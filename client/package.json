@@ -11,5 +11,8 @@
     "url": "https://github.com/markovidakovic/gdsi/client"
   },
   "author": "Marko Vidaković",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "prettier": "^3.4.2"
+  }
 }
