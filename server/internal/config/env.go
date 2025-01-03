@@ -1,6 +1,3 @@
-// env.go handles the loading and parsing of env files.
-// It provides functions to read key-value pairs from the files
-// and set them in the applications environment
 package config
 
 import (
@@ -78,11 +75,6 @@ func parseEnvFileLine(line string) (key string, value string, err error) {
 		return "", "", nil
 	}
 
-	// Trim inline comments
-	if commIdx := strings.Index(line, "#"); commIdx != -1 {
-		line = strings.TrimSpace(line[:commIdx])
-	}
-
 	// Split key-value pairs
 	lineParts := strings.SplitN(line, "=", 2)
 
@@ -97,6 +89,11 @@ func parseEnvFileLine(line string) (key string, value string, err error) {
 		return "", "", fmt.Errorf("invalid environment variable key: %q", key)
 	}
 
+	// Handle invalid value
+	if strings.Contains(value, "\n") {
+		return "", "", fmt.Errorf("environment variable %q has an invalid multiline value", key)
+	}
+
 	// Handle empty value
 	if value == "" {
 		return "", "", fmt.Errorf("environment variable %q has an empty value", key)
@@ -107,6 +104,11 @@ func parseEnvFileLine(line string) (key string, value string, err error) {
 		value = strings.Trim(value, "\"")
 	} else if strings.HasPrefix(value, "'") || strings.HasSuffix(value, "'") {
 		value = strings.Trim(value, "'")
+	} else {
+		// If not qouted, trim inline comments
+		if commIdx := strings.Index(value, "#"); commIdx != -1 {
+			value = strings.TrimSpace(value[:commIdx])
+		}
 	}
 
 	return
