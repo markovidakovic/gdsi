@@ -1,0 +1,39 @@
+basePath: /
+host: localhost:8080
+info:
+  contact: {}
+  description: Documentation for the Gdsi API
+  title: Gdsi API
+  version: 1.0.0
+paths:
+  /v1/auth/signup:
+    post:
+      consumes:
+      - application/json
+      description: Signup a new account
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "500":
+          description: Internal Server Error
+      summary: Signup
+      tags:
+      - auth
+  /v1/auth/tokens/access:
+    post:
+      consumes:
+      - application/json
+      description: Login and get a new access token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "500":
+          description: Internal Server Error
+      summary: Login
+      tags:
+      - auth
+swagger: "2.0"

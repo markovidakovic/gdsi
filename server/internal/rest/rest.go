@@ -10,8 +10,8 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/markovidakovic/gdsi/server/internal/config"
 	"github.com/markovidakovic/gdsi/server/internal/db"
-	"github.com/markovidakovic/gdsi/server/internal/rest/v1/auth"
-	"github.com/markovidakovic/gdsi/server/internal/rest/v1/players"
+	v1 "github.com/markovidakovic/gdsi/server/internal/rest/v1"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 // server is a struct that holds configuration, database connection, and router
@@ -53,27 +53,10 @@ func (s *server) MountHandlers() {
 	s.Rtr.Use(middleware.StripSlashes)
 	s.Rtr.Use(middleware.Heartbeat("/"))
 
-	// Initialize application handlers
-	authHandler := auth.NewHandler(s.Cfg, s.Db)
-	playersHandler := players.NewHandler(s.Cfg, s.Db)
+	// Mount all application handlers
+	v1.MountHandlers(s.Cfg, s.Db, s.Rtr)
 
-	s.Rtr.Route("/v1", func(r chi.Router) {
-		// Public endpoints
-		r.Group(func(r chi.Router) {
-			r.Route("/auth", func(chi.Router) {
-				r.Post("/signup", authHandler.Signup)
-				r.Post("/tokens/access", authHandler.Login)
-			})
-		})
-
-		// Private endpoints requiring authentication
-		r.Group(func(r chi.Router) {
-			r.Route("/players", func(r chi.Router) {
-				// r.Use(jwtauth.Authenticator)
-				r.Get("/", playersHandler.Get)
-			})
-		})
-	})
+	s.Rtr.Get("/swagger/*", httpSwagger.WrapHandler)
 }
 
 // NewServer initialized a new instance of the server, loading its configuration, database connection,

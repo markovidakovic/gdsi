@@ -9,12 +9,16 @@ import (
 	"syscall"
 	"time"
 
+	_ "github.com/markovidakovic/gdsi/server/docs"
 	"github.com/markovidakovic/gdsi/server/internal/rest"
 )
 
-// main is the entry point for the application. It initializes the rest server,
-// starts it in a separate goroutine, and listens for system termination signals.
-// Upon receiving a signal, it gracefully shuts down the server and any associated resources.
+// @title Gdsi API
+// @version 1.0.0
+// @description Documentation for the Gdsi API
+
+// @host localhost:8080
+// @BasePath /
 func main() {
 	// Create a new rest server
 	srv, err := rest.NewServer()
