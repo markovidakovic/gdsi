@@ -4,20 +4,22 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 	"github.com/markovidakovic/gdsi/server/internal/config"
 	"github.com/markovidakovic/gdsi/server/internal/db"
+	"github.com/markovidakovic/gdsi/server/internal/rest/v1/auth"
+	"github.com/markovidakovic/gdsi/server/internal/rest/v1/players"
 )
 
 // server is a struct that holds configuration, database connection, and router
 // necessary to run the API server
 type server struct {
 	Cfg *config.Config // Server configuration
-	Rtr *chi.Mux       // Router for handling HTTP requests
 	Db  db.Conn        // Database connection
+	Rtr *chi.Mux       // Router for handling HTTP requests
 }
 
 // Shutdown gracefully shuts down the API server by closing relevant services and connections
@@ -36,35 +38,64 @@ func (s *server) Shutdown(ctx context.Context) error {
 	return nil
 }
 
-// NewServer initializes a new API server by loading the configuration, connecting
-// to the database, setting up the router, and attaching service endpoints. This function
-// returns a pointer to the server object and any error encountered during initialization.
+// MountHandlers configures the API endpoints and applies middleware to the router.
+func (s *server) MountHandlers() {
+	// Middleware
+	s.Rtr.Use(cors.Handler(cors.Options{
+		AllowedOrigins: []string{"https://*", "http://*"},
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		MaxAge:         300, // Maximum value not ignored by any of major browsers
+	}))
+	s.Rtr.Use(middleware.Logger)
+	s.Rtr.Use(middleware.AllowContentType("application/json"))
+	s.Rtr.Use(middleware.CleanPath)
+	s.Rtr.Use(middleware.NoCache)
+	s.Rtr.Use(middleware.StripSlashes)
+	s.Rtr.Use(middleware.Heartbeat("/"))
+
+	// Initialize application handlers
+	authHandler := auth.NewHandler(s.Cfg, s.Db)
+	playersHandler := players.NewHandler(s.Cfg, s.Db)
+
+	s.Rtr.Route("/v1", func(r chi.Router) {
+		// Public endpoints
+		r.Group(func(r chi.Router) {
+			r.Route("/auth", func(chi.Router) {
+				r.Post("/signup", authHandler.Signup)
+				r.Post("/tokens/access", authHandler.Login)
+			})
+		})
+
+		// Private endpoints requiring authentication
+		r.Group(func(r chi.Router) {
+			r.Route("/players", func(r chi.Router) {
+				// r.Use(jwtauth.Authenticator)
+				r.Get("/", playersHandler.Get)
+			})
+		})
+	})
+}
+
+// NewServer initialized a new instance of the server, loading its configuration, database connection,
+// and initializing the router.
 func NewServer() (*server, error) {
+	var err error
 	var srv = &server{}
 
 	// Load config
-	cfg, err := config.Load()
+	srv.Cfg, err = config.Load()
 	if err != nil {
 		return nil, err
 	}
 
 	// Connect the database
-	db, err := db.Connect(cfg)
+	srv.Db, err = db.Connect(srv.Cfg)
 	if err != nil {
 		return nil, err
 	}
 
 	// Initialize router
-	rtr := chi.NewRouter()
-
-	srv.Cfg = cfg
-	srv.Db = db
-	srv.Rtr = rtr
-
-	srv.Rtr.Use(middleware.Logger)
-	srv.Rtr.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("hello from gdsi api\n"))
-	})
+	srv.Rtr = chi.NewRouter()
 
 	return srv, nil
 }
