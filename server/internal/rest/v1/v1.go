@@ -4,12 +4,13 @@ import (
 	"log"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/jwtauth/v5"
 	"github.com/markovidakovic/gdsi/server/internal/config"
 	"github.com/markovidakovic/gdsi/server/internal/db"
 	"github.com/markovidakovic/gdsi/server/internal/rest/v1/auth"
 )
 
-func MountHandlers(cfg *config.Config, db db.Conn, rtr *chi.Mux) {
+func MountHandlers(cfg *config.Config, db *db.Conn, rtr *chi.Mux) {
 	authHandler := auth.NewHandler(cfg, db)
 
 	rtr.Route("/v1", func(r chi.Router) {
@@ -23,7 +24,9 @@ func MountHandlers(cfg *config.Config, db db.Conn, rtr *chi.Mux) {
 
 		// Private endpoints
 		r.Group(func(r chi.Router) {
-
+			//  Seek, verify and validate JWT tokens
+			r.Use(jwtauth.Verifier(cfg.JwtAuth))
+			r.Use(jwtauth.Authenticator(cfg.JwtAuth))
 		})
 	})
 

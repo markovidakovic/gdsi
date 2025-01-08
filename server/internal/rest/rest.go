@@ -18,7 +18,7 @@ import (
 // necessary to run the API server
 type server struct {
 	Cfg *config.Config // Server configuration
-	Db  db.Conn        // Database connection
+	Db  *db.Conn       // Database connection
 	Rtr *chi.Mux       // Router for handling HTTP requests
 }
 
@@ -39,6 +39,13 @@ func (s *server) Shutdown(ctx context.Context) error {
 }
 
 // MountHandlers configures the API endpoints and applies middleware to the router.
+
+// @title Gdsi API
+// @version 1.0.0
+// @description Documentation for the gdsi API
+
+// @host localhost:8080
+// @BasePath /
 func (s *server) MountHandlers() {
 	// Middleware
 	s.Rtr.Use(cors.Handler(cors.Options{

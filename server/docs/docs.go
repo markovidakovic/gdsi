@@ -28,12 +28,35 @@ const docTemplate = `{
                     "auth"
                 ],
                 "summary": "Signup",
+                "parameters": [
+                    {
+                        "description": "Request body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/auth.SignupRequestModel"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/auth.AccessTokenResponseModel"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ValidationError"
+                        }
                     },
                     "500": {
-                        "description": "Internal Server Error"
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
                     }
                 }
             }
@@ -51,13 +74,151 @@ const docTemplate = `{
                     "auth"
                 ],
                 "summary": "Login",
+                "parameters": [
+                    {
+                        "description": "Request body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/auth.LoginRequestModel"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/auth.AccessTokenResponseModel"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ValidationError"
+                        }
                     },
                     "500": {
-                        "description": "Internal Server Error"
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
                     }
+                }
+            }
+        },
+        "/v1/auth/tokens/refresh": {
+            "get": {
+                "description": "Get a refreshed access token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Refresh token",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/auth.AccessTokenResponseModel"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "auth.AccessTokenResponseModel": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "auth.LoginRequestModel": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "auth.SignupRequestModel": {
+            "type": "object",
+            "properties": {
+                "dob": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.Error": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "response.InvalidField": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "field": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.ValidationError": {
+            "type": "object",
+            "properties": {
+                "invalid_fields": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.InvalidField"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
                 }
             }
         }
@@ -71,7 +232,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "Gdsi API",
-	Description:      "Documentation for the Gdsi API",
+	Description:      "Documentation for the gdsi API",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

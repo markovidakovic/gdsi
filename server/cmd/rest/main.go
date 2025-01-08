@@ -13,12 +13,6 @@ import (
 	"github.com/markovidakovic/gdsi/server/internal/rest"
 )
 
-// @title Gdsi API
-// @version 1.0.0
-// @description Documentation for the Gdsi API
-
-// @host localhost:8080
-// @BasePath /
 func main() {
 	// Create a new rest server
 	srv, err := rest.NewServer()
