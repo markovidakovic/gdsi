@@ -20,7 +20,7 @@ type handler struct {
 // @Accept application/json
 // @Produce application/json
 // @Param body body SignupRequestModel true "Request body"
-// @Success 200 {object} auth.AccessTokenResponseModel "OK"
+// @Success 200 {object} auth.TokensResponseModel "OK"
 // @Failure 400 {object} response.ValidationError "Bad request"
 // @Failure 500 {object} response.Error "Internal server error"
 // @Router /v1/auth/signup [post]
@@ -51,7 +51,7 @@ func (h *handler) Signup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Call the service
-	result, err := h.service.signupNewAccount(r.Context(), model)
+	accessToken, refreshToken, err := h.service.signup(r.Context(), model)
 	if err != nil {
 		if errors.Is(err, response.ErrDuplicateRecord) {
 			response.WriteError(w, response.Error{
@@ -68,8 +68,9 @@ func (h *handler) Signup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := AccessTokenResponseModel{
-		AccessToken: result,
+	resp := TokensResponseModel{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
 	}
 
 	response.WriteSuccess(w, http.StatusCreated, resp)
@@ -81,7 +82,7 @@ func (h *handler) Signup(w http.ResponseWriter, r *http.Request) {
 // @Accept application/json
 // @Produce application/json
 // @Param body body LoginRequestModel true "Request body"
-// @Success 200 {object} auth.AccessTokenResponseModel "OK"
+// @Success 200 {object} auth.TokensResponseModel "OK"
 // @Failure 400 {object} response.ValidationError "Bad request"
 // @Failure 500 {object} response.Error "Internal server error"
 // @Router /v1/auth/tokens/access [post]
@@ -112,7 +113,7 @@ func (h *handler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Call the service
-	result, err := h.service.getAccessToken(r.Context(), model)
+	accessToken, refreshToken, err := h.service.login(r.Context(), model)
 	if err != nil {
 		if errors.Is(err, response.ErrNotFound) {
 			response.WriteError(w, response.Error{
@@ -129,8 +130,9 @@ func (h *handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := AccessTokenResponseModel{
-		AccessToken: result,
+	resp := TokensResponseModel{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
 	}
 
 	response.WriteSuccess(w, http.StatusOK, resp)
@@ -141,7 +143,7 @@ func (h *handler) Login(w http.ResponseWriter, r *http.Request) {
 // @Tags auth
 // @Accept application/json
 // @Produce application/json
-// @Success 200 {object} auth.AccessTokenResponseModel "OK"
+// @Success 200 {object} auth.TokensResponseModel "OK"
 // @Failure 500 {object} response.Error "Internal server error"
 // @Router /v1/auth/tokens/refresh [get]
 func (h *handler) Refresh(w http.ResponseWriter, r *http.Request) {

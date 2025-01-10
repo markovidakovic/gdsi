@@ -11,6 +11,7 @@ var (
 	ErrInvalidInput = errors.New("invalid input")
 	// ErrBadRequest   = errors.New("bad request")
 	ErrDuplicateRecord = errors.New("resource already exists")
+	ErrUnauthorized    = errors.New("access unathorized")
 	ErrInternal        = errors.New("internal server error")
 )
 

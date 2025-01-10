@@ -8,10 +8,12 @@ import (
 	"github.com/markovidakovic/gdsi/server/internal/config"
 	"github.com/markovidakovic/gdsi/server/internal/db"
 	"github.com/markovidakovic/gdsi/server/internal/rest/v1/auth"
+	"github.com/markovidakovic/gdsi/server/internal/rest/v1/seasons"
 )
 
 func MountHandlers(cfg *config.Config, db *db.Conn, rtr *chi.Mux) {
 	authHandler := auth.NewHandler(cfg, db)
+	seasonsHandler := seasons.NewHandler(cfg, db)
 
 	rtr.Route("/v1", func(r chi.Router) {
 		// Public endpoints
@@ -27,6 +29,11 @@ func MountHandlers(cfg *config.Config, db *db.Conn, rtr *chi.Mux) {
 			//  Seek, verify and validate JWT tokens
 			r.Use(jwtauth.Verifier(cfg.JwtAuth))
 			r.Use(jwtauth.Authenticator(cfg.JwtAuth))
+
+			r.Route("/seasons", func(r chi.Router) {
+				r.Post("/", seasonsHandler.Create)
+			})
+
 		})
 	})
 

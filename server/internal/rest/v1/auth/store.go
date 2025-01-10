@@ -3,6 +3,8 @@ package auth
 import (
 	"context"
 	"errors"
+	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/markovidakovic/gdsi/server/internal/db"
@@ -71,6 +73,35 @@ func (s *store) selectAccountByEmail(ctx context.Context, email string) (*Accoun
 			return &result, response.ErrNotFound
 		}
 		return &result, response.ErrInternal
+	}
+
+	return &result, nil
+}
+
+func (s *store) insertRefreshToken(ctx context.Context, accountId string, token string, issuedAt, expiresAt time.Time) (*RefreshToken, error) {
+	var result RefreshToken
+
+	sql := `
+		INSERT INTO refresh_token (account_id, token_hash, issued_at, expires_at)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id, account_id, token_hash, device_id, ip_address, user_agent, issued_at, expires_at, last_used_at, is_revoked
+	`
+
+	err := s.db.QueryRow(ctx, sql, accountId, token, issuedAt, expiresAt).Scan(
+		&result.Id,
+		&result.AccountId,
+		&result.TokenHash,
+		&result.DeviceId,
+		&result.IpAddress,
+		&result.UserAgent,
+		&result.IssuedAt,
+		&result.ExpiresAt,
+		&result.LastUsedAt,
+		&result.IsRevoked,
+	)
+	if err != nil {
+		fmt.Printf("err: %v\n", err)
+		return nil, response.ErrInternal
 	}
 
 	return &result, nil

@@ -1,10 +1,5 @@
 basePath: /
 definitions:
-  auth.AccessTokenResponseModel:
-    properties:
-      access_token:
-        type: string
-    type: object
   auth.LoginRequestModel:
     properties:
       email:
@@ -27,6 +22,13 @@ definitions:
       password:
         type: string
       phone_number:
+        type: string
+    type: object
+  auth.TokensResponseModel:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
         type: string
     type: object
   response.Error:
@@ -79,7 +81,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/auth.AccessTokenResponseModel'
+            $ref: '#/definitions/auth.TokensResponseModel'
         "400":
           description: Bad request
           schema:
@@ -109,7 +111,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/auth.AccessTokenResponseModel'
+            $ref: '#/definitions/auth.TokensResponseModel'
         "400":
           description: Bad request
           schema:
@@ -132,7 +134,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/auth.AccessTokenResponseModel'
+            $ref: '#/definitions/auth.TokensResponseModel'
         "500":
           description: Internal server error
           schema:
@@ -140,4 +142,34 @@ paths:
       summary: Refresh token
       tags:
       - auth
+  /v1/seasons:
+    post:
+      consumes:
+      - application/json
+      description: Create a new season
+      parameters:
+      - description: Request body
+        in: body
+        name: body
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/response.ValidationError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Create
+      tags:
+      - seasons
 swagger: "2.0"

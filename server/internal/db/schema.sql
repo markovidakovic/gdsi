@@ -33,6 +33,17 @@ CREATE TYPE public.gender AS ENUM (
 );
 
 
+--
+-- Name: handedness; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.handedness AS ENUM (
+    'right',
+    'left',
+    'ambidextrous'
+);
+
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
@@ -43,14 +54,101 @@ SET default_table_access_method = heap;
 
 CREATE TABLE public.account (
     id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
-    first_name character varying(50) NOT NULL,
-    last_name character varying(50) NOT NULL,
-    email character varying(100) NOT NULL,
+    first_name character varying(250) NOT NULL,
+    last_name character varying(250) NOT NULL,
+    email character varying(250) NOT NULL,
     dob date NOT NULL,
     gender public.gender NOT NULL,
-    phone_number character varying(50) NOT NULL,
+    phone_number character varying(250) NOT NULL,
     password text NOT NULL,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+--
+-- Name: court; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.court (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    name character varying(250) NOT NULL,
+    creator_id uuid NOT NULL,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+--
+-- Name: league; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.league (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    title character varying(250) NOT NULL,
+    description character varying(500),
+    season_id uuid NOT NULL,
+    creator_id uuid NOT NULL,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+--
+-- Name: match; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.match (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    court_id uuid NOT NULL,
+    scheduled_at timestamp with time zone NOT NULL,
+    player_one_id uuid NOT NULL,
+    player_two_id uuid NOT NULL,
+    winner_id uuid,
+    score text,
+    season_id uuid NOT NULL,
+    league_id uuid NOT NULL,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+--
+-- Name: player; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.player (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    height numeric,
+    weight numeric,
+    handedness public.handedness,
+    racket character varying(250),
+    matches_expected integer DEFAULT 0 NOT NULL,
+    matches_played integer DEFAULT 0 NOT NULL,
+    matches_won integer DEFAULT 0 NOT NULL,
+    matches_scheduled integer DEFAULT 0 NOT NULL,
+    seasons_played integer DEFAULT 0 NOT NULL,
+    winning_ratio double precision DEFAULT 0.0 NOT NULL,
+    activity_ratio double precision DEFAULT 0.0 NOT NULL,
+    ranking integer,
+    elo integer,
+    account_id uuid NOT NULL,
+    current_league uuid,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+--
+-- Name: refresh_token; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.refresh_token (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    account_id uuid NOT NULL,
+    token_hash text NOT NULL,
+    device_id text,
+    ip_address character varying(250),
+    user_agent text,
+    issued_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    expires_at timestamp with time zone NOT NULL,
+    last_used_at timestamp with time zone,
+    is_revoked boolean DEFAULT false NOT NULL
 );
 
 
@@ -60,6 +158,19 @@ CREATE TABLE public.account (
 
 CREATE TABLE public.schema_migrations (
     version character varying(128) NOT NULL
+);
+
+
+--
+-- Name: season; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.season (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    title character varying(250) NOT NULL,
+    description character varying(500),
+    creator_id uuid NOT NULL,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 
@@ -80,11 +191,171 @@ ALTER TABLE ONLY public.account
 
 
 --
+-- Name: court court_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.court
+    ADD CONSTRAINT court_name_key UNIQUE (name);
+
+
+--
+-- Name: court court_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.court
+    ADD CONSTRAINT court_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: league league_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.league
+    ADD CONSTRAINT league_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: match match_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.match
+    ADD CONSTRAINT match_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: player player_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.player
+    ADD CONSTRAINT player_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: refresh_token refresh_token_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.refresh_token
+    ADD CONSTRAINT refresh_token_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: schema_migrations schema_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.schema_migrations
     ADD CONSTRAINT schema_migrations_pkey PRIMARY KEY (version);
+
+
+--
+-- Name: season season_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.season
+    ADD CONSTRAINT season_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: court court_creator_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.court
+    ADD CONSTRAINT court_creator_id_fkey FOREIGN KEY (creator_id) REFERENCES public.account(id);
+
+
+--
+-- Name: league league_creator_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.league
+    ADD CONSTRAINT league_creator_id_fkey FOREIGN KEY (creator_id) REFERENCES public.account(id);
+
+
+--
+-- Name: league league_season_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.league
+    ADD CONSTRAINT league_season_id_fkey FOREIGN KEY (season_id) REFERENCES public.season(id);
+
+
+--
+-- Name: match match_court_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.match
+    ADD CONSTRAINT match_court_id_fkey FOREIGN KEY (court_id) REFERENCES public.court(id);
+
+
+--
+-- Name: match match_league_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.match
+    ADD CONSTRAINT match_league_id_fkey FOREIGN KEY (league_id) REFERENCES public.league(id);
+
+
+--
+-- Name: match match_player_one_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.match
+    ADD CONSTRAINT match_player_one_id_fkey FOREIGN KEY (player_one_id) REFERENCES public.player(id);
+
+
+--
+-- Name: match match_player_two_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.match
+    ADD CONSTRAINT match_player_two_id_fkey FOREIGN KEY (player_two_id) REFERENCES public.player(id);
+
+
+--
+-- Name: match match_season_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.match
+    ADD CONSTRAINT match_season_id_fkey FOREIGN KEY (season_id) REFERENCES public.season(id);
+
+
+--
+-- Name: match match_winner_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.match
+    ADD CONSTRAINT match_winner_id_fkey FOREIGN KEY (winner_id) REFERENCES public.player(id);
+
+
+--
+-- Name: player player_account_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.player
+    ADD CONSTRAINT player_account_id_fkey FOREIGN KEY (account_id) REFERENCES public.account(id) ON DELETE CASCADE;
+
+
+--
+-- Name: player player_current_league_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.player
+    ADD CONSTRAINT player_current_league_fkey FOREIGN KEY (current_league) REFERENCES public.league(id);
+
+
+--
+-- Name: refresh_token refresh_token_account_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.refresh_token
+    ADD CONSTRAINT refresh_token_account_id_fkey FOREIGN KEY (account_id) REFERENCES public.account(id) ON DELETE CASCADE;
+
+
+--
+-- Name: season season_creator_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.season
+    ADD CONSTRAINT season_creator_id_fkey FOREIGN KEY (creator_id) REFERENCES public.account(id);
 
 
 --
@@ -97,4 +368,10 @@ ALTER TABLE ONLY public.schema_migrations
 --
 
 INSERT INTO public.schema_migrations (version) VALUES
-    ('20250106191753');
+    ('20250106191753'),
+    ('20250109114332'),
+    ('20250110182359'),
+    ('20250110182416'),
+    ('20250110182427'),
+    ('20250110191222'),
+    ('20250110195840');
