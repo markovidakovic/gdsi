@@ -17,7 +17,7 @@ CREATE TABLE player(
     ranking integer,
     elo integer,
     account_id UUID REFERENCES account (id) ON DELETE CASCADE NOT NULL,
-    current_league UUID REFERENCES league (id),
+    current_league_id UUID REFERENCES league (id),
     created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 

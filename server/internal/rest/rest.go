@@ -14,17 +14,12 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
-// server is a struct that holds configuration, database connection, and router
-// necessary to run the API server
 type server struct {
-	Cfg *config.Config // Server configuration
-	Db  *db.Conn       // Database connection
-	Rtr *chi.Mux       // Router for handling HTTP requests
+	Cfg *config.Config
+	Db  *db.Conn
+	Rtr *chi.Mux
 }
 
-// Shutdown gracefully shuts down the API server by closing relevant services and connections
-// or resources. It is called when the server is shutting down or terminating, ensuring the services
-// and connections are properly closed to prevent "hanging" or resource leaks.
 func (s *server) Shutdown(ctx context.Context) error {
 	// Close the db connection
 	if s.Db != nil {
@@ -37,8 +32,6 @@ func (s *server) Shutdown(ctx context.Context) error {
 
 	return nil
 }
-
-// MountHandlers configures the API endpoints and applies middleware to the router.
 
 // @title Gdsi API
 // @version 1.0.0
@@ -66,8 +59,6 @@ func (s *server) MountHandlers() {
 	s.Rtr.Get("/swagger/*", httpSwagger.WrapHandler)
 }
 
-// NewServer initialized a new instance of the server, loading its configuration, database connection,
-// and initializing the router.
 func NewServer() (*server, error) {
 	var err error
 	var srv = &server{}

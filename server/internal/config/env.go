@@ -9,9 +9,6 @@ import (
 	"strings"
 )
 
-// loadEnv loads environment variables from a list of provided file paths.
-// Each file is read in sequence, and its key-value pairs are set in the environment.
-// If any file fails to load or contains errors, the process stops, and an error is returned.
 func loadEnv(filenames []string) (err error) {
 	for _, f := range filenames {
 		envVars, err := readEnvFile(f)
@@ -26,9 +23,6 @@ func loadEnv(filenames []string) (err error) {
 	return
 }
 
-// readEnvFile reads an environment variables file and parses its key-value pairs
-// into a map. The file should follow the format: KEY=VALUE, with optional quotes
-// arount the value. Lines starting with '#' or empty lines are ignored.
 func readEnvFile(filename string) (map[string]string, error) {
 	envVars := make(map[string]string)
 
@@ -64,9 +58,6 @@ func readEnvFile(filename string) (map[string]string, error) {
 	return envVars, nil
 }
 
-// parseEnvFileLine parses a single line from an environment variables file.
-// The line should follow the format KEY=VALUE, with optional quotes around the value.
-// Lines starting with '#' or empty lines are treated as comments and ignored.
 func parseEnvFileLine(line string) (key string, value string, err error) {
 	line = strings.TrimSpace(line)
 
@@ -114,8 +105,6 @@ func parseEnvFileLine(line string) (key string, value string, err error) {
 	return
 }
 
-// setEnvVars sets environment variables from a map of key-value pairs.
-// If a variable already exists in the environment, it logs a warning and overwrites the value.
 func setEnvVars(envVars map[string]string) error {
 	for k, v := range envVars {
 		// Check if var already exist
@@ -134,8 +123,6 @@ func setEnvVars(envVars map[string]string) error {
 	return nil
 }
 
-// getEnvVar retrieves the value of an environment variable by its key.
-// If the key does not exist or is empty, the specified defaultValue is returned.
 func getEnvVar(key, defaultValue string) string {
 	value := os.Getenv(key)
 	if value == "" {

@@ -4,8 +4,7 @@ CREATE TYPE gender AS ENUM ('male', 'female');
 
 CREATE TABLE account (
     id UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
-    first_name varchar(250) NOT NULL,
-    last_name varchar(250) NOT NULL,
+    name varchar(250) NOT NULL,
     email varchar(250) UNIQUE NOT NULL,
     dob date NOT NULL, 
     gender gender NOT NULL,

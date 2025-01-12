@@ -13,11 +13,9 @@ definitions:
         type: string
       email:
         type: string
-      first_name:
-        type: string
       gender:
         type: string
-      last_name:
+      name:
         type: string
       password:
         type: string
@@ -30,6 +28,282 @@ definitions:
         type: string
       refresh_token:
         type: string
+    type: object
+  courts.CourtModel:
+    properties:
+      created_at:
+        type: string
+      creator:
+        $ref: '#/definitions/courts.CreatorModel'
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  courts.CreateCourtModel:
+    properties:
+      name:
+        type: string
+    type: object
+  courts.CreatorModel:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  courts.UpdateCourtModel:
+    properties:
+      name:
+        type: string
+    type: object
+  leagues.CreateLeagueModel:
+    properties:
+      description:
+        type: string
+      title:
+        type: string
+    type: object
+  leagues.CreatorModel:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  leagues.LeagueModel:
+    properties:
+      created_at:
+        type: string
+      creator:
+        $ref: '#/definitions/leagues.CreatorModel'
+      description:
+        type: string
+      id:
+        type: string
+      season:
+        $ref: '#/definitions/leagues.SeasonModel'
+      title:
+        type: string
+    type: object
+  leagues.SeasonModel:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      title:
+        type: string
+    type: object
+  leagues.UpdateLeagueModel:
+    properties:
+      description:
+        type: string
+      title:
+        type: string
+    type: object
+  matches.CourtModel:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  matches.CreateMatchModel:
+    properties:
+      court_id:
+        type: string
+      player_one_id:
+        type: string
+      player_two_id:
+        type: string
+      scheduled_at:
+        type: string
+      score:
+        type: string
+    type: object
+  matches.LeagueModel:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  matches.MatchModel:
+    properties:
+      court:
+        $ref: '#/definitions/matches.CourtModel'
+      created_at:
+        type: string
+      id:
+        type: string
+      league:
+        $ref: '#/definitions/matches.LeagueModel'
+      player_one:
+        $ref: '#/definitions/matches.PlayerModel'
+      player_two:
+        $ref: '#/definitions/matches.PlayerModel'
+      scheduled_at:
+        type: string
+      score:
+        type: string
+      season:
+        $ref: '#/definitions/matches.SeasonModel'
+      winner:
+        $ref: '#/definitions/matches.PlayerModel'
+    type: object
+  matches.PlayerModel:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  matches.SeasonModel:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  matches.UpdateMatchModel:
+    properties:
+      court_id:
+        type: string
+      player_one_id:
+        type: string
+      player_two_id:
+        type: string
+      scheduled_at:
+        type: string
+      score:
+        type: string
+    type: object
+  me.CurrentLeagueModel:
+    properties:
+      id:
+        type: string
+      title:
+        type: string
+    type: object
+  me.MeModel:
+    properties:
+      created_at:
+        type: string
+      dob:
+        type: string
+      email:
+        type: string
+      gender:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      phone_number:
+        type: string
+      player_profile:
+        $ref: '#/definitions/me.PlayerProfileModel'
+    type: object
+  me.PlayerProfileModel:
+    properties:
+      activity_ratio:
+        type: number
+      current_league:
+        $ref: '#/definitions/me.CurrentLeagueModel'
+      elo:
+        type: integer
+      handedness:
+        type: string
+      height:
+        type: number
+      id:
+        type: string
+      matches_expected:
+        type: integer
+      matches_played:
+        type: integer
+      matches_scheduled:
+        type: integer
+      matches_won:
+        type: integer
+      racket:
+        type: string
+      ranking:
+        type: integer
+      seasons_played:
+        type: integer
+      weight:
+        type: number
+      winning_ratio:
+        type: number
+    type: object
+  me.UpdateMeModel:
+    properties:
+      name:
+        type: string
+    type: object
+  players.AccountModel:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  players.CurrentLeagueModel:
+    properties:
+      id:
+        type: string
+      title:
+        type: string
+    type: object
+  players.PlayerModel:
+    properties:
+      account:
+        $ref: '#/definitions/players.AccountModel'
+      activity_ratio:
+        type: number
+      current_league:
+        $ref: '#/definitions/players.CurrentLeagueModel'
+      elo:
+        type: integer
+      handedness:
+        type: string
+      height:
+        type: number
+      id:
+        type: string
+      matches_expected:
+        type: integer
+      matches_played:
+        type: integer
+      matches_won:
+        type: integer
+      name:
+        type: string
+      racket:
+        type: string
+      ranking:
+        type: integer
+      seasons_played:
+        type: integer
+      weight:
+        type: number
+      winning_ratio:
+        type: number
+    type: object
+  players.UpdatePlayerModel:
+    properties:
+      handedness:
+        type: string
+      height:
+        type: number
+      racket:
+        type: string
+      weight:
+        type: number
     type: object
   response.Error:
     properties:
@@ -54,6 +328,88 @@ definitions:
       message:
         type: string
       status:
+        type: integer
+    type: object
+  seasons.CreateSeasonModel:
+    properties:
+      description:
+        type: string
+      title:
+        type: string
+    type: object
+  seasons.CreatorModel:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  seasons.SeasonModel:
+    properties:
+      created_at:
+        type: string
+      creator:
+        $ref: '#/definitions/seasons.CreatorModel'
+      description:
+        type: string
+      id:
+        type: string
+      title:
+        type: string
+    type: object
+  seasons.UpdateSeasonModel:
+    properties:
+      description:
+        type: string
+      title:
+        type: string
+    type: object
+  standings.LeagueModel:
+    properties:
+      id:
+        type: string
+      title:
+        type: string
+    type: object
+  standings.PlayerModel:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  standings.SeasonModel:
+    properties:
+      id:
+        type: string
+      title:
+        type: string
+    type: object
+  standings.StandingModel:
+    properties:
+      created_at:
+        type: string
+      games_lost:
+        type: integer
+      games_won:
+        type: integer
+      id:
+        type: string
+      league:
+        $ref: '#/definitions/standings.LeagueModel'
+      matches_played:
+        type: integer
+      matches_won:
+        type: integer
+      player:
+        $ref: '#/definitions/standings.PlayerModel'
+      points:
+        type: integer
+      season:
+        $ref: '#/definitions/standings.SeasonModel'
+      sets_lost:
+        type: integer
+      sets_won:
         type: integer
     type: object
 host: localhost:8080
@@ -142,7 +498,386 @@ paths:
       summary: Refresh token
       tags:
       - auth
+  /v1/courts:
+    get:
+      description: Get courts
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/courts.CourtModel'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/response.ValidationError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Get
+      tags:
+      - courts
+    post:
+      consumes:
+      - application/json
+      description: Create a new court
+      parameters:
+      - description: Request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/courts.CreateCourtModel'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/courts.CourtModel'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/response.ValidationError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Create
+      tags:
+      - courts
+  /v1/courts/{courtId}:
+    delete:
+      description: Delete an existing court
+      parameters:
+      - description: Court id
+        in: path
+        name: courtId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No content
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/response.ValidationError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Error'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Delete
+      tags:
+      - courts
+    get:
+      description: Get court by id
+      parameters:
+      - description: Court id
+        in: path
+        name: courtId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/courts.CourtModel'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/response.ValidationError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Error'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Get by id
+      tags:
+      - courts
+    put:
+      consumes:
+      - application/json
+      description: Update an existing court
+      parameters:
+      - description: Court id
+        in: path
+        name: courtId
+        required: true
+        type: string
+      - description: Request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/courts.UpdateCourtModel'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/courts.CourtModel'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/response.ValidationError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Error'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Update
+      tags:
+      - courts
+  /v1/me:
+    delete:
+      description: Delete my account and player profile data
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Error'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Delete
+      tags:
+      - me
+    get:
+      description: Get my account and player profile data
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/me.MeModel'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Get
+      tags:
+      - me
+    put:
+      consumes:
+      - application/json
+      description: Update my account and player profile data
+      parameters:
+      - description: Request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/me.UpdateMeModel'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/me.MeModel'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/response.ValidationError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Error'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Update
+      tags:
+      - me
+  /v1/players:
+    get:
+      description: Get players
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/players.PlayerModel'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/response.ValidationError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Get
+      tags:
+      - players
+  /v1/players/{playerId}:
+    get:
+      description: Get player by id
+      parameters:
+      - description: Player id
+        in: path
+        name: playerId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/matches.MatchModel'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/response.ValidationError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Error'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Get by id
+      tags:
+      - players
+    put:
+      consumes:
+      - application/json
+      description: Update an existing player
+      parameters:
+      - description: Player id
+        in: path
+        name: playerId
+        required: true
+        type: string
+      - description: Request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/players.UpdatePlayerModel'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/players.PlayerModel'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/response.ValidationError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Error'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Update
+      tags:
+      - players
   /v1/seasons:
+    get:
+      description: Get seasons
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/seasons.SeasonModel'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/response.ValidationError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Get
+      tags:
+      - seasons
     post:
       consumes:
       - application/json
@@ -153,18 +888,22 @@ paths:
         name: body
         required: true
         schema:
-          type: string
+          $ref: '#/definitions/seasons.CreateSeasonModel'
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: OK
           schema:
-            type: string
+            $ref: '#/definitions/seasons.SeasonModel'
         "400":
           description: Bad request
           schema:
             $ref: '#/definitions/response.ValidationError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Error'
         "500":
           description: Internal server error
           schema:
@@ -172,4 +911,566 @@ paths:
       summary: Create
       tags:
       - seasons
+  /v1/seasons/{seasonId}:
+    delete:
+      description: Delete an existing season
+      parameters:
+      - description: Season id
+        in: path
+        name: seasonId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No content
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/response.ValidationError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Error'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Delete
+      tags:
+      - seasons
+    get:
+      description: Get season by id
+      parameters:
+      - description: Season id
+        in: path
+        name: seasonId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/seasons.SeasonModel'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/response.ValidationError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Error'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Get by id
+      tags:
+      - seasons
+    put:
+      consumes:
+      - application/json
+      description: Update an existing season
+      parameters:
+      - description: Season id
+        in: path
+        name: seasonId
+        required: true
+        type: string
+      - description: Request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/seasons.UpdateSeasonModel'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/seasons.SeasonModel'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/response.ValidationError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Error'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Update
+      tags:
+      - seasons
+  /v1/seasons/{seasonId}/leagues:
+    get:
+      description: Get leagues
+      parameters:
+      - description: Season id
+        in: path
+        name: seasonId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/leagues.LeagueModel'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/response.ValidationError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Get
+      tags:
+      - leagues
+    post:
+      consumes:
+      - application/json
+      description: Create a new league
+      parameters:
+      - description: Season id
+        in: path
+        name: seasonId
+        required: true
+        type: string
+      - description: Request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/leagues.CreateLeagueModel'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: OK
+          schema:
+            $ref: '#/definitions/leagues.LeagueModel'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/response.ValidationError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Create
+      tags:
+      - leagues
+  /v1/seasons/{seasonId}/leagues/{leagueId}:
+    delete:
+      description: Delete an existing league
+      parameters:
+      - description: Season id
+        in: path
+        name: seasonId
+        required: true
+        type: string
+      - description: League id
+        in: path
+        name: leagueId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No content
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/response.ValidationError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Error'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Delete
+      tags:
+      - leagues
+    get:
+      description: Get league by id
+      parameters:
+      - description: Season id
+        in: path
+        name: seasonId
+        required: true
+        type: string
+      - description: League id
+        in: path
+        name: leagueId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/leagues.LeagueModel'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/response.ValidationError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Error'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Get by id
+      tags:
+      - leagues
+    put:
+      consumes:
+      - application/json
+      description: Update an existing league
+      parameters:
+      - description: Season id
+        in: path
+        name: seasonId
+        required: true
+        type: string
+      - description: League id
+        in: path
+        name: leagueId
+        required: true
+        type: string
+      - description: Request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/leagues.UpdateLeagueModel'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/leagues.LeagueModel'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/response.ValidationError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Error'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Update
+      tags:
+      - leagues
+  /v1/seasons/{seasonId}/leagues/{leagueId}/matches:
+    get:
+      description: Get matches
+      parameters:
+      - description: Season id
+        in: path
+        name: seasonId
+        required: true
+        type: string
+      - description: League id
+        in: path
+        name: leagueId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/matches.MatchModel'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/response.ValidationError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Get
+      tags:
+      - matches
+    post:
+      consumes:
+      - application/json
+      description: Create a new match
+      parameters:
+      - description: Season id
+        in: path
+        name: seasonId
+        required: true
+        type: string
+      - description: League id
+        in: path
+        name: leagueId
+        required: true
+        type: string
+      - description: Request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/matches.CreateMatchModel'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: OK
+          schema:
+            $ref: '#/definitions/matches.MatchModel'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/response.ValidationError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Create
+      tags:
+      - matches
+  /v1/seasons/{seasonId}/leagues/{leagueId}/matches/{matchId}:
+    delete:
+      description: Delete an existing league
+      parameters:
+      - description: Season id
+        in: path
+        name: seasonId
+        required: true
+        type: string
+      - description: League id
+        in: path
+        name: leagueId
+        required: true
+        type: string
+      - description: Match id
+        in: path
+        name: matchId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No content
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/response.ValidationError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Error'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Delete
+      tags:
+      - matches
+    get:
+      description: Get match by id
+      parameters:
+      - description: Season id
+        in: path
+        name: seasonId
+        required: true
+        type: string
+      - description: League id
+        in: path
+        name: leagueId
+        required: true
+        type: string
+      - description: Match id
+        in: path
+        name: matchId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/matches.MatchModel'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/response.ValidationError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Error'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Get by id
+      tags:
+      - matches
+    put:
+      consumes:
+      - application/json
+      description: Update an existing match
+      parameters:
+      - description: Season id
+        in: path
+        name: seasonId
+        required: true
+        type: string
+      - description: League id
+        in: path
+        name: leagueId
+        required: true
+        type: string
+      - description: Match id
+        in: path
+        name: matchId
+        required: true
+        type: string
+      - description: Request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/matches.UpdateMatchModel'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/matches.MatchModel'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/response.ValidationError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Error'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Update
+      tags:
+      - matches
+  /v1/seasons/{seasonId}/leagues/{leagueId}/standings:
+    get:
+      description: Get standings
+      parameters:
+      - description: Season id
+        in: path
+        name: seasonId
+        required: true
+        type: string
+      - description: League id
+        in: path
+        name: leagueId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/standings.StandingModel'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/response.ValidationError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Get
+      tags:
+      - standings
 swagger: "2.0"

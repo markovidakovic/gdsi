@@ -7,8 +7,8 @@ CREATE TABLE match(
     player_two_id UUID REFERENCES player (id) NOT NULL,
     winner_id UUID REFERENCES player (id),
     score text,
-    season_id UUID REFERENCES season (id) NOT NULL,
-    league_id UUID REFERENCES league (id) NOT NULL,
+    season_id UUID REFERENCES season (id) ON DELETE CASCADE NOT NULL,
+    league_id UUID REFERENCES league (id) ON DELETE CASCADE NOT NULL,
     created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 

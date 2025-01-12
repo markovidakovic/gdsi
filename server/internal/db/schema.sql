@@ -54,8 +54,7 @@ SET default_table_access_method = heap;
 
 CREATE TABLE public.account (
     id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
-    first_name character varying(250) NOT NULL,
-    last_name character varying(250) NOT NULL,
+    name character varying(250) NOT NULL,
     email character varying(250) NOT NULL,
     dob date NOT NULL,
     gender public.gender NOT NULL,
@@ -129,7 +128,7 @@ CREATE TABLE public.player (
     ranking integer,
     elo integer,
     account_id uuid NOT NULL,
-    current_league uuid,
+    current_league_id uuid,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
@@ -170,6 +169,26 @@ CREATE TABLE public.season (
     title character varying(250) NOT NULL,
     description character varying(500),
     creator_id uuid NOT NULL,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+--
+-- Name: standing; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.standing (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    points integer DEFAULT 0 NOT NULL,
+    matches_played integer DEFAULT 0 NOT NULL,
+    matches_won integer DEFAULT 0 NOT NULL,
+    sets_won integer DEFAULT 0 NOT NULL,
+    sets_lost integer DEFAULT 0 NOT NULL,
+    games_won integer DEFAULT 0 NOT NULL,
+    games_lost integer DEFAULT 0 NOT NULL,
+    season_id uuid NOT NULL,
+    league_id uuid NOT NULL,
+    player_id uuid NOT NULL,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
@@ -255,6 +274,14 @@ ALTER TABLE ONLY public.season
 
 
 --
+-- Name: standing standing_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.standing
+    ADD CONSTRAINT standing_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: court court_creator_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -275,7 +302,7 @@ ALTER TABLE ONLY public.league
 --
 
 ALTER TABLE ONLY public.league
-    ADD CONSTRAINT league_season_id_fkey FOREIGN KEY (season_id) REFERENCES public.season(id);
+    ADD CONSTRAINT league_season_id_fkey FOREIGN KEY (season_id) REFERENCES public.season(id) ON DELETE CASCADE;
 
 
 --
@@ -291,7 +318,7 @@ ALTER TABLE ONLY public.match
 --
 
 ALTER TABLE ONLY public.match
-    ADD CONSTRAINT match_league_id_fkey FOREIGN KEY (league_id) REFERENCES public.league(id);
+    ADD CONSTRAINT match_league_id_fkey FOREIGN KEY (league_id) REFERENCES public.league(id) ON DELETE CASCADE;
 
 
 --
@@ -315,7 +342,7 @@ ALTER TABLE ONLY public.match
 --
 
 ALTER TABLE ONLY public.match
-    ADD CONSTRAINT match_season_id_fkey FOREIGN KEY (season_id) REFERENCES public.season(id);
+    ADD CONSTRAINT match_season_id_fkey FOREIGN KEY (season_id) REFERENCES public.season(id) ON DELETE CASCADE;
 
 
 --
@@ -335,11 +362,11 @@ ALTER TABLE ONLY public.player
 
 
 --
--- Name: player player_current_league_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: player player_current_league_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.player
-    ADD CONSTRAINT player_current_league_fkey FOREIGN KEY (current_league) REFERENCES public.league(id);
+    ADD CONSTRAINT player_current_league_id_fkey FOREIGN KEY (current_league_id) REFERENCES public.league(id);
 
 
 --
@@ -359,6 +386,30 @@ ALTER TABLE ONLY public.season
 
 
 --
+-- Name: standing standing_league_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.standing
+    ADD CONSTRAINT standing_league_id_fkey FOREIGN KEY (league_id) REFERENCES public.league(id) ON DELETE CASCADE;
+
+
+--
+-- Name: standing standing_player_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.standing
+    ADD CONSTRAINT standing_player_id_fkey FOREIGN KEY (player_id) REFERENCES public.player(id) ON DELETE CASCADE;
+
+
+--
+-- Name: standing standing_season_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.standing
+    ADD CONSTRAINT standing_season_id_fkey FOREIGN KEY (season_id) REFERENCES public.season(id) ON DELETE CASCADE;
+
+
+--
 -- PostgreSQL database dump complete
 --
 
@@ -374,4 +425,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20250110182416'),
     ('20250110182427'),
     ('20250110191222'),
-    ('20250110195840');
+    ('20250110195840'),
+    ('20250111202415');

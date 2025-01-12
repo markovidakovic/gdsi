@@ -8,34 +8,26 @@ import (
 	"github.com/go-chi/jwtauth/v5"
 )
 
-// Config holds application-specific configuration values,
-// such as API server port and database connection details.
 type Config struct {
-	ApiPort              string           // Port where the API server runs
-	DbDriver             string           // Database driver
-	DbHost               string           // Host of the database
-	DbName               string           // Name of the database
-	DbPort               string           // Port of the database connection
-	DbUser               string           // Database username
-	DbPassword           string           // Database password
-	DbSslMode            string           // SSL mode for database connection
-	JwtSecret            string           // Json web token secret
-	JwtExpiration        string           // Json web token expiration - default
-	JwtAccessExpiration  string           // Json web token expiration - access token
-	JwtRefreshExpiration string           // Json web token expiration - refresh token
-	JwtAuth              *jwtauth.JWTAuth // go-chi/jwtauth/v5 jwt auth type
+	ApiPort              string
+	DbDriver             string
+	DbHost               string
+	DbName               string
+	DbPort               string
+	DbUser               string
+	DbPassword           string
+	DbSslMode            string
+	JwtSecret            string
+	JwtExpiration        string
+	JwtAccessExpiration  string
+	JwtRefreshExpiration string
+	JwtAuth              *jwtauth.JWTAuth
 }
 
-// Default file path for loading environment variables.
 const defaultEnvFile = ".env"
 
-// requiredEnvVars lists the environment variables that must be set for the
-// application to run correctly. An error is returned if any of these are missing.
 var requiredEnvVars = []string{"DB_DRIVER", "DB_HOST", "DB_NAME", "DB_PORT", "DB_USER", "DB_PASSWORD", "JWT_SECRET", "JWT_EXPIRATION", "JWT_ACCESS_EXPIRATION", "JWT_REFRESH_EXPIRATION"}
 
-// Load reads environment variables from specified env files or defaults to the
-// ".env" file. It returns a pointer to a config struct populated with values or an error
-// if required variables are missing
 func Load(envFiles ...string) (*Config, error) {
 	if len(envFiles) == 0 {
 		envFiles = append(envFiles, defaultEnvFile)

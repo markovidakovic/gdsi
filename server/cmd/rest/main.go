@@ -22,8 +22,7 @@ func main() {
 	srv.MountHandlers()
 
 	go func() {
-		// Run the server in a separate goroutine so that the http.ListenAndServe
-		// function does not block the rest of the execution in the main goroutine
+		// Run server in a separate goroutine
 		log.Printf("api server started on port %s\n", srv.Cfg.ApiPort)
 		err = http.ListenAndServe(":"+srv.Cfg.ApiPort, srv.Rtr)
 		if err != nil {

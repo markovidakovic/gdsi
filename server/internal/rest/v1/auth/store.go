@@ -19,14 +19,13 @@ func (s *store) insertAccount(ctx context.Context, model SignupRequestModel) (Ac
 	var result Account
 
 	query := `
-		INSERT INTO account (first_name, last_name, email, dob, gender, phone_number, password)
+		INSERT INTO account (name, email, dob, gender, phone_number, password)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
-		RETURNING id, first_name, last_name, email, dob, gender, phone_number, password
+		RETURNING id, name, email, dob, gender, phone_number, password
 	`
 
 	err := s.db.QueryRow(ctx, query,
-		model.FirstName,
-		model.LastName,
+		model.Name,
 		model.Email,
 		model.Dob,
 		model.Gender,
@@ -34,8 +33,7 @@ func (s *store) insertAccount(ctx context.Context, model SignupRequestModel) (Ac
 		model.Password,
 	).Scan(
 		&result.Id,
-		&result.FirstName,
-		&result.LastName,
+		&result.Name,
 		&result.Email,
 		&result.Dob,
 		&result.Gender,
@@ -53,15 +51,14 @@ func (s *store) selectAccountByEmail(ctx context.Context, email string) (*Accoun
 	var result Account
 
 	query := `
-		SELECT id, first_name, last_name, email, dob, gender, phone_number, password
+		SELECT id, email, dob, gender, phone_number, password
 		FROM account
 		WHERE email = $1
 	`
 
 	err := s.db.QueryRow(ctx, query, email).Scan(
 		&result.Id,
-		&result.FirstName,
-		&result.LastName,
+		&result.Name,
 		&result.Email,
 		&result.Dob,
 		&result.Gender,

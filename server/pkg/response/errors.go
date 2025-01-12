@@ -49,6 +49,7 @@ func (ver ValidationError) GetMessage() string {
 type InvalidField struct {
 	Field string `json:"field"`
 	Error string `json:"error"`
+	// Location  string `json:"location"` // location would specify where is the invalid param located (path, query, body)
 }
 
 func WriteError(w http.ResponseWriter, err ErrorWriter) {

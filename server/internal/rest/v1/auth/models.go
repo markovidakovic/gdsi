@@ -4,8 +4,7 @@ import "time"
 
 type Account struct {
 	Id          string    `json:"id"`
-	FirstName   string    `json:"first_name"`
-	LastName    string    `json:"last_name"`
+	Name        string    `json:"name"`
 	Email       string    `json:"email"`
 	Dob         time.Time `json:"dob"`
 	Gender      string    `json:"gender"`
@@ -28,8 +27,7 @@ type RefreshToken struct {
 }
 
 type SignupRequestModel struct {
-	FirstName   string `json:"first_name"`
-	LastName    string `json:"last_name"`
+	Name        string `json:"name"`
 	Email       string `json:"email"`
 	Dob         string `json:"dob"`
 	Gender      string `json:"gender"`

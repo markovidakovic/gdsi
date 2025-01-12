@@ -10,16 +10,10 @@ import (
 func validateSignup(model SignupRequestModel) []response.InvalidField {
 	var invFields []response.InvalidField
 
-	if model.FirstName == "" {
+	if model.Name == "" {
 		invFields = append(invFields, response.InvalidField{
-			Field: "first_name",
-			Error: "First name field is required",
-		})
-	}
-	if model.LastName == "" {
-		invFields = append(invFields, response.InvalidField{
-			Field: "last_name",
-			Error: "Last name field is required",
+			Field: "name",
+			Error: "Name field is required",
 		})
 	}
 	if model.Email == "" {
