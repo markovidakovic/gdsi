@@ -1,16 +1,16 @@
 -- migrate:up
-CREATE TABLE match(
-    id UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
-    court_id UUID REFERENCES court (id) NOT NULL,
-    scheduled_at timestamptz NOT NULL,
-    player_one_id UUID REFERENCES player (id) NOT NULL,
-    player_two_id UUID REFERENCES player (id) NOT NULL,
-    winner_id UUID REFERENCES player (id),
+create table match(
+    id uuid primary key not null default  uuid_generate_v4(),
+    court_id uuid not null references court (id),
+    scheduled_at timestamptz not null,
+    player_one_id uuid not null references player (id),
+    player_two_id uuid not null references player (id),
+    winner_id uuid references player (id),
     score text,
-    season_id UUID REFERENCES season (id) ON DELETE CASCADE NOT NULL,
-    league_id UUID REFERENCES league (id) ON DELETE CASCADE NOT NULL,
-    created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+    season_id uuid not null references season (id) on delete cascade,
+    league_id uuid not null references league (id) on delete cascade,
+    created_at timestamptz not null default current_timestamp
 );
 
 -- migrate:down
-DROP TABLE IF EXISTS match;
+drop table if exists match;

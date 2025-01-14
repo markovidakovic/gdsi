@@ -16,92 +16,128 @@ type store struct {
 }
 
 func (s *store) insertAccount(ctx context.Context, model SignupRequestModel) (Account, error) {
-	var result Account
-
-	query := `
-		INSERT INTO account (name, email, dob, gender, phone_number, password)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
-		RETURNING id, name, email, dob, gender, phone_number, password
+	sql1 := `
+		insert into account (name, email, dob, gender, phone_number, password)
+		values ($1, $2, $3, $4, $5, $6)
+		returning id, name, email, dob, gender, phone_number, password
 	`
 
-	err := s.db.QueryRow(ctx, query,
-		model.Name,
-		model.Email,
-		model.Dob,
-		model.Gender,
-		model.PhoneNumber,
-		model.Password,
-	).Scan(
-		&result.Id,
-		&result.Name,
-		&result.Email,
-		&result.Dob,
-		&result.Gender,
-		&result.PhoneNumber,
-		&result.Password,
-	)
+	sql2 := `
+		insert into player (account_id)
+		values ($1)
+	`
+
+	var account Account
+
+	tx, err := s.db.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
-		return result, response.ErrInternal
+		return account, response.ErrInternal
 	}
 
-	return result, nil
+	// tx rollback
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback(ctx)
+		}
+	}()
+
+	err = tx.QueryRow(ctx, sql1, model.Name, model.Email, model.Dob, model.Gender, model.PhoneNumber, model.Password).Scan(&account.Id, &account.Name, &account.Email, &account.Dob, &account.Gender, &account.PhoneNumber, &account.Password)
+	if err != nil {
+		fmt.Printf("err: %v\n", err)
+		return account, response.ErrInternal
+	}
+
+	_, err = tx.Exec(ctx, sql2, account.Id)
+	if err != nil {
+		fmt.Printf("err: %v\n", err)
+		return account, response.ErrInternal
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return account, response.ErrInternal
+	}
+
+	return account, nil
 }
 
-func (s *store) selectAccountByEmail(ctx context.Context, email string) (*Account, error) {
-	var result Account
+func (s *store) readAccountByEmail(ctx context.Context, email string) (*Account, error) {
+	var account Account
 
-	query := `
-		SELECT id, email, dob, gender, phone_number, password
-		FROM account
-		WHERE email = $1
+	sql := `
+		select id, name, email, dob, gender, phone_number, password
+		from account
+		where email = $1
 	`
 
-	err := s.db.QueryRow(ctx, query, email).Scan(
-		&result.Id,
-		&result.Name,
-		&result.Email,
-		&result.Dob,
-		&result.Gender,
-		&result.PhoneNumber,
-		&result.Password,
+	err := s.db.QueryRow(ctx, sql, email).Scan(
+		&account.Id,
+		&account.Name,
+		&account.Email,
+		&account.Dob,
+		&account.Gender,
+		&account.PhoneNumber,
+		&account.Password,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return &result, response.ErrNotFound
+			return nil, response.ErrNotFound
 		}
-		return &result, response.ErrInternal
+		return &account, response.ErrInternal
 	}
 
-	return &result, nil
+	return &account, nil
 }
 
-func (s *store) insertRefreshToken(ctx context.Context, accountId string, token string, issuedAt, expiresAt time.Time) (*RefreshToken, error) {
-	var result RefreshToken
-
-	sql := `
-		INSERT INTO refresh_token (account_id, token_hash, issued_at, expires_at)
-		VALUES ($1, $2, $3, $4)
-		RETURNING id, account_id, token_hash, device_id, ip_address, user_agent, issued_at, expires_at, last_used_at, is_revoked
+func (s *store) insertRefreshToken(ctx context.Context, accountId string, token string, issuedAt, expiresAt time.Time) (inserted bool, err error) {
+	sql1 := `
+		insert into refresh_token (account_id, token_hash, issued_at, expires_at)
+		values ($1, $2, $3, $4)
+		returning id, account_id, token_hash, device_id, ip_address, user_agent, issued_at, expires_at, last_used_at, is_revoked
 	`
 
-	err := s.db.QueryRow(ctx, sql, accountId, token, issuedAt, expiresAt).Scan(
-		&result.Id,
-		&result.AccountId,
-		&result.TokenHash,
-		&result.DeviceId,
-		&result.IpAddress,
-		&result.UserAgent,
-		&result.IssuedAt,
-		&result.ExpiresAt,
-		&result.LastUsedAt,
-		&result.IsRevoked,
-	)
+	sql2 := `
+		update refresh_token
+		set is_revoked = true
+		where account_id = $1 and is_revoked = false
+	`
+
+	tx, err := s.db.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
-		fmt.Printf("err: %v\n", err)
-		return nil, response.ErrInternal
+		err = response.ErrInternal
+		return
 	}
 
-	return &result, nil
+	// tx rollback
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback(ctx)
+		}
+	}()
+
+	// revoke the previous refresh token
+	_, err = tx.Exec(ctx, sql2, accountId)
+	if err != nil {
+		err = response.ErrInternal
+		return
+	}
+
+	// insert the new refresh token
+	_, err = tx.Exec(ctx, sql1, accountId, token, issuedAt, expiresAt)
+	if err != nil {
+		err = response.ErrInternal
+		return
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		err = response.ErrInternal
+		return
+	}
+
+	inserted = true
+
+	return
 }
 
 func newStore(db *db.Conn) *store {

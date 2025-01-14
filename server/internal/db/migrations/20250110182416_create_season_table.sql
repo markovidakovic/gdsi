@@ -1,11 +1,11 @@
 -- migrate:up
-CREATE TABLE season(
-    id UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
-    title varchar(250) NOT NULL,
+create table season(
+    id uuid primary key not null default  uuid_generate_v4(),
+    title varchar(250) not null,
     description varchar(500),
-    creator_id UUID REFERENCES account (id) NOT NULL,
-    created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+    creator_id uuid not null references account (id),
+    created_at timestamptz not null default current_timestamp
 );
 
 -- migrate:down
-DROP TABLE IF EXISTS season;
+drop table if exists season;

@@ -17,14 +17,14 @@ type handler struct {
 // @Summary Signup
 // @Description Signup a new account
 // @Tags auth
-// @Accept application/json
-// @Produce application/json
+// @Accept json
+// @Produce json
 // @Param body body SignupRequestModel true "Request body"
 // @Success 200 {object} auth.TokensResponseModel "OK"
 // @Failure 400 {object} response.ValidationError "Bad request"
 // @Failure 500 {object} response.Error "Internal server error"
 // @Router /v1/auth/signup [post]
-func (h *handler) Signup(w http.ResponseWriter, r *http.Request) {
+func (h *handler) postSignup(w http.ResponseWriter, r *http.Request) {
 	var model SignupRequestModel
 
 	// Decode request body
@@ -32,7 +32,7 @@ func (h *handler) Signup(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		response.WriteError(w, response.Error{
 			Status:  http.StatusBadRequest,
-			Message: "Invalid request body",
+			Message: response.ErrBadRequest.Error(),
 		})
 		return
 	}
@@ -43,7 +43,7 @@ func (h *handler) Signup(w http.ResponseWriter, r *http.Request) {
 		response.WriteError(w, response.ValidationError{
 			Error: response.Error{
 				Status:  http.StatusBadRequest,
-				Message: "Invalid request body",
+				Message: response.ErrBadRequest.Error(),
 			},
 			InvalidFields: validationErr,
 		})
@@ -56,14 +56,14 @@ func (h *handler) Signup(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, response.ErrDuplicateRecord) {
 			response.WriteError(w, response.Error{
 				Status:  http.StatusBadRequest,
-				Message: "Account with email already exists",
+				Message: "account with email already exists",
 			})
 			return
 		}
 
 		response.WriteError(w, response.Error{
 			Status:  http.StatusInternalServerError,
-			Message: "Internal server error",
+			Message: response.ErrInternal.Error(),
 		})
 		return
 	}
@@ -79,14 +79,14 @@ func (h *handler) Signup(w http.ResponseWriter, r *http.Request) {
 // @Summary Login
 // @Description Login and get a new access token
 // @Tags auth
-// @Accept application/json
-// @Produce application/json
+// @Accept json
+// @Produce json
 // @Param body body LoginRequestModel true "Request body"
 // @Success 200 {object} auth.TokensResponseModel "OK"
 // @Failure 400 {object} response.ValidationError "Bad request"
 // @Failure 500 {object} response.Error "Internal server error"
 // @Router /v1/auth/tokens/access [post]
-func (h *handler) Login(w http.ResponseWriter, r *http.Request) {
+func (h *handler) postLogin(w http.ResponseWriter, r *http.Request) {
 	var model LoginRequestModel
 
 	// Decode request body
@@ -94,7 +94,7 @@ func (h *handler) Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		response.WriteError(w, response.Error{
 			Status:  http.StatusBadRequest,
-			Message: "Invalid request body",
+			Message: response.ErrBadRequest.Error(),
 		})
 		return
 	}
@@ -105,7 +105,7 @@ func (h *handler) Login(w http.ResponseWriter, r *http.Request) {
 		response.WriteError(w, response.ValidationError{
 			Error: response.Error{
 				Status:  http.StatusBadRequest,
-				Message: "Invalid request body",
+				Message: response.ErrBadRequest.Error(),
 			},
 			InvalidFields: validationErr,
 		})
@@ -118,14 +118,14 @@ func (h *handler) Login(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, response.ErrNotFound) {
 			response.WriteError(w, response.Error{
 				Status:  http.StatusBadRequest,
-				Message: "Invalid email or password",
+				Message: "invalid email or password",
 			})
 			return
 		}
 
 		response.WriteError(w, response.Error{
 			Status:  http.StatusInternalServerError,
-			Message: "Internal server error",
+			Message: response.ErrInternal.Error(),
 		})
 		return
 	}
@@ -141,22 +141,46 @@ func (h *handler) Login(w http.ResponseWriter, r *http.Request) {
 // @Summary Refresh token
 // @Description Get a refreshed access token
 // @Tags auth
-// @Accept application/json
-// @Produce application/json
+// @Accept json
+// @Produce json
 // @Success 200 {object} auth.TokensResponseModel "OK"
 // @Failure 500 {object} response.Error "Internal server error"
 // @Router /v1/auth/tokens/refresh [get]
-func (h *handler) Refresh(w http.ResponseWriter, r *http.Request) {
+func (h *handler) getRefreshToken(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("refresh token endpoint\n"))
 }
 
-func NewHandler(cfg *config.Config, db *db.Conn) *handler {
+// @SUmmary Forgotten password
+// @Description Get an email with a password reset link
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param body body auth.ForgottenPasswordRequestModel true "Request body"
+// @Success 200 {object} auth.ForgottenPasswordResponseModel "OK"
+// @Failure 400 {object} response.ValidationError "Bad request"
+// @Failure 500 {object} response.Error "Internal server error"
+// @Router /v1/auth/passwords/forgotten [post]
+func (h *handler) postForgottenPassword(w http.ResponseWriter, r *http.Request) {
+	response.WriteSuccess(w, http.StatusOK, "email sent")
+}
+
+// @SUmmary Forgotten password
+// @Description Reset forgotten password
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param body body auth.ChangeForgottenPasswordRequestModel true "Request body"
+// @Success 200 {object} auth.ChangeForgottenPasswordResponseModel "OK"
+// @Failure 400 {object} response.ValidationError "Bad request"
+// @Failure 500 {object} response.Error "Internal server error"
+// @Router /v1/auth/passwords/forgotten [put]
+func (h *handler) putForgottenPassword(w http.ResponseWriter, r *http.Request) {
+	response.WriteSuccess(w, http.StatusOK, "email sent")
+}
+
+func newHandler(cfg *config.Config, db *db.Conn) *handler {
 	h := &handler{}
-
 	store := newStore(db)
-	service := newService(cfg, store)
-
-	h.service = service
-
+	h.service = newService(cfg, store)
 	return h
 }

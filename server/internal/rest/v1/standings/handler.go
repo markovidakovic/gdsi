@@ -9,6 +9,7 @@ import (
 )
 
 type handler struct {
+	service *service
 }
 
 // @Summary Get
@@ -21,12 +22,15 @@ type handler struct {
 // @Failure 400 {object} response.ValidationError "Bad request"
 // @Failure 401 {object} response.Error "Unauthorized"
 // @Failure 500 {object} response.Error "Internal server error"
+// @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId}/standings [get]
-func (h *handler) Get(w http.ResponseWriter, r *http.Request) {
+func (h *handler) getStandings(w http.ResponseWriter, r *http.Request) {
 	response.WriteSuccess(w, http.StatusOK, "get standings")
 }
 
-func NewHandler(cfg *config.Config, db *db.Conn) *handler {
+func newHandler(cfg *config.Config, db *db.Conn) *handler {
 	h := &handler{}
+	store := newStore(db)
+	h.service = newService(cfg, store)
 	return h
 }

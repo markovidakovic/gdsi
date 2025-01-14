@@ -8,7 +8,9 @@ import (
 	"github.com/markovidakovic/gdsi/server/pkg/response"
 )
 
-type handler struct{}
+type handler struct {
+	service *service
+}
 
 // @Summary Create
 // @Description Create a new court
@@ -20,8 +22,9 @@ type handler struct{}
 // @Failure 400 {object} response.ValidationError "Bad request"
 // @Failure 401 {object} response.Error "Unauthorized"
 // @Failure 500 {object} response.Error "Internal server error"
+// @Security BearerAuth
 // @Router /v1/courts [post]
-func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
+func (h *handler) postCourt(w http.ResponseWriter, r *http.Request) {
 	response.WriteSuccess(w, http.StatusCreated, "create court")
 }
 
@@ -33,8 +36,9 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {object} response.ValidationError "Bad request"
 // @Failure 401 {object} response.Error "Unauthorized"
 // @Failure 500 {object} response.Error "Internal server error"
+// @Security BearerAuth
 // @Router /v1/courts [get]
-func (h *handler) Get(w http.ResponseWriter, r *http.Request) {
+func (h *handler) getCourt(w http.ResponseWriter, r *http.Request) {
 	response.WriteSuccess(w, http.StatusOK, "get courts")
 }
 
@@ -48,8 +52,9 @@ func (h *handler) Get(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 {object} response.Error "Unauthorized"
 // @Failure 404 {object} response.Error "Not found"
 // @Failure 500 {object} response.Error "Internal server error"
+// @Security BearerAuth
 // @Router /v1/courts/{courtId} [get]
-func (h *handler) GetById(w http.ResponseWriter, r *http.Request) {
+func (h *handler) getCourtById(w http.ResponseWriter, r *http.Request) {
 	response.WriteSuccess(w, http.StatusOK, "get court by id")
 }
 
@@ -65,8 +70,9 @@ func (h *handler) GetById(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 {object} response.Error "Unauthorized"
 // @Failure 404 {object} response.Error "Not found"
 // @Failure 500 {object} response.Error "Internal server error"
+// @Security BearerAuth
 // @Router /v1/courts/{courtId} [put]
-func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
+func (h *handler) putCourt(w http.ResponseWriter, r *http.Request) {
 	response.WriteSuccess(w, http.StatusOK, "update court")
 }
 
@@ -80,13 +86,15 @@ func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 {object} response.Error "Unauthorized"
 // @Failure 404 {object} response.Error "Not found"
 // @Failure 500 {object} response.Error "Internal server error"
+// @Security BearerAuth
 // @Router /v1/courts/{courtId} [delete]
-func (h *handler) Delete(w http.ResponseWriter, r *http.Request) {
+func (h *handler) deleteCourt(w http.ResponseWriter, r *http.Request) {
 	response.WriteSuccess(w, http.StatusNoContent, "deleted court")
 }
 
-func NewHandler(cfg *config.Config, db *db.Conn) *handler {
+func newHandler(cfg *config.Config, db *db.Conn) *handler {
 	h := &handler{}
-
+	store := newStore(db)
+	h.service = newService(cfg, store)
 	return h
 }

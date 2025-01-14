@@ -1,5 +1,31 @@
 basePath: /
 definitions:
+  auth.ChangeForgottenPasswordRequestModel:
+    properties:
+      code:
+        type: string
+      confirm_password:
+        type: string
+      email:
+        type: string
+      new_password:
+        type: string
+    type: object
+  auth.ChangeForgottenPasswordResponseModel:
+    properties:
+      message:
+        type: string
+    type: object
+  auth.ForgottenPasswordRequestModel:
+    properties:
+      email:
+        type: string
+    type: object
+  auth.ForgottenPasswordResponseModel:
+    properties:
+      message:
+        type: string
+    type: object
   auth.LoginRequestModel:
     properties:
       email:
@@ -128,7 +154,7 @@ definitions:
     properties:
       id:
         type: string
-      name:
+      title:
         type: string
     type: object
   matches.MatchModel:
@@ -165,7 +191,7 @@ definitions:
     properties:
       id:
         type: string
-      name:
+      title:
         type: string
     type: object
   matches.UpdateMatchModel:
@@ -281,8 +307,6 @@ definitions:
         type: integer
       matches_won:
         type: integer
-      name:
-        type: string
       racket:
         type: string
       ranking:
@@ -317,6 +341,10 @@ definitions:
       error:
         type: string
       field:
+        type: string
+      location:
+        description: location specifies where the field is comming from (path, query,
+          body)
         type: string
     type: object
   response.ValidationError:
@@ -419,6 +447,65 @@ info:
   title: Gdsi API
   version: 1.0.0
 paths:
+  /v1/auth/passwords/forgotten:
+    post:
+      consumes:
+      - application/json
+      description: Get an email with a password reset link
+      parameters:
+      - description: Request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/auth.ForgottenPasswordRequestModel'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.ForgottenPasswordResponseModel'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/response.ValidationError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Forgotten password
+      tags:
+      - auth
+    put:
+      consumes:
+      - application/json
+      description: Reset forgotten password
+      parameters:
+      - description: Request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/auth.ChangeForgottenPasswordRequestModel'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.ChangeForgottenPasswordResponseModel'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/response.ValidationError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Forgotten password
+      tags:
+      - auth
   /v1/auth/signup:
     post:
       consumes:
@@ -522,6 +609,8 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/response.Error'
+      security:
+      - BearerAuth: []
       summary: Get
       tags:
       - courts
@@ -555,6 +644,8 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/response.Error'
+      security:
+      - BearerAuth: []
       summary: Create
       tags:
       - courts
@@ -588,6 +679,8 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/response.Error'
+      security:
+      - BearerAuth: []
       summary: Delete
       tags:
       - courts
@@ -622,6 +715,8 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/response.Error'
+      security:
+      - BearerAuth: []
       summary: Get by id
       tags:
       - courts
@@ -664,6 +759,8 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/response.Error'
+      security:
+      - BearerAuth: []
       summary: Update
       tags:
       - courts
@@ -687,6 +784,8 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/response.Error'
+      security:
+      - BearerAuth: []
       summary: Delete
       tags:
       - me
@@ -707,6 +806,8 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/response.Error'
+      security:
+      - BearerAuth: []
       summary: Get
       tags:
       - me
@@ -744,6 +845,8 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/response.Error'
+      security:
+      - BearerAuth: []
       summary: Update
       tags:
       - me
@@ -771,6 +874,8 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/response.Error'
+      security:
+      - BearerAuth: []
       summary: Get
       tags:
       - players
@@ -806,6 +911,8 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/response.Error'
+      security:
+      - BearerAuth: []
       summary: Get by id
       tags:
       - players
@@ -848,6 +955,8 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/response.Error'
+      security:
+      - BearerAuth: []
       summary: Update
       tags:
       - players
@@ -875,6 +984,8 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/response.Error'
+      security:
+      - BearerAuth: []
       summary: Get
       tags:
       - seasons
@@ -908,6 +1019,8 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/response.Error'
+      security:
+      - BearerAuth: []
       summary: Create
       tags:
       - seasons
@@ -941,6 +1054,8 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/response.Error'
+      security:
+      - BearerAuth: []
       summary: Delete
       tags:
       - seasons
@@ -975,6 +1090,8 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/response.Error'
+      security:
+      - BearerAuth: []
       summary: Get by id
       tags:
       - seasons
@@ -1017,6 +1134,8 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/response.Error'
+      security:
+      - BearerAuth: []
       summary: Update
       tags:
       - seasons
@@ -1050,6 +1169,8 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/response.Error'
+      security:
+      - BearerAuth: []
       summary: Get
       tags:
       - leagues
@@ -1088,6 +1209,8 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/response.Error'
+      security:
+      - BearerAuth: []
       summary: Create
       tags:
       - leagues
@@ -1126,6 +1249,8 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/response.Error'
+      security:
+      - BearerAuth: []
       summary: Delete
       tags:
       - leagues
@@ -1165,6 +1290,8 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/response.Error'
+      security:
+      - BearerAuth: []
       summary: Get by id
       tags:
       - leagues
@@ -1212,6 +1339,8 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/response.Error'
+      security:
+      - BearerAuth: []
       summary: Update
       tags:
       - leagues
@@ -1250,6 +1379,8 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/response.Error'
+      security:
+      - BearerAuth: []
       summary: Get
       tags:
       - matches
@@ -1293,6 +1424,8 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/response.Error'
+      security:
+      - BearerAuth: []
       summary: Create
       tags:
       - matches
@@ -1336,6 +1469,8 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/response.Error'
+      security:
+      - BearerAuth: []
       summary: Delete
       tags:
       - matches
@@ -1380,6 +1515,8 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/response.Error'
+      security:
+      - BearerAuth: []
       summary: Get by id
       tags:
       - matches
@@ -1432,6 +1569,8 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/response.Error'
+      security:
+      - BearerAuth: []
       summary: Update
       tags:
       - matches
@@ -1470,7 +1609,15 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/response.Error'
+      security:
+      - BearerAuth: []
       summary: Get
       tags:
       - standings
+securityDefinitions:
+  BearerAuth:
+    description: 'Enter the Bearer token in the format: Bearer token'
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

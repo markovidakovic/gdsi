@@ -1,17 +1,17 @@
 -- migrate:up
-CREATE TABLE refresh_token(
-    id UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
-    account_id UUID REFERENCES account (id) ON DELETE CASCADE NOT NULL,
-    token_hash text NOT NULL,
+create table refresh_token(
+    id uuid primary key not null default  uuid_generate_v4(),
+    account_id uuid not null references account (id) on delete cascade,
+    token_hash text not null,
     device_id text,
     ip_address varchar(250),
     user_agent text,
-    issued_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    expires_at timestamptz NOT NULL,
+    issued_at timestamptz not null default current_timestamp,
+    expires_at timestamptz not null,
     last_used_at timestamptz,
-    is_revoked boolean NOT NULL DEFAULT false
-    -- CONSTRAINT unique_token_per_device UNIQUE (account_id, device_id)
+    is_revoked boolean not null default false
+    -- constraint unique_token_per_device unique (account_id, device_id)
 );
 
 -- migrate:down
-DROP TABLE IF EXISTS refresh_token;
+drop table if exists refresh_token;

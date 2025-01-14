@@ -9,39 +9,33 @@ import (
 	"github.com/markovidakovic/gdsi/server/internal/db"
 	"github.com/markovidakovic/gdsi/server/internal/rest/v1/auth"
 	"github.com/markovidakovic/gdsi/server/internal/rest/v1/courts"
+	"github.com/markovidakovic/gdsi/server/internal/rest/v1/leagues"
+	"github.com/markovidakovic/gdsi/server/internal/rest/v1/matches"
+	"github.com/markovidakovic/gdsi/server/internal/rest/v1/me"
+	"github.com/markovidakovic/gdsi/server/internal/rest/v1/players"
 	"github.com/markovidakovic/gdsi/server/internal/rest/v1/seasons"
+	"github.com/markovidakovic/gdsi/server/internal/rest/v1/standings"
 )
 
-func MountHandlers(cfg *config.Config, db *db.Conn, rtr *chi.Mux) {
-	authHandler := auth.NewHandler(cfg, db)
-	courtsHandler := courts.NewHandler(cfg, db)
-	seasonsHandler := seasons.NewHandler(cfg, db)
-
-	rtr.Route("/v1", func(r chi.Router) {
-		// Public endpoints
+func MountHandlers(cfg *config.Config, db *db.Conn) func(r chi.Router) {
+	return func(r chi.Router) {
 		r.Group(func(r chi.Router) {
-			r.Route("/auth", func(r chi.Router) {
-				r.Post("/signup", authHandler.Signup)
-				r.Post("/tokens/access", authHandler.Login)
-			})
+			r.Route("/auth", auth.Route(cfg, db))
 		})
-
-		// Private endpoints
 		r.Group(func(r chi.Router) {
-			//  Seek, verify and validate JWT tokens
+			// seek, verify and validate jwt
 			r.Use(jwtauth.Verifier(cfg.JwtAuth))
 			r.Use(jwtauth.Authenticator(cfg.JwtAuth))
 
-			r.Route("/courts", func(r chi.Router) {
-				r.Get("/", courtsHandler.Get)
-			})
-
-			r.Route("/seasons", func(r chi.Router) {
-				r.Post("/", seasonsHandler.Create)
-			})
-
+			r.Route("/courts", courts.Route(cfg, db))
+			r.Route("/me", me.Route(cfg, db))
+			r.Route("/players", players.Route(cfg, db))
+			r.Route("/seasons", seasons.Route(cfg, db))
+			r.Route("/seasons/{seasonId}/leagues", leagues.Route(cfg, db))
+			r.Route("/seasons/{seasonId}/leagues/{leagueId}/matches", matches.Route(cfg, db))
+			r.Route("/seasons/{seasonId}/leagues/{leagueId}/standings", standings.Route(cfg, db))
 		})
-	})
 
-	log.Println("v1 endpoints mounted")
+		log.Println("v1 endpoints mounted")
+	}
 }

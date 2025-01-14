@@ -7,9 +7,9 @@ import (
 )
 
 var (
-	ErrNotFound     = errors.New("resource not found")
-	ErrInvalidInput = errors.New("invalid input")
-	// ErrBadRequest   = errors.New("bad request")
+	ErrNotFound        = errors.New("resource not found")
+	ErrInvalidInput    = errors.New("invalid input")
+	ErrBadRequest      = errors.New("bad request")
 	ErrDuplicateRecord = errors.New("resource already exists")
 	ErrUnauthorized    = errors.New("access unathorized")
 	ErrInternal        = errors.New("internal server error")
@@ -24,6 +24,10 @@ type Error struct {
 	Status  int    `json:"status"`
 	Message string `json:"message"`
 }
+
+// func (er Error) Error() string {
+// 	return er.Message
+// }
 
 func (er Error) GetStatus() int {
 	return er.Status
@@ -47,9 +51,9 @@ func (ver ValidationError) GetMessage() string {
 }
 
 type InvalidField struct {
-	Field string `json:"field"`
-	Error string `json:"error"`
-	// Location  string `json:"location"` // location would specify where is the invalid param located (path, query, body)
+	Field    string `json:"field"`
+	Error    string `json:"error"`
+	Location string `json:"location"` // location specifies where the field is comming from (path, query, body)
 }
 
 func WriteError(w http.ResponseWriter, err ErrorWriter) {

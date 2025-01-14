@@ -4,7 +4,6 @@ import "time"
 
 type Player struct {
 	Id              string    `json:"id"`
-	Name            string    `json:"name"`
 	Height          *float64  `json:"height"`
 	Weight          *float64  `json:"weight"`
 	Handedness      *string   `json:"handedness"`
@@ -34,7 +33,6 @@ type CurrentLeagueModel struct {
 
 type PlayerModel struct {
 	Id              string              `json:"id"`
-	Name            string              `json:"name"`
 	Height          *float64            `json:"height"`
 	Weight          *float64            `json:"weight"`
 	Handedness      *string             `json:"handedness"`

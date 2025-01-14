@@ -9,6 +9,7 @@ import (
 )
 
 type handler struct {
+	service *service
 }
 
 // @Summary Create
@@ -22,8 +23,9 @@ type handler struct {
 // @Failure 400 {object} response.ValidationError "Bad request"
 // @Failure 401 {object} response.Error "Unauthorized"
 // @Failure 500 {object} response.Error "Internal server error"
+// @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues [post]
-func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
+func (h *handler) postLeague(w http.ResponseWriter, r *http.Request) {
 	response.WriteSuccess(w, http.StatusCreated, "create league")
 }
 
@@ -36,8 +38,9 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {object} response.ValidationError "Bad request"
 // @Failure 401 {object} response.Error "Unauthorized"
 // @Failure 500 {object} response.Error "Internal server error"
+// @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues [get]
-func (h *handler) Get(w http.ResponseWriter, r *http.Request) {
+func (h *handler) getLeagues(w http.ResponseWriter, r *http.Request) {
 	response.WriteSuccess(w, http.StatusOK, "get leagues")
 }
 
@@ -52,8 +55,9 @@ func (h *handler) Get(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 {object} response.Error "Unauthorized"
 // @Failure 404 {object} response.Error "Not found"
 // @Failure 500 {object} response.Error "Internal server error"
+// @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId} [get]
-func (h *handler) GetById(w http.ResponseWriter, r *http.Request) {
+func (h *handler) getLeague(w http.ResponseWriter, r *http.Request) {
 	response.WriteSuccess(w, http.StatusOK, "get league by id")
 }
 
@@ -70,8 +74,9 @@ func (h *handler) GetById(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 {object} response.Error "Unauthorized"
 // @Failure 404 {object} response.Error "Not found"
 // @Failure 500 {object} response.Error "Internal server error"
+// @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId} [put]
-func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
+func (h *handler) putLeague(w http.ResponseWriter, r *http.Request) {
 	response.WriteSuccess(w, http.StatusOK, "update league")
 }
 
@@ -86,12 +91,15 @@ func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 {object} response.Error "Unauthorized"
 // @Failure 404 {object} response.Error "Not found"
 // @Failure 500 {object} response.Error "Internal server error"
+// @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId} [delete]
-func (h *handler) Delete(w http.ResponseWriter, r *http.Request) {
+func (h *handler) deleteLeague(w http.ResponseWriter, r *http.Request) {
 	response.WriteSuccess(w, http.StatusNoContent, "deleted league")
 }
 
-func NewHandler(cfg *config.Config, db *db.Conn) *handler {
+func newHandler(cfg *config.Config, db *db.Conn) *handler {
 	h := &handler{}
+	store := newStore(db)
+	h.service = newService(cfg, store)
 	return h
 }

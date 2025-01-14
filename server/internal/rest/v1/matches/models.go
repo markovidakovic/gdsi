@@ -26,13 +26,13 @@ type PlayerModel struct {
 }
 
 type SeasonModel struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
+	Id    string `json:"id"`
+	Title string `json:"title"`
 }
 
 type LeagueModel struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
+	Id    string `json:"id"`
+	Title string `json:"title"`
 }
 
 type MatchModel struct {

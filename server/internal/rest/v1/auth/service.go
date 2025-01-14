@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -27,7 +28,7 @@ func (s *service) signup(ctx context.Context, model SignupRequestModel) (string,
 	model.Password = string(pwdBytes)
 
 	// Check if email exists
-	existingAccount, err := s.store.selectAccountByEmail(ctx, model.Email)
+	existingAccount, err := s.store.readAccountByEmail(ctx, model.Email)
 	if err != nil {
 		if !errors.Is(err, response.ErrNotFound) {
 			return "", "", err
@@ -37,7 +38,7 @@ func (s *service) signup(ctx context.Context, model SignupRequestModel) (string,
 		return "", "", response.ErrDuplicateRecord
 	}
 
-	// Call the store
+	// Insert account
 	newAccount, err := s.store.insertAccount(ctx, model)
 	if err != nil {
 		return "", "", err
@@ -54,7 +55,8 @@ func (s *service) signup(ctx context.Context, model SignupRequestModel) (string,
 
 func (s *service) login(ctx context.Context, model LoginRequestModel) (string, string, error) {
 	// Call the store
-	account, err := s.store.selectAccountByEmail(ctx, model.Email)
+	account, err := s.store.readAccountByEmail(ctx, model.Email)
+	fmt.Printf("err: %v\n", err)
 	if err != nil {
 		return "", "", err
 	}
@@ -67,6 +69,7 @@ func (s *service) login(ctx context.Context, model LoginRequestModel) (string, s
 
 	// Generate jwt
 	accessToken, refreshToken, err := s.getAuthTokens(ctx, account.Id)
+	fmt.Printf("err: %v\n", err)
 	if err != nil {
 		return "", "", response.ErrInternal
 	}
@@ -78,7 +81,7 @@ func (s *service) getAuthTokens(ctx context.Context, accountId string) (access, 
 	var iss string = "gdsi api"
 	var aud string = "gdsi app"
 
-	// Parse config vars
+	// parse config vars
 	durationAccess, err := time.ParseDuration(s.cfg.JwtAccessExpiration)
 	if err != nil {
 		return
@@ -90,11 +93,11 @@ func (s *service) getAuthTokens(ctx context.Context, accountId string) (access, 
 
 	now := time.Now()
 
-	// Expiration dates for tokens
+	// expiration dates for tokens
 	var expAccess time.Time = now.Add(durationAccess)
 	var expRefresh time.Time = now.Add(durationRefresh)
 
-	// Jwt claims
+	// jwt claims
 	var claims = map[string]interface{}{
 		"iss": iss,
 		"sub": accountId,
@@ -104,26 +107,26 @@ func (s *service) getAuthTokens(ctx context.Context, accountId string) (access, 
 		"iat": now.Unix(),
 	}
 
-	// Create access jwt
+	// create access jwt
 	_, access, err = s.cfg.JwtAuth.Encode(claims)
 	if err != nil {
 		return
 	}
 
-	// Change the exp value
+	// change the exp value
 	claims["exp"] = expRefresh.Unix()
 
-	// Create refresh token
+	// create refresh token
 	_, refresh, err = s.cfg.JwtAuth.Encode(claims)
 	if err != nil {
 		return
 	}
 
-	// Hash the refresh token for storage
+	// hash the refresh token for storage
 	hash := sha256.Sum256([]byte(refresh))
 	refreshHashed := hex.EncodeToString(hash[:])
 
-	// Call the store
+	// call the store
 	_, err = s.store.insertRefreshToken(ctx, accountId, refreshHashed, now, expRefresh)
 	if err != nil {
 		return

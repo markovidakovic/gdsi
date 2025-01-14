@@ -1,18 +1,18 @@
 -- migrate:up
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE TYPE gender AS ENUM ('male', 'female');
+create extension if not exists "uuid-ossp";
+create type gender as enum ('male', 'female');
 
-CREATE TABLE account (
-    id UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
-    name varchar(250) NOT NULL,
-    email varchar(250) UNIQUE NOT NULL,
-    dob date NOT NULL, 
-    gender gender NOT NULL,
-    phone_number varchar(250) NOT NULL,
-    password text NOT NULL,
-    created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+create table account (
+    id uuid primary key not null default uuid_generate_v4(),
+    name varchar(250) not null,
+    email varchar(250) not null unique,
+    dob date not null, 
+    gender gender not null,
+    phone_number varchar(250) not null,
+    password text not null,
+    created_at timestamptz not null default current_timestamp
 );
 
 -- migrate:down
-DROP TABLE IF EXISTS account;
-DROP TYPE IF EXISTS gender;
+drop table if exists account;
+drop type if exists gender;

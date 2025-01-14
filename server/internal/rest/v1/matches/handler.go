@@ -9,6 +9,7 @@ import (
 )
 
 type handler struct {
+	service *service
 }
 
 // @Summary Create
@@ -23,8 +24,9 @@ type handler struct {
 // @Failure 400 {object} response.ValidationError "Bad request"
 // @Failure 401 {object} response.Error "Unauthorized"
 // @Failure 500 {object} response.Error "Internal server error"
+// @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId}/matches [post]
-func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
+func (h *handler) postMatch(w http.ResponseWriter, r *http.Request) {
 	response.WriteSuccess(w, http.StatusCreated, "create match")
 }
 
@@ -38,8 +40,9 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {object} response.ValidationError "Bad request"
 // @Failure 401 {object} response.Error "Unauthorized"
 // @Failure 500 {object} response.Error "Internal server error"
+// @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId}/matches [get]
-func (h *handler) Get(w http.ResponseWriter, r *http.Request) {
+func (h *handler) getMatches(w http.ResponseWriter, r *http.Request) {
 	response.WriteSuccess(w, http.StatusOK, "get matches")
 }
 
@@ -55,8 +58,9 @@ func (h *handler) Get(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 {object} response.Error "Unauthorized"
 // @Failure 404 {object} response.Error "Not found"
 // @Failure 500 {object} response.Error "Internal server error"
+// @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId}/matches/{matchId} [get]
-func (h *handler) GetById(w http.ResponseWriter, r *http.Request) {
+func (h *handler) getMatch(w http.ResponseWriter, r *http.Request) {
 	response.WriteSuccess(w, http.StatusOK, "get match by id")
 }
 
@@ -74,8 +78,9 @@ func (h *handler) GetById(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 {object} response.Error "Unauthorized"
 // @Failure 404 {object} response.Error "Not found"
 // @Failure 500 {object} response.Error "Internal server error"
+// @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId}/matches/{matchId} [put]
-func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
+func (h *handler) putMatch(w http.ResponseWriter, r *http.Request) {
 	response.WriteSuccess(w, http.StatusOK, "update match")
 }
 
@@ -91,12 +96,15 @@ func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 {object} response.Error "Unauthorized"
 // @Failure 404 {object} response.Error "Not found"
 // @Failure 500 {object} response.Error "Internal server error"
+// @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId}/matches/{matchId} [delete]
-func (h *handler) Delete(w http.ResponseWriter, r *http.Request) {
+func (h *handler) deleteMatch(w http.ResponseWriter, r *http.Request) {
 	response.WriteSuccess(w, http.StatusNoContent, "deleted match")
 }
 
-func NewHandler(cfg *config.Config, db *db.Conn) *handler {
+func newHandler(cfg *config.Config, db *db.Conn) *handler {
 	h := &handler{}
+	store := newStore(db)
+	h.service = newService(cfg, store)
 	return h
 }

@@ -9,6 +9,7 @@ import (
 )
 
 type handler struct {
+	service *service
 }
 
 // @Summary Get
@@ -18,8 +19,9 @@ type handler struct {
 // @Success 200 {object} me.MeModel "OK"
 // @Failure 401 {object} response.Error "Unauthorized"
 // @Failure 500 {object} response.Error "Internal server error"
+// @Security BearerAuth
 // @Router /v1/me [get]
-func (h *handler) GetMe(w http.ResponseWriter, r *http.Request) {
+func (h *handler) getMe(w http.ResponseWriter, r *http.Request) {
 	response.WriteSuccess(w, http.StatusOK, "me")
 }
 
@@ -34,8 +36,9 @@ func (h *handler) GetMe(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 {object} response.Error "Unauthorized"
 // @Failure 404 {object} response.Error "Not found"
 // @Failure 500 {object} response.Error "Internal server error"
+// @Security BearerAuth
 // @Router /v1/me [put]
-func (h *handler) UpdateMe(w http.ResponseWriter, r *http.Request) {
+func (h *handler) putMe(w http.ResponseWriter, r *http.Request) {
 	response.WriteSuccess(w, http.StatusOK, "update me")
 }
 
@@ -47,13 +50,15 @@ func (h *handler) UpdateMe(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 {object} response.Error "Unauthorized"
 // @Failure 404 {object} response.Error "Not found"
 // @Failure 500 {object} response.Error "Internal server error"
+// @Security BearerAuth
 // @Router /v1/me [delete]
-func (h *handler) DeleteMe(w http.ResponseWriter, r *http.Request) {
+func (h *handler) deleteMe(w http.ResponseWriter, r *http.Request) {
 	response.WriteSuccess(w, http.StatusNoContent, "deleted me")
 }
 
-func NewHandler(cfg *config.Config, db *db.Conn) *handler {
+func newHandler(cfg *config.Config, db *db.Conn) *handler {
 	h := &handler{}
-
+	store := newStore(db)
+	h.service = newService(cfg, store)
 	return h
 }

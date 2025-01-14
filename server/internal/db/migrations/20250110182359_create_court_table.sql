@@ -1,10 +1,10 @@
 -- migrate:up
-CREATE TABLE court(
-    id UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
-    name varchar(250) UNIQUE NOT NULL,
-    creator_id UUID REFERENCES account (id) NOT NULL,
-    created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+create table court(
+    id uuid primary key not null default uuid_generate_v4(),
+    name varchar(250) not null unique,
+    creator_id uuid not null references account (id),
+    created_at timestamptz not null default current_timestamp
 );
 
 -- migrate:down
-DROP TABLE IF EXISTS court;
+drop table if exists court;

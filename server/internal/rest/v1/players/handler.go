@@ -9,6 +9,7 @@ import (
 )
 
 type handler struct {
+	service *service
 }
 
 // @Summary Get
@@ -19,8 +20,9 @@ type handler struct {
 // @Failure 400 {object} response.ValidationError "Bad request"
 // @Failure 401 {object} response.Error "Unauthorized"
 // @Failure 500 {object} response.Error "Internal server error"
+// @Security BearerAuth
 // @Router /v1/players [get]
-func (h *handler) GetPlayers(w http.ResponseWriter, r *http.Request) {
+func (h *handler) getPlayers(w http.ResponseWriter, r *http.Request) {
 	response.WriteSuccess(w, http.StatusOK, "get players")
 }
 
@@ -34,8 +36,9 @@ func (h *handler) GetPlayers(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 {object} response.Error "Unauthorized"
 // @Failure 404 {object} response.Error "Not found"
 // @Failure 500 {object} response.Error "Internal server error"
+// @Security BearerAuth
 // @Router /v1/players/{playerId} [get]
-func (h *handler) GetPlayerById(w http.ResponseWriter, r *http.Request) {
+func (h *handler) getPlayer(w http.ResponseWriter, r *http.Request) {
 	response.WriteSuccess(w, http.StatusOK, "get player by id")
 }
 
@@ -51,12 +54,15 @@ func (h *handler) GetPlayerById(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 {object} response.Error "Unauthorized"
 // @Failure 404 {object} response.Error "Not found"
 // @Failure 500 {object} response.Error "Internal server error"
+// @Security BearerAuth
 // @Router /v1/players/{playerId} [put]
-func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
+func (h *handler) putPlayer(w http.ResponseWriter, r *http.Request) {
 	response.WriteSuccess(w, http.StatusOK, "update player")
 }
 
-func NewHandler(cfg *config.Config, db *db.Conn) *handler {
+func newHandler(cfg *config.Config, db *db.Conn) *handler {
 	h := &handler{}
+	store := newStore(db)
+	h.service = newService(cfg, store)
 	return h
 }

@@ -14,7 +14,6 @@ import (
 )
 
 func main() {
-	// Create a new rest server
 	srv, err := rest.NewServer()
 	if err != nil {
 		log.Fatalf("api server failed to start -> %v", err)

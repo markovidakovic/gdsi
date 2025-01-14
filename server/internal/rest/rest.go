@@ -39,6 +39,11 @@ func (s *server) Shutdown(ctx context.Context) error {
 
 // @host localhost:8080
 // @BasePath /
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Enter the Bearer token in the format: Bearer token
 func (s *server) MountHandlers() {
 	// Middleware
 	s.Rtr.Use(cors.Handler(cors.Options{
@@ -53,8 +58,8 @@ func (s *server) MountHandlers() {
 	s.Rtr.Use(middleware.StripSlashes)
 	s.Rtr.Use(middleware.Heartbeat("/"))
 
-	// Mount all application handlers
-	v1.MountHandlers(s.Cfg, s.Db, s.Rtr)
+	// mount v1 api endpoints
+	s.Rtr.Route("/v1", v1.MountHandlers(s.Cfg, s.Db))
 
 	s.Rtr.Get("/swagger/*", httpSwagger.WrapHandler)
 }

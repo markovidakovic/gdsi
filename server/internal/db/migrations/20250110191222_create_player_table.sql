@@ -1,26 +1,26 @@
 -- migrate:up
-CREATE TYPE handedness AS ENUM ('right', 'left', 'ambidextrous');
+create type handedness as enum ('right', 'left', 'ambidextrous');
 
-CREATE TABLE player(
-    id UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
+create table player(
+    id uuid primary key not null default  uuid_generate_v4(),
     height numeric,
     weight numeric,
     handedness handedness,
     racket varchar(250),
-    matches_expected integer NOT NULL DEFAULT 0,
-    matches_played integer NOT NULL DEFAULT 0,
-    matches_won integer NOT NULL DEFAULT 0,
-    matches_scheduled integer NOT NULL DEFAULT 0,
-    seasons_played integer NOT NULL DEFAULT 0,
-    winning_ratio double precision NOT NULL DEFAULT 0.0,
-    activity_ratio double precision NOT NULL DEFAULT 0.0,
+    matches_expected integer not null default 0,
+    matches_played integer not null default 0,
+    matches_won integer not null default 0,
+    matches_scheduled integer not null default 0,
+    seasons_played integer not null default 0,
+    winning_ratio double precision not null default 0.0,
+    activity_ratio double precision not null default 0.0,
     ranking integer,
     elo integer,
-    account_id UUID REFERENCES account (id) ON DELETE CASCADE NOT NULL,
-    current_league_id UUID REFERENCES league (id),
-    created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+    account_id uuid not null references account (id) on delete cascade,
+    current_league_id uuid references league (id),
+    created_at timestamptz not null default current_timestamp
 );
 
 -- migrate:down
-DROP TABLE IF EXISTS player;
-DROP TYPE IF EXISTS handedness;
+drop table if exists player;
+drop type if exists handedness;

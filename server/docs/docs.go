@@ -15,6 +15,96 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/v1/auth/passwords/forgotten": {
+            "put": {
+                "description": "Reset forgotten password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Forgotten password",
+                "parameters": [
+                    {
+                        "description": "Request body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/auth.ChangeForgottenPasswordRequestModel"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/auth.ChangeForgottenPasswordResponseModel"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ValidationError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Get an email with a password reset link",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Forgotten password",
+                "parameters": [
+                    {
+                        "description": "Request body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/auth.ForgottenPasswordRequestModel"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/auth.ForgottenPasswordResponseModel"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ValidationError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/auth/signup": {
             "post": {
                 "description": "Signup a new account",
@@ -138,6 +228,11 @@ const docTemplate = `{
         },
         "/v1/courts": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get courts",
                 "produces": [
                     "application/json"
@@ -177,6 +272,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new court",
                 "consumes": [
                     "application/json"
@@ -229,6 +329,11 @@ const docTemplate = `{
         },
         "/v1/courts/{courtId}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get court by id",
                 "produces": [
                     "application/json"
@@ -280,6 +385,11 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Update an existing court",
                 "consumes": [
                     "application/json"
@@ -343,6 +453,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Delete an existing court",
                 "produces": [
                     "application/json"
@@ -393,6 +508,11 @@ const docTemplate = `{
         },
         "/v1/me": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get my account and player profile data",
                 "produces": [
                     "application/json"
@@ -423,6 +543,11 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Update my account and player profile data",
                 "consumes": [
                     "application/json"
@@ -479,6 +604,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Delete my account and player profile data",
                 "produces": [
                     "application/json"
@@ -514,6 +644,11 @@ const docTemplate = `{
         },
         "/v1/players": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get players",
                 "produces": [
                     "application/json"
@@ -555,6 +690,11 @@ const docTemplate = `{
         },
         "/v1/players/{playerId}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get player by id",
                 "produces": [
                     "application/json"
@@ -606,6 +746,11 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Update an existing player",
                 "consumes": [
                     "application/json"
@@ -671,6 +816,11 @@ const docTemplate = `{
         },
         "/v1/seasons": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get seasons",
                 "produces": [
                     "application/json"
@@ -710,6 +860,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new season",
                 "consumes": [
                     "application/json"
@@ -762,6 +917,11 @@ const docTemplate = `{
         },
         "/v1/seasons/{seasonId}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get season by id",
                 "produces": [
                     "application/json"
@@ -813,6 +973,11 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Update an existing season",
                 "consumes": [
                     "application/json"
@@ -876,6 +1041,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Delete an existing season",
                 "produces": [
                     "application/json"
@@ -926,6 +1096,11 @@ const docTemplate = `{
         },
         "/v1/seasons/{seasonId}/leagues": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get leagues",
                 "produces": [
                     "application/json"
@@ -974,6 +1149,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new league",
                 "consumes": [
                     "application/json"
@@ -1033,6 +1213,11 @@ const docTemplate = `{
         },
         "/v1/seasons/{seasonId}/leagues/{leagueId}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get league by id",
                 "produces": [
                     "application/json"
@@ -1091,6 +1276,11 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Update an existing league",
                 "consumes": [
                     "application/json"
@@ -1161,6 +1351,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Delete an existing league",
                 "produces": [
                     "application/json"
@@ -1218,6 +1413,11 @@ const docTemplate = `{
         },
         "/v1/seasons/{seasonId}/leagues/{leagueId}/matches": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get matches",
                 "produces": [
                     "application/json"
@@ -1273,6 +1473,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new match",
                 "consumes": [
                     "application/json"
@@ -1339,6 +1544,11 @@ const docTemplate = `{
         },
         "/v1/seasons/{seasonId}/leagues/{leagueId}/matches/{matchId}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get match by id",
                 "produces": [
                     "application/json"
@@ -1404,6 +1614,11 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Update an existing match",
                 "consumes": [
                     "application/json"
@@ -1481,6 +1696,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Delete an existing league",
                 "produces": [
                     "application/json"
@@ -1545,6 +1765,11 @@ const docTemplate = `{
         },
         "/v1/seasons/{seasonId}/leagues/{leagueId}/standings": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get standings",
                 "produces": [
                     "application/json"
@@ -1602,6 +1827,47 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "auth.ChangeForgottenPasswordRequestModel": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "confirm_password": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "new_password": {
+                    "type": "string"
+                }
+            }
+        },
+        "auth.ChangeForgottenPasswordResponseModel": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "auth.ForgottenPasswordRequestModel": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                }
+            }
+        },
+        "auth.ForgottenPasswordResponseModel": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "auth.LoginRequestModel": {
             "type": "object",
             "properties": {
@@ -1801,7 +2067,7 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
-                "name": {
+                "title": {
                     "type": "string"
                 }
             }
@@ -1858,7 +2124,7 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
-                "name": {
+                "title": {
                     "type": "string"
                 }
             }
@@ -2036,9 +2302,6 @@ const docTemplate = `{
                 "matches_won": {
                     "type": "integer"
                 },
-                "name": {
-                    "type": "string"
-                },
                 "racket": {
                     "type": "string"
                 },
@@ -2091,6 +2354,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "field": {
+                    "type": "string"
+                },
+                "location": {
+                    "description": "location specifies where the field is comming from (path, query, body)",
                     "type": "string"
                 }
             }
@@ -2238,6 +2505,14 @@ const docTemplate = `{
                     "type": "integer"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Enter the Bearer token in the format: Bearer token",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`
