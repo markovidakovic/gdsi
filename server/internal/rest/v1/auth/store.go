@@ -83,7 +83,7 @@ func (s *store) readAccountByEmail(ctx context.Context, email string) (*Account,
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, response.ErrNotFound
 		}
-		return &account, response.ErrInternal
+		return &account, err
 	}
 
 	return &account, nil
@@ -104,7 +104,6 @@ func (s *store) insertRefreshToken(ctx context.Context, accountId string, token 
 
 	tx, err := s.db.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
-		err = response.ErrInternal
 		return
 	}
 
@@ -118,20 +117,17 @@ func (s *store) insertRefreshToken(ctx context.Context, accountId string, token 
 	// revoke the previous refresh token
 	_, err = tx.Exec(ctx, sql2, accountId)
 	if err != nil {
-		err = response.ErrInternal
 		return
 	}
 
 	// insert the new refresh token
 	_, err = tx.Exec(ctx, sql1, accountId, token, issuedAt, expiresAt)
 	if err != nil {
-		err = response.ErrInternal
 		return
 	}
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		err = response.ErrInternal
 		return
 	}
 

@@ -22,49 +22,34 @@ type handler struct {
 // @Param body body SignupRequestModel true "Request body"
 // @Success 200 {object} auth.TokensResponseModel "OK"
 // @Failure 400 {object} response.ValidationError "Bad request"
-// @Failure 500 {object} response.Error "Internal server error"
+// @Failure 500 {object} response.BaseError "Internal server error"
 // @Router /v1/auth/signup [post]
 func (h *handler) postSignup(w http.ResponseWriter, r *http.Request) {
-	var model SignupRequestModel
+	var input SignupRequestModel
 
-	// Decode request body
-	err := json.NewDecoder(r.Body).Decode(&model)
+	// decode request body
+	err := json.NewDecoder(r.Body).Decode(&input)
 	if err != nil {
-		response.WriteError(w, response.Error{
-			Status:  http.StatusBadRequest,
-			Message: response.ErrBadRequest.Error(),
-		})
+		response.WriteError(w, response.NewBadRequestError("invalid request body"))
 		return
 	}
 
-	// Validate input
-	validationErr := validateSignup(model)
-	if validationErr != nil {
-		response.WriteError(w, response.ValidationError{
-			Error: response.Error{
-				Status:  http.StatusBadRequest,
-				Message: response.ErrBadRequest.Error(),
-			},
-			InvalidFields: validationErr,
-		})
+	// validation
+	valErr := validateSignup(input)
+	if valErr != nil {
+		response.WriteError(w, response.NewValidationError("validation failed", valErr))
 		return
 	}
 
-	// Call the service
-	accessToken, refreshToken, err := h.service.signup(r.Context(), model)
+	// call the service
+	accessToken, refreshToken, err := h.service.signup(r.Context(), input)
 	if err != nil {
-		if errors.Is(err, response.ErrDuplicateRecord) {
-			response.WriteError(w, response.Error{
-				Status:  http.StatusBadRequest,
-				Message: "account with email already exists",
-			})
-			return
+		switch {
+		case errors.Is(err, response.ErrDuplicateRecord):
+			response.WriteError(w, response.NewBadRequestError("account with email already exists"))
+		default:
+			response.WriteError(w, response.NewInternalError(err))
 		}
-
-		response.WriteError(w, response.Error{
-			Status:  http.StatusInternalServerError,
-			Message: response.ErrInternal.Error(),
-		})
 		return
 	}
 
@@ -84,49 +69,34 @@ func (h *handler) postSignup(w http.ResponseWriter, r *http.Request) {
 // @Param body body LoginRequestModel true "Request body"
 // @Success 200 {object} auth.TokensResponseModel "OK"
 // @Failure 400 {object} response.ValidationError "Bad request"
-// @Failure 500 {object} response.Error "Internal server error"
+// @Failure 500 {object} response.BaseError "Internal server error"
 // @Router /v1/auth/tokens/access [post]
 func (h *handler) postLogin(w http.ResponseWriter, r *http.Request) {
-	var model LoginRequestModel
+	var input LoginRequestModel
 
-	// Decode request body
-	err := json.NewDecoder(r.Body).Decode(&model)
+	// decode request body
+	err := json.NewDecoder(r.Body).Decode(&input)
 	if err != nil {
-		response.WriteError(w, response.Error{
-			Status:  http.StatusBadRequest,
-			Message: response.ErrBadRequest.Error(),
-		})
+		response.WriteError(w, response.NewBadRequestError("invalid request body"))
 		return
 	}
 
-	// Validate input
-	validationErr := validateLogin(model)
-	if validationErr != nil {
-		response.WriteError(w, response.ValidationError{
-			Error: response.Error{
-				Status:  http.StatusBadRequest,
-				Message: response.ErrBadRequest.Error(),
-			},
-			InvalidFields: validationErr,
-		})
+	// validate input
+	valErr := validateLogin(input)
+	if valErr != nil {
+		response.WriteError(w, response.NewValidationError("validation failed", valErr))
 		return
 	}
 
 	// Call the service
-	accessToken, refreshToken, err := h.service.login(r.Context(), model)
+	accessToken, refreshToken, err := h.service.login(r.Context(), input)
 	if err != nil {
-		if errors.Is(err, response.ErrNotFound) {
-			response.WriteError(w, response.Error{
-				Status:  http.StatusBadRequest,
-				Message: "invalid email or password",
-			})
-			return
+		switch {
+		case errors.Is(err, response.ErrDuplicateRecord):
+			response.WriteError(w, response.NewBadRequestError("invalid email or password"))
+		default:
+			response.WriteError(w, response.NewInternalError(err))
 		}
-
-		response.WriteError(w, response.Error{
-			Status:  http.StatusInternalServerError,
-			Message: response.ErrInternal.Error(),
-		})
 		return
 	}
 

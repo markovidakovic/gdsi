@@ -22,10 +22,8 @@ func AccountId(next http.Handler) http.Handler {
 
 		accountId, ok := claims["sub"].(string)
 		if !ok {
-			response.WriteError(w, response.Error{
-				Status:  http.StatusUnauthorized,
-				Message: response.ErrUnauthorized.Error(),
-			})
+			response.WriteError(w, response.NewUnauthorizedError("account unauthorized"))
+			return
 		}
 
 		// add account_id to the context

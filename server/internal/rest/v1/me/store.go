@@ -86,7 +86,7 @@ func (s *store) queryMe(ctx context.Context, accountId string) (*MeModel, error)
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, response.ErrNotFound
 		}
-		return nil, response.ErrInternal
+		return nil, err
 	}
 
 	if !leagueId.Valid {

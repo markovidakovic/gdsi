@@ -22,7 +22,7 @@ func (s *service) signup(ctx context.Context, model SignupRequestModel) (string,
 	// Hash the password
 	pwdBytes, err := bcrypt.GenerateFromPassword([]byte(model.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return "", "", response.ErrInternal
+		return "", "", err
 	}
 	model.Password = string(pwdBytes)
 
@@ -46,7 +46,7 @@ func (s *service) signup(ctx context.Context, model SignupRequestModel) (string,
 	// Generate jwt
 	accessToken, refreshToken, err := s.getAuthTokens(ctx, newAccount.Id)
 	if err != nil {
-		return "", "", response.ErrInternal
+		return "", "", err
 	}
 
 	return accessToken, refreshToken, nil
@@ -68,7 +68,7 @@ func (s *service) login(ctx context.Context, model LoginRequestModel) (string, s
 	// Generate jwt
 	accessToken, refreshToken, err := s.getAuthTokens(ctx, account.Id)
 	if err != nil {
-		return "", "", response.ErrInternal
+		return "", "", err
 	}
 
 	return accessToken, refreshToken, nil

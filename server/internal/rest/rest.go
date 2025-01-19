@@ -15,9 +15,34 @@ import (
 )
 
 type server struct {
-	Cfg *config.Config
-	Db  *db.Conn
-	Rtr *chi.Mux
+	Cfg            *config.Config
+	Db             *db.Conn
+	Rtr            *chi.Mux
+	swaggerEnabled bool
+}
+
+type serverOption func(*server) error
+
+// @title Gdsi API
+// @version 1.0.0
+// @description Documentation for the gdsi API
+
+// @host localhost:8080
+// @BasePath /
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Enter the Bearer token in the format: Bearer token
+func (s *server) MountHandlers() {
+	s.setupMiddleware()
+
+	// mount v1 api endpoints
+	s.Rtr.Route("/v1", v1.MountHandlers(s.Cfg, s.Db))
+
+	if s.swaggerEnabled {
+		s.Rtr.Get("/swagger/*", httpSwagger.WrapHandler)
+	}
 }
 
 func (s *server) Shutdown(ctx context.Context) error {
@@ -33,19 +58,7 @@ func (s *server) Shutdown(ctx context.Context) error {
 	return nil
 }
 
-// @title Gdsi API
-// @version 1.0.0
-// @description Documentation for the gdsi API
-
-// @host localhost:8080
-// @BasePath /
-
-// @securityDefinitions.apikey BearerAuth
-// @in header
-// @name Authorization
-// @description Enter the Bearer token in the format: Bearer token
-func (s *server) MountHandlers() {
-	// Middleware
+func (s *server) setupMiddleware() {
 	s.Rtr.Use(cors.Handler(cors.Options{
 		AllowedOrigins: []string{"https://*", "http://*"},
 		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -57,31 +70,62 @@ func (s *server) MountHandlers() {
 	s.Rtr.Use(middleware.NoCache)
 	s.Rtr.Use(middleware.StripSlashes)
 	s.Rtr.Use(middleware.Heartbeat("/"))
-
-	// mount v1 api endpoints
-	s.Rtr.Route("/v1", v1.MountHandlers(s.Cfg, s.Db))
-
-	s.Rtr.Get("/swagger/*", httpSwagger.WrapHandler)
 }
 
 func NewServer() (*server, error) {
-	var err error
 	var srv = &server{}
 
-	// Load config
-	srv.Cfg, err = config.Load()
-	if err != nil {
-		return nil, err
+	opts := []serverOption{
+		withConfig(),
+		withDatabase(),
+		withRouter(),
+		withSwagger(),
 	}
 
-	// Connect the database
-	srv.Db, err = db.Connect(srv.Cfg)
-	if err != nil {
-		return nil, err
+	for _, opt := range opts {
+		if err := opt(srv); err != nil {
+			return nil, err
+		}
 	}
-
-	// Initialize router
-	srv.Rtr = chi.NewRouter()
 
 	return srv, nil
+}
+
+func withConfig() serverOption {
+	return func(s *server) error {
+		cfg, err := config.Load()
+		if err != nil {
+			return fmt.Errorf("loading config: %w", err)
+		}
+		s.Cfg = cfg
+		return nil
+	}
+}
+
+func withDatabase() serverOption {
+	return func(s *server) error {
+		if s.Cfg == nil {
+			return fmt.Errorf("config must be initialized before database")
+		}
+		db, err := db.Connect(s.Cfg)
+		if err != nil {
+			return err
+		}
+		s.Db = db
+		return nil
+	}
+}
+
+func withRouter() serverOption {
+	return func(s *server) error {
+		s.Rtr = chi.NewRouter()
+		return nil
+	}
+}
+
+func withSwagger() serverOption {
+	return func(s *server) error {
+		s.swaggerEnabled = true
+		return nil
+	}
 }

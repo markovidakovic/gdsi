@@ -28,17 +28,12 @@ func (h *handler) getMe(w http.ResponseWriter, r *http.Request) {
 
 	result, err := h.service.getMe(r.Context(), accountId)
 	if err != nil {
-		if errors.Is(err, response.ErrNotFound) {
-			response.WriteError(w, response.Error{
-				Status:  http.StatusNotFound,
-				Message: err.Error(),
-			})
-			return
+		switch {
+		case errors.Is(err, response.ErrNotFound):
+			response.WriteError(w, response.NewNotFoundError("account not found"))
+		default:
+			response.WriteError(w, response.NewInternalError(err))
 		}
-		response.WriteError(w, response.Error{
-			Status:  http.StatusInternalServerError,
-			Message: err.Error(),
-		})
 		return
 	}
 
