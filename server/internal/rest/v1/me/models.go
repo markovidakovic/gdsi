@@ -26,14 +26,16 @@ type PlayerProfileModel struct {
 	SeasonsPlayed    int                 `json:"seasons_played"`
 	WinningRation    float64             `json:"winning_ratio"`
 	ActivityRatio    float64             `json:"activity_ratio"`
-	Ranking          int                 `json:"ranking"`
-	Elo              int                 `json:"elo"`
+	Ranking          *int                `json:"ranking"`
+	Elo              *int                `json:"elo"`
 	CurrentLeague    *CurrentLeagueModel `json:"current_league"`
+	CreatedAt        time.Time           `json:"created_at"`
 }
 
 type CurrentLeagueModel struct {
-	Id    string `json:"id"`
-	Title string `json:"title"`
+	Id        string    `json:"id"`
+	Title     string    `json:"title"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type UpdateMeModel struct {

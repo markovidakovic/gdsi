@@ -1,10 +1,12 @@
 package me
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/markovidakovic/gdsi/server/internal/config"
 	"github.com/markovidakovic/gdsi/server/internal/db"
+	custommiddleware "github.com/markovidakovic/gdsi/server/internal/middleware"
 	"github.com/markovidakovic/gdsi/server/pkg/response"
 )
 
@@ -22,7 +24,25 @@ type handler struct {
 // @Security BearerAuth
 // @Router /v1/me [get]
 func (h *handler) getMe(w http.ResponseWriter, r *http.Request) {
-	response.WriteSuccess(w, http.StatusOK, "me")
+	accountId := r.Context().Value(custommiddleware.AccountIdKey).(string)
+
+	result, err := h.service.getMe(r.Context(), accountId)
+	if err != nil {
+		if errors.Is(err, response.ErrNotFound) {
+			response.WriteError(w, response.Error{
+				Status:  http.StatusNotFound,
+				Message: err.Error(),
+			})
+			return
+		}
+		response.WriteError(w, response.Error{
+			Status:  http.StatusInternalServerError,
+			Message: err.Error(),
+		})
+		return
+	}
+
+	response.WriteSuccess(w, http.StatusOK, result)
 }
 
 // @Summary Update

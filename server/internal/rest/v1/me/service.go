@@ -1,10 +1,22 @@
 package me
 
-import "github.com/markovidakovic/gdsi/server/internal/config"
+import (
+	"context"
+
+	"github.com/markovidakovic/gdsi/server/internal/config"
+)
 
 type service struct {
 	cfg   *config.Config
 	store *store
+}
+
+func (s *service) getMe(ctx context.Context, accountId string) (*MeModel, error) {
+	me, err := s.store.queryMe(ctx, accountId)
+	if err != nil {
+		return nil, err
+	}
+	return me, nil
 }
 
 func newService(cfg *config.Config, store *store) *service {

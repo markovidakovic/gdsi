@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -56,7 +55,6 @@ func (s *service) signup(ctx context.Context, model SignupRequestModel) (string,
 func (s *service) login(ctx context.Context, model LoginRequestModel) (string, string, error) {
 	// Call the store
 	account, err := s.store.readAccountByEmail(ctx, model.Email)
-	fmt.Printf("err: %v\n", err)
 	if err != nil {
 		return "", "", err
 	}
@@ -69,7 +67,6 @@ func (s *service) login(ctx context.Context, model LoginRequestModel) (string, s
 
 	// Generate jwt
 	accessToken, refreshToken, err := s.getAuthTokens(ctx, account.Id)
-	fmt.Printf("err: %v\n", err)
 	if err != nil {
 		return "", "", response.ErrInternal
 	}
