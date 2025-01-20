@@ -19,8 +19,8 @@ type handler struct {
 // @Tags me
 // @Produce json
 // @Success 200 {object} me.MeModel "OK"
-// @Failure 401 {object} response.Error "Unauthorized"
-// @Failure 500 {object} response.Error "Internal server error"
+// @Failure 401 {object} response.BaseError "Unauthorized"
+// @Failure 500 {object} response.BaseError "Internal server error"
 // @Security BearerAuth
 // @Router /v1/me [get]
 func (h *handler) getMe(w http.ResponseWriter, r *http.Request) {
@@ -48,9 +48,9 @@ func (h *handler) getMe(w http.ResponseWriter, r *http.Request) {
 // @Param body body me.UpdateMeModel true "Request body"
 // @Success 200 {object} me.MeModel "OK"
 // @Failure 400 {object} response.ValidationError "Bad request"
-// @Failure 401 {object} response.Error "Unauthorized"
-// @Failure 404 {object} response.Error "Not found"
-// @Failure 500 {object} response.Error "Internal server error"
+// @Failure 401 {object} response.BaseError "Unauthorized"
+// @Failure 404 {object} response.BaseError "Not found"
+// @Failure 500 {object} response.BaseError "Internal server error"
 // @Security BearerAuth
 // @Router /v1/me [put]
 func (h *handler) putMe(w http.ResponseWriter, r *http.Request) {
@@ -62,9 +62,9 @@ func (h *handler) putMe(w http.ResponseWriter, r *http.Request) {
 // @Tags me
 // @Produce json
 // @Success 204 "No content"
-// @Failure 401 {object} response.Error "Unauthorized"
-// @Failure 404 {object} response.Error "Not found"
-// @Failure 500 {object} response.Error "Internal server error"
+// @Failure 401 {object} response.BaseError "Unauthorized"
+// @Failure 404 {object} response.BaseError "Not found"
+// @Failure 500 {object} response.BaseError "Internal server error"
 // @Security BearerAuth
 // @Router /v1/me [delete]
 func (h *handler) deleteMe(w http.ResponseWriter, r *http.Request) {

@@ -114,7 +114,7 @@ func (h *handler) postLogin(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} auth.TokensResponseModel "OK"
-// @Failure 500 {object} response.Error "Internal server error"
+// @Failure 500 {object} response.BaseError "Internal server error"
 // @Router /v1/auth/tokens/refresh [get]
 func (h *handler) getRefreshToken(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("refresh token endpoint\n"))
@@ -128,7 +128,7 @@ func (h *handler) getRefreshToken(w http.ResponseWriter, r *http.Request) {
 // @Param body body auth.ForgottenPasswordRequestModel true "Request body"
 // @Success 200 {object} auth.ForgottenPasswordResponseModel "OK"
 // @Failure 400 {object} response.ValidationError "Bad request"
-// @Failure 500 {object} response.Error "Internal server error"
+// @Failure 500 {object} response.BaseError "Internal server error"
 // @Router /v1/auth/passwords/forgotten [post]
 func (h *handler) postForgottenPassword(w http.ResponseWriter, r *http.Request) {
 	response.WriteSuccess(w, http.StatusOK, "email sent")
@@ -142,7 +142,7 @@ func (h *handler) postForgottenPassword(w http.ResponseWriter, r *http.Request) 
 // @Param body body auth.ChangeForgottenPasswordRequestModel true "Request body"
 // @Success 200 {object} auth.ChangeForgottenPasswordResponseModel "OK"
 // @Failure 400 {object} response.ValidationError "Bad request"
-// @Failure 500 {object} response.Error "Internal server error"
+// @Failure 500 {object} response.BaseError "Internal server error"
 // @Router /v1/auth/passwords/forgotten [put]
 func (h *handler) putForgottenPassword(w http.ResponseWriter, r *http.Request) {
 	response.WriteSuccess(w, http.StatusOK, "email sent")

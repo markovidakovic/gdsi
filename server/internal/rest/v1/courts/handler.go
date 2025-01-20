@@ -20,8 +20,8 @@ type handler struct {
 // @Param body body courts.CreateCourtModel true "Request body"
 // @Success 200 {object} courts.CourtModel "OK"
 // @Failure 400 {object} response.ValidationError "Bad request"
-// @Failure 401 {object} response.Error "Unauthorized"
-// @Failure 500 {object} response.Error "Internal server error"
+// @Failure 401 {object} response.BaseError "Unauthorized"
+// @Failure 500 {object} response.BaseError "Internal server error"
 // @Security BearerAuth
 // @Router /v1/courts [post]
 func (h *handler) postCourt(w http.ResponseWriter, r *http.Request) {
@@ -34,8 +34,8 @@ func (h *handler) postCourt(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Success 200 {array} courts.CourtModel "OK"
 // @Failure 400 {object} response.ValidationError "Bad request"
-// @Failure 401 {object} response.Error "Unauthorized"
-// @Failure 500 {object} response.Error "Internal server error"
+// @Failure 401 {object} response.BaseError "Unauthorized"
+// @Failure 500 {object} response.BaseError "Internal server error"
 // @Security BearerAuth
 // @Router /v1/courts [get]
 func (h *handler) getCourt(w http.ResponseWriter, r *http.Request) {
@@ -49,9 +49,9 @@ func (h *handler) getCourt(w http.ResponseWriter, r *http.Request) {
 // @Param courtId path string true "Court id"
 // @Success 200 {object} courts.CourtModel "OK"
 // @Failure 400 {object} response.ValidationError "Bad request"
-// @Failure 401 {object} response.Error "Unauthorized"
-// @Failure 404 {object} response.Error "Not found"
-// @Failure 500 {object} response.Error "Internal server error"
+// @Failure 401 {object} response.BaseError "Unauthorized"
+// @Failure 404 {object} response.BaseError "Not found"
+// @Failure 500 {object} response.BaseError "Internal server error"
 // @Security BearerAuth
 // @Router /v1/courts/{courtId} [get]
 func (h *handler) getCourtById(w http.ResponseWriter, r *http.Request) {
@@ -67,9 +67,9 @@ func (h *handler) getCourtById(w http.ResponseWriter, r *http.Request) {
 // @Param body body courts.UpdateCourtModel true "Request body"
 // @Success 200 {object} courts.CourtModel "OK"
 // @Failure 400 {object} response.ValidationError "Bad request"
-// @Failure 401 {object} response.Error "Unauthorized"
-// @Failure 404 {object} response.Error "Not found"
-// @Failure 500 {object} response.Error "Internal server error"
+// @Failure 401 {object} response.BaseError "Unauthorized"
+// @Failure 404 {object} response.BaseError "Not found"
+// @Failure 500 {object} response.BaseError "Internal server error"
 // @Security BearerAuth
 // @Router /v1/courts/{courtId} [put]
 func (h *handler) putCourt(w http.ResponseWriter, r *http.Request) {
@@ -83,9 +83,9 @@ func (h *handler) putCourt(w http.ResponseWriter, r *http.Request) {
 // @Param courtId path string true "Court id"
 // @Success 204 "No content"
 // @Failure 400 {object} response.ValidationError "Bad request"
-// @Failure 401 {object} response.Error "Unauthorized"
-// @Failure 404 {object} response.Error "Not found"
-// @Failure 500 {object} response.Error "Internal server error"
+// @Failure 401 {object} response.BaseError "Unauthorized"
+// @Failure 404 {object} response.BaseError "Not found"
+// @Failure 500 {object} response.BaseError "Internal server error"
 // @Security BearerAuth
 // @Router /v1/courts/{courtId} [delete]
 func (h *handler) deleteCourt(w http.ResponseWriter, r *http.Request) {
