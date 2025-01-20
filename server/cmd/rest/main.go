@@ -10,7 +10,7 @@ import (
 	"time"
 
 	_ "github.com/markovidakovic/gdsi/server/docs"
-	"github.com/markovidakovic/gdsi/server/internal/rest"
+	"github.com/markovidakovic/gdsi/server/rest"
 )
 
 func main() {
