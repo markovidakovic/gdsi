@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	gochimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/markovidakovic/gdsi/server/internal/config"
 	"github.com/markovidakovic/gdsi/server/internal/db"
@@ -64,12 +64,12 @@ func (s *server) setupMiddleware() {
 		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		MaxAge:         300, // Maximum value not ignored by any of major browsers
 	}))
-	s.Rtr.Use(middleware.Logger)
-	s.Rtr.Use(middleware.AllowContentType("application/json"))
-	s.Rtr.Use(middleware.CleanPath)
-	s.Rtr.Use(middleware.NoCache)
-	s.Rtr.Use(middleware.StripSlashes)
-	s.Rtr.Use(middleware.Heartbeat("/"))
+	s.Rtr.Use(gochimiddleware.Logger)
+	s.Rtr.Use(gochimiddleware.AllowContentType("application/json"))
+	s.Rtr.Use(gochimiddleware.CleanPath)
+	s.Rtr.Use(gochimiddleware.NoCache)
+	s.Rtr.Use(gochimiddleware.StripSlashes)
+	s.Rtr.Use(gochimiddleware.Heartbeat("/"))
 }
 
 func NewServer() (*server, error) {

@@ -7,7 +7,6 @@ import (
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/markovidakovic/gdsi/server/internal/config"
 	"github.com/markovidakovic/gdsi/server/internal/db"
-	custommiddleware "github.com/markovidakovic/gdsi/server/internal/middleware"
 	"github.com/markovidakovic/gdsi/server/internal/rest/v1/auth"
 	"github.com/markovidakovic/gdsi/server/internal/rest/v1/courts"
 	"github.com/markovidakovic/gdsi/server/internal/rest/v1/leagues"
@@ -16,6 +15,7 @@ import (
 	"github.com/markovidakovic/gdsi/server/internal/rest/v1/players"
 	"github.com/markovidakovic/gdsi/server/internal/rest/v1/seasons"
 	"github.com/markovidakovic/gdsi/server/internal/rest/v1/standings"
+	"github.com/markovidakovic/gdsi/server/pkg/middleware"
 )
 
 func MountHandlers(cfg *config.Config, db *db.Conn) func(r chi.Router) {
@@ -27,7 +27,7 @@ func MountHandlers(cfg *config.Config, db *db.Conn) func(r chi.Router) {
 			// seek, verify and validate jwt
 			r.Use(jwtauth.Verifier(cfg.JwtAuth))
 			r.Use(jwtauth.Authenticator(cfg.JwtAuth))
-			r.Use(custommiddleware.AccountId)
+			r.Use(middleware.AttachAccountId)
 
 			r.Route("/courts", courts.Route(cfg, db))
 			r.Route("/me", me.Route(cfg, db))

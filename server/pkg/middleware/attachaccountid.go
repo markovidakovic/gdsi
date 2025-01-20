@@ -1,4 +1,4 @@
-package custommiddleware
+package middleware
 
 import (
 	"context"
@@ -14,9 +14,8 @@ const (
 	AccountIdKey contextKey = "account_id"
 )
 
-// AccountId attaches the authenticated accounts id to the context
-// for easier access in the handlers
-func AccountId(next http.Handler) http.Handler {
+// AttachAccountId sets the authenticated account id to the context for easier access in the handlers
+func AttachAccountId(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, claims, _ := jwtauth.FromContext(r.Context())
 

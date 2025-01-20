@@ -6,7 +6,7 @@ import (
 
 	"github.com/markovidakovic/gdsi/server/internal/config"
 	"github.com/markovidakovic/gdsi/server/internal/db"
-	custommiddleware "github.com/markovidakovic/gdsi/server/internal/middleware"
+	"github.com/markovidakovic/gdsi/server/pkg/middleware"
 	"github.com/markovidakovic/gdsi/server/pkg/response"
 )
 
@@ -24,7 +24,7 @@ type handler struct {
 // @Security BearerAuth
 // @Router /v1/me [get]
 func (h *handler) getMe(w http.ResponseWriter, r *http.Request) {
-	accountId := r.Context().Value(custommiddleware.AccountIdKey).(string)
+	accountId := r.Context().Value(middleware.AccountIdKey).(string)
 
 	result, err := h.service.getMe(r.Context(), accountId)
 	if err != nil {
