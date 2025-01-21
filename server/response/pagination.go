@@ -1,19 +1,25 @@
 package response
 
-type Pagination struct {
-	Page        int         `json:"page"`
-	PageCurrent int         `json:"page_current"`
-	PageCount   int         `json:"page_count"`
-	Count       int         `json:"count"`
-	Items       interface{} `json:"items"`
+type Pagination[T any] struct {
+	CurrentPage  int `json:"current_page"`
+	TotalPages   int `json:"total_pages"`
+	TotalItems   int `json:"total_items"`
+	ItemsPerPage int `json:"items_per_page"`
+	Items        []T `json:"items"`
 }
 
-func NewPagination(page, pageCurrent, pageCount, count int, items interface{}) Pagination {
-	return Pagination{
-		Page:        page,
-		PageCurrent: pageCurrent,
-		PageCount:   pageCount,
-		Count:       count,
-		Items:       items,
+func NewPagination[T any](currentPage, totalItems, itemsPerPage int, items []T) Pagination[T] {
+	// totalPages := (totalItems + itemsPerPage - 1) / itemsPerPage
+	totalPages := totalItems / itemsPerPage
+	if totalItems%itemsPerPage > 0 {
+		totalPages++
+	}
+
+	return Pagination[T]{
+		CurrentPage:  currentPage,
+		TotalPages:   totalPages,
+		TotalItems:   totalItems,
+		ItemsPerPage: itemsPerPage,
+		Items:        items,
 	}
 }

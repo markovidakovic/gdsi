@@ -30,9 +30,9 @@ func (h *handler) getMe(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, response.ErrNotFound):
-			response.WriteError(w, response.NewNotFoundError("account not found"))
+			response.WriteFailure(w, response.NewNotFoundFailure("account not found"))
 		default:
-			response.WriteError(w, response.NewInternalError(err))
+			response.WriteFailure(w, response.NewInternalFailure(err))
 		}
 		return
 	}

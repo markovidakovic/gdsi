@@ -21,7 +21,7 @@ func AttachAccountId(next http.Handler) http.Handler {
 
 		accountId, ok := claims["sub"].(string)
 		if !ok {
-			response.WriteError(w, response.NewUnauthorizedError("account unauthorized"))
+			response.WriteFailure(w, response.NewUnauthorizedFailure("account unauthorized"))
 			return
 		}
 

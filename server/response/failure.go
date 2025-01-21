@@ -20,7 +20,7 @@ var (
 )
 
 // error status code mapping
-var errorStatusCodes = map[error]int{
+var failureStatusCodes = map[error]int{
 	ErrNotFound:        http.StatusNotFound,
 	ErrInvalidInput:    http.StatusBadRequest,
 	ErrBadRequest:      http.StatusBadRequest,
@@ -30,15 +30,15 @@ var errorStatusCodes = map[error]int{
 	ErrInternal:        http.StatusInternalServerError,
 }
 
-// ErrorWriter interface defines methods that error types must implement
-type ErrorWriter interface {
+// FailWriter interface defines methods that error types must implement
+type FailureWriter interface {
 	Error() string
 	GetStatus() int
 	GetMessage() string
 }
 
-// BaseError represents a basic error response
-type BaseError struct {
+// Fail represents a basic error response
+type Failure struct {
 	Status  int    `json:"status"`
 	Message string `json:"message"`
 	Err     error  `json:"-"`
@@ -46,31 +46,31 @@ type BaseError struct {
 
 // Error method implements the standard go error interface which requires an Error() string method
 // if there's a wrapped error (be.Err), it combines both error messages with a colon separator
-func (be BaseError) Error() string {
-	if be.Err != nil {
-		return fmt.Sprintf("%s: %v", be.Message, be.Err)
+func (f Failure) Error() string {
+	if f.Err != nil {
+		return fmt.Sprintf("%s: %v", f.Message, f.Err)
 	}
-	return be.Message
+	return f.Message
 }
 
 // Unwrap method is part of go's error wrapping mechanism. it allows the use of errors.Is() and errors.As()
 // to inspect wrapped errors. when we call errors.Is(err, targetErr), go will repeatedly call Unwrap() to check
 // each wrapped error in the chain
-func (be BaseError) Unwrap() error {
-	return be.Err
+func (f Failure) Unwrap() error {
+	return f.Err
 }
 
-func (be BaseError) GetStatus() int {
-	return be.Status
+func (f Failure) GetStatus() int {
+	return f.Status
 }
 
-func (e BaseError) GetMessage() string {
-	return e.Message
+func (f Failure) GetMessage() string {
+	return f.Message
 }
 
-// ValidationError embeds the BaseError and contains additional information about invalid fields
-type ValidationError struct {
-	BaseError
+// ValidationFailure embeds the Failure and contains additional information about invalid fields
+type ValidationFailure struct {
+	Failure
 	InvalidFields []InvalidField `json:"invalid_fields,omitempty"`
 }
 
@@ -80,46 +80,53 @@ type InvalidField struct {
 	Location string `json:"location"` // location specifies where the field is comming from (path, query, body)
 }
 
-func NewError(status int, message string, err error) BaseError {
-	return BaseError{
+func NewFailure(status int, message string, err error) Failure {
+	return Failure{
 		Status:  status,
 		Message: message,
 		Err:     err,
 	}
 }
 
-func NewNotFoundError(message string) BaseError {
-	return BaseError{
+func NewNotFoundFailure(message string) Failure {
+	return Failure{
 		Status:  http.StatusNotFound,
 		Message: message,
 	}
 }
 
-func NewBadRequestError(message string) BaseError {
-	return BaseError{
+func NewBadRequestFailure(message string) Failure {
+	return Failure{
 		Status:  http.StatusBadRequest,
 		Message: message,
 	}
 }
 
-func NewUnauthorizedError(message string) BaseError {
-	return BaseError{
+func NewUnauthorizedFailure(message string) Failure {
+	return Failure{
 		Status:  http.StatusUnauthorized,
 		Message: message,
 	}
 }
 
-func NewInternalError(err error) BaseError {
-	return BaseError{
+func NewForbiddenFailure(message string) Failure {
+	return Failure{
+		Status:  http.StatusForbidden,
+		Message: message,
+	}
+}
+
+func NewInternalFailure(err error) Failure {
+	return Failure{
 		Status:  http.StatusInternalServerError,
 		Message: "internal server error",
 		Err:     err,
 	}
 }
 
-func NewValidationError(message string, fields []InvalidField) ValidationError {
-	return ValidationError{
-		BaseError: BaseError{
+func NewValidationFailure(message string, fields []InvalidField) ValidationFailure {
+	return ValidationFailure{
+		Failure: Failure{
 			Status:  http.StatusBadRequest,
 			Message: message,
 		},
@@ -128,22 +135,22 @@ func NewValidationError(message string, fields []InvalidField) ValidationError {
 }
 
 // helper funcs
-func StatusCodeFromError(err error) int {
-	if code, exists := errorStatusCodes[err]; exists {
+func StatusCodeFromFailure(err error) int {
+	if code, exists := failureStatusCodes[err]; exists {
 		return code
 	}
 	return http.StatusInternalServerError
 }
 
-func WriteError(w http.ResponseWriter, ew ErrorWriter) {
+func WriteFailure(w http.ResponseWriter, fw FailureWriter) {
 	// log server error
-	if ew.GetStatus() >= 500 {
-		log.Printf("Server error: %v", ew.Error())
+	if fw.GetStatus() >= 500 {
+		log.Printf("Server error: %v", fw.Error())
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(ew.GetStatus())
-	if err := json.NewEncoder(w).Encode(ew); err != nil {
+	w.WriteHeader(fw.GetStatus())
+	if err := json.NewEncoder(w).Encode(fw); err != nil {
 		log.Printf("Error encoding response: %v", err)
 	}
 }

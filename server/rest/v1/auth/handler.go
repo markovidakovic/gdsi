@@ -30,14 +30,14 @@ func (h *handler) postSignup(w http.ResponseWriter, r *http.Request) {
 	// decode request body
 	err := json.NewDecoder(r.Body).Decode(&input)
 	if err != nil {
-		response.WriteError(w, response.NewBadRequestError("invalid request body"))
+		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))
 		return
 	}
 
 	// validation
 	valErr := validateSignup(input)
 	if valErr != nil {
-		response.WriteError(w, response.NewValidationError("validation failed", valErr))
+		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
 		return
 	}
 
@@ -46,9 +46,9 @@ func (h *handler) postSignup(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, response.ErrDuplicateRecord):
-			response.WriteError(w, response.NewBadRequestError("account with email already exists"))
+			response.WriteFailure(w, response.NewBadRequestFailure("account with email already exists"))
 		default:
-			response.WriteError(w, response.NewInternalError(err))
+			response.WriteFailure(w, response.NewInternalFailure(err))
 		}
 		return
 	}
@@ -77,14 +77,14 @@ func (h *handler) postLogin(w http.ResponseWriter, r *http.Request) {
 	// decode request body
 	err := json.NewDecoder(r.Body).Decode(&input)
 	if err != nil {
-		response.WriteError(w, response.NewBadRequestError("invalid request body"))
+		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))
 		return
 	}
 
 	// validate input
 	valErr := validateLogin(input)
 	if valErr != nil {
-		response.WriteError(w, response.NewValidationError("validation failed", valErr))
+		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
 		return
 	}
 
@@ -93,9 +93,9 @@ func (h *handler) postLogin(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, response.ErrDuplicateRecord):
-			response.WriteError(w, response.NewBadRequestError("invalid email or password"))
+			response.WriteFailure(w, response.NewBadRequestFailure("invalid email or password"))
 		default:
-			response.WriteError(w, response.NewInternalError(err))
+			response.WriteFailure(w, response.NewInternalFailure(err))
 		}
 		return
 	}
