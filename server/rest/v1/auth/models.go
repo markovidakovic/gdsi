@@ -74,3 +74,8 @@ type ChangeForgottenPasswordRequestModel struct {
 type ChangeForgottenPasswordResponseModel struct {
 	Message string `json:"message"`
 }
+
+// refresh token request
+type RefreshTokenRequestModel struct {
+	RefreshToken string `json:"refresh_token"`
+}

@@ -117,6 +117,24 @@ func validateLogin(model LoginRequestModel) []response.InvalidField {
 	return nil
 }
 
+func validateRefreshToken(input RefreshTokenRequestModel) []response.InvalidField {
+	var invFields []response.InvalidField
+
+	if input.RefreshToken == "" {
+		invFields = append(invFields, response.InvalidField{
+			Field:    "refresh_token",
+			Message:  "Refresh token field is required",
+			Location: "body",
+		})
+	}
+
+	if len(invFields) > 0 {
+		return invFields
+	}
+
+	return nil
+}
+
 func isValidEmail(email string) bool {
 	re := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 	return re.MatchString(email)

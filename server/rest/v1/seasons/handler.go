@@ -19,9 +19,9 @@ type handler struct {
 // @Produce json
 // @Param body body seasons.CreateSeasonModel true "Request body"
 // @Success 201 {object} seasons.SeasonModel "OK"
-// @Failure 400 {object} response.ValidationError "Bad request"
-// @Failure 401 {object} response.BaseError "Unauthorized"
-// @Failure 500 {object} response.BaseError "Internal server error"
+// @Failure 400 {object} response.ValidationFailure "Bad request"
+// @Failure 401 {object} response.Failure "Unauthorized"
+// @Failure 500 {object} response.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/seasons [post]
 func (h *handler) postSeason(w http.ResponseWriter, r *http.Request) {
@@ -33,9 +33,9 @@ func (h *handler) postSeason(w http.ResponseWriter, r *http.Request) {
 // @Tags seasons
 // @Produce json
 // @Success 200 {array} seasons.SeasonModel "OK"
-// @Failure 400 {object} response.ValidationError "Bad request"
-// @Failure 401 {object} response.BaseError "Unauthorized"
-// @Failure 500 {object} response.BaseError "Internal server error"
+// @Failure 400 {object} response.ValidationFailure "Bad request"
+// @Failure 401 {object} response.Failure "Unauthorized"
+// @Failure 500 {object} response.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/seasons [get]
 func (h *handler) getSeasons(w http.ResponseWriter, r *http.Request) {
@@ -48,10 +48,10 @@ func (h *handler) getSeasons(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param seasonId path string true "Season id"
 // @Success 200 {object} seasons.SeasonModel "OK"
-// @Failure 400 {object} response.ValidationError "Bad request"
-// @Failure 401 {object} response.BaseError "Unauthorized"
-// @Failure 404 {object} response.BaseError "Not found"
-// @Failure 500 {object} response.BaseError "Internal server error"
+// @Failure 400 {object} response.ValidationFailure "Bad request"
+// @Failure 401 {object} response.Failure "Unauthorized"
+// @Failure 404 {object} response.Failure "Not found"
+// @Failure 500 {object} response.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId} [get]
 func (h *handler) getSeason(w http.ResponseWriter, r *http.Request) {
@@ -66,10 +66,10 @@ func (h *handler) getSeason(w http.ResponseWriter, r *http.Request) {
 // @Param seasonId path string true "Season id"
 // @Param body body seasons.UpdateSeasonModel true "Request body"
 // @Success 200 {object} seasons.SeasonModel "OK"
-// @Failure 400 {object} response.ValidationError "Bad request"
-// @Failure 401 {object} response.BaseError "Unauthorized"
-// @Failure 404 {object} response.BaseError "Not found"
-// @Failure 500 {object} response.BaseError "Internal server error"
+// @Failure 400 {object} response.ValidationFailure "Bad request"
+// @Failure 401 {object} response.Failure "Unauthorized"
+// @Failure 404 {object} response.Failure "Not found"
+// @Failure 500 {object} response.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId} [put]
 func (h *handler) putSeason(w http.ResponseWriter, r *http.Request) {
@@ -82,10 +82,10 @@ func (h *handler) putSeason(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param seasonId path string true "Season id"
 // @Success 204 "No content"
-// @Failure 400 {object} response.ValidationError "Bad request"
-// @Failure 401 {object} response.BaseError "Unauthorized"
-// @Failure 404 {object} response.BaseError "Not found"
-// @Failure 500 {object} response.BaseError "Internal server error"
+// @Failure 400 {object} response.ValidationFailure "Bad request"
+// @Failure 401 {object} response.Failure "Unauthorized"
+// @Failure 404 {object} response.Failure "Not found"
+// @Failure 500 {object} response.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId} [delete]
 func (h *handler) deleteSeason(w http.ResponseWriter, r *http.Request) {

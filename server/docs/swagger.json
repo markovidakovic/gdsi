@@ -43,13 +43,13 @@
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationError"
+                            "$ref": "#/definitions/response.ValidationFailure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     }
                 }
@@ -87,13 +87,13 @@
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationError"
+                            "$ref": "#/definitions/response.ValidationFailure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     }
                 }
@@ -133,13 +133,13 @@
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationError"
+                            "$ref": "#/definitions/response.ValidationFailure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     }
                 }
@@ -179,20 +179,20 @@
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationError"
+                            "$ref": "#/definitions/response.ValidationFailure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     }
                 }
             }
         },
         "/v1/auth/tokens/refresh": {
-            "get": {
+            "post": {
                 "description": "Get a refreshed access token",
                 "consumes": [
                     "application/json"
@@ -204,6 +204,17 @@
                     "auth"
                 ],
                 "summary": "Refresh token",
+                "parameters": [
+                    {
+                        "description": "Request body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/auth.RefreshTokenRequestModel"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -214,7 +225,7 @@
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     }
                 }
@@ -248,19 +259,19 @@
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationError"
+                            "$ref": "#/definitions/response.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     }
                 }
@@ -303,19 +314,19 @@
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationError"
+                            "$ref": "#/definitions/response.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     }
                 }
@@ -355,25 +366,25 @@
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationError"
+                            "$ref": "#/definitions/response.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "404": {
                         "description": "Not found",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     }
                 }
@@ -423,25 +434,25 @@
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationError"
+                            "$ref": "#/definitions/response.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "404": {
                         "description": "Not found",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     }
                 }
@@ -476,25 +487,25 @@
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationError"
+                            "$ref": "#/definitions/response.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "404": {
                         "description": "Not found",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     }
                 }
@@ -525,13 +536,13 @@
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     }
                 }
@@ -574,25 +585,25 @@
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationError"
+                            "$ref": "#/definitions/response.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "404": {
                         "description": "Not found",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     }
                 }
@@ -618,19 +629,19 @@
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "404": {
                         "description": "Not found",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     }
                 }
@@ -664,19 +675,19 @@
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationError"
+                            "$ref": "#/definitions/response.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     }
                 }
@@ -716,25 +727,25 @@
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationError"
+                            "$ref": "#/definitions/response.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "404": {
                         "description": "Not found",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     }
                 }
@@ -784,25 +795,25 @@
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationError"
+                            "$ref": "#/definitions/response.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "404": {
                         "description": "Not found",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     }
                 }
@@ -836,19 +847,19 @@
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationError"
+                            "$ref": "#/definitions/response.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     }
                 }
@@ -891,19 +902,19 @@
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationError"
+                            "$ref": "#/definitions/response.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     }
                 }
@@ -943,25 +954,25 @@
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationError"
+                            "$ref": "#/definitions/response.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "404": {
                         "description": "Not found",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     }
                 }
@@ -1011,25 +1022,25 @@
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationError"
+                            "$ref": "#/definitions/response.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "404": {
                         "description": "Not found",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     }
                 }
@@ -1064,25 +1075,25 @@
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationError"
+                            "$ref": "#/definitions/response.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "404": {
                         "description": "Not found",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     }
                 }
@@ -1125,19 +1136,19 @@
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationError"
+                            "$ref": "#/definitions/response.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     }
                 }
@@ -1187,19 +1198,19 @@
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationError"
+                            "$ref": "#/definitions/response.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     }
                 }
@@ -1246,25 +1257,25 @@
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationError"
+                            "$ref": "#/definitions/response.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "404": {
                         "description": "Not found",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     }
                 }
@@ -1321,25 +1332,25 @@
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationError"
+                            "$ref": "#/definitions/response.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "404": {
                         "description": "Not found",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     }
                 }
@@ -1381,25 +1392,25 @@
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationError"
+                            "$ref": "#/definitions/response.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "404": {
                         "description": "Not found",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     }
                 }
@@ -1449,19 +1460,19 @@
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationError"
+                            "$ref": "#/definitions/response.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     }
                 }
@@ -1518,19 +1529,19 @@
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationError"
+                            "$ref": "#/definitions/response.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     }
                 }
@@ -1584,25 +1595,25 @@
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationError"
+                            "$ref": "#/definitions/response.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "404": {
                         "description": "Not found",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     }
                 }
@@ -1666,25 +1677,25 @@
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationError"
+                            "$ref": "#/definitions/response.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "404": {
                         "description": "Not found",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     }
                 }
@@ -1733,25 +1744,25 @@
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationError"
+                            "$ref": "#/definitions/response.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "404": {
                         "description": "Not found",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     }
                 }
@@ -1801,19 +1812,19 @@
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationError"
+                            "$ref": "#/definitions/response.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.BaseError"
+                            "$ref": "#/definitions/response.Failure"
                         }
                     }
                 }
@@ -1869,6 +1880,14 @@
                     "type": "string"
                 },
                 "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "auth.RefreshTokenRequestModel": {
+            "type": "object",
+            "properties": {
+                "refresh_token": {
                     "type": "string"
                 }
             }
@@ -2336,7 +2355,7 @@
                 }
             }
         },
-        "response.BaseError": {
+        "response.Failure": {
             "type": "object",
             "properties": {
                 "message": {
@@ -2362,7 +2381,7 @@
                 }
             }
         },
-        "response.ValidationError": {
+        "response.ValidationFailure": {
             "type": "object",
             "properties": {
                 "invalid_fields": {

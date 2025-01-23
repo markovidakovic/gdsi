@@ -20,9 +20,9 @@ type handler struct {
 // @Param seasonId path string true "Season id"
 // @Param body body leagues.CreateLeagueModel true "Request body"
 // @Success 201 {object} leagues.LeagueModel "OK"
-// @Failure 400 {object} response.ValidationError "Bad request"
-// @Failure 401 {object} response.BaseError "Unauthorized"
-// @Failure 500 {object} response.BaseError "Internal server error"
+// @Failure 400 {object} response.ValidationFailure "Bad request"
+// @Failure 401 {object} response.Failure "Unauthorized"
+// @Failure 500 {object} response.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues [post]
 func (h *handler) postLeague(w http.ResponseWriter, r *http.Request) {
@@ -35,9 +35,9 @@ func (h *handler) postLeague(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param seasonId path string true "Season id"
 // @Success 200 {array} leagues.LeagueModel "OK"
-// @Failure 400 {object} response.ValidationError "Bad request"
-// @Failure 401 {object} response.BaseError "Unauthorized"
-// @Failure 500 {object} response.BaseError "Internal server error"
+// @Failure 400 {object} response.ValidationFailure "Bad request"
+// @Failure 401 {object} response.Failure "Unauthorized"
+// @Failure 500 {object} response.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues [get]
 func (h *handler) getLeagues(w http.ResponseWriter, r *http.Request) {
@@ -51,10 +51,10 @@ func (h *handler) getLeagues(w http.ResponseWriter, r *http.Request) {
 // @Param seasonId path string true "Season id"
 // @Param leagueId path string true "League id"
 // @Success 200 {object} leagues.LeagueModel "OK"
-// @Failure 400 {object} response.ValidationError "Bad request"
-// @Failure 401 {object} response.BaseError "Unauthorized"
-// @Failure 404 {object} response.BaseError "Not found"
-// @Failure 500 {object} response.BaseError "Internal server error"
+// @Failure 400 {object} response.ValidationFailure "Bad request"
+// @Failure 401 {object} response.Failure "Unauthorized"
+// @Failure 404 {object} response.Failure "Not found"
+// @Failure 500 {object} response.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId} [get]
 func (h *handler) getLeague(w http.ResponseWriter, r *http.Request) {
@@ -70,10 +70,10 @@ func (h *handler) getLeague(w http.ResponseWriter, r *http.Request) {
 // @Param leagueId path string true "League id"
 // @Param body body leagues.UpdateLeagueModel true "Request body"
 // @Success 200 {object} leagues.LeagueModel "OK"
-// @Failure 400 {object} response.ValidationError "Bad request"
-// @Failure 401 {object} response.BaseError "Unauthorized"
-// @Failure 404 {object} response.BaseError "Not found"
-// @Failure 500 {object} response.BaseError "Internal server error"
+// @Failure 400 {object} response.ValidationFailure "Bad request"
+// @Failure 401 {object} response.Failure "Unauthorized"
+// @Failure 404 {object} response.Failure "Not found"
+// @Failure 500 {object} response.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId} [put]
 func (h *handler) putLeague(w http.ResponseWriter, r *http.Request) {
@@ -87,10 +87,10 @@ func (h *handler) putLeague(w http.ResponseWriter, r *http.Request) {
 // @Param seasonId path string true "Season id"
 // @Param leagueId path string true "League id"
 // @Success 204 "No content"
-// @Failure 400 {object} response.ValidationError "Bad request"
-// @Failure 401 {object} response.BaseError "Unauthorized"
-// @Failure 404 {object} response.BaseError "Not found"
-// @Failure 500 {object} response.BaseError "Internal server error"
+// @Failure 400 {object} response.ValidationFailure "Bad request"
+// @Failure 401 {object} response.Failure "Unauthorized"
+// @Failure 404 {object} response.Failure "Not found"
+// @Failure 500 {object} response.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId} [delete]
 func (h *handler) deleteLeague(w http.ResponseWriter, r *http.Request) {

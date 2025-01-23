@@ -12,7 +12,7 @@ func Route(cfg *config.Config, db *db.Conn) func(r chi.Router) {
 	return func(r chi.Router) {
 		r.Post("/signup", hdl.postSignup)
 		r.Post("/tokens/access", hdl.postLogin)
-		r.Get("/tokens/refresh", hdl.getRefreshToken)
+		r.Post("/tokens/refresh", hdl.postRefreshToken)
 		r.Post("/passwords/forgotten", hdl.postForgottenPassword)
 		r.Put("/passwords/forgotten", hdl.putForgottenPassword)
 	}

@@ -33,6 +33,11 @@ definitions:
       password:
         type: string
     type: object
+  auth.RefreshTokenRequestModel:
+    properties:
+      refresh_token:
+        type: string
+    type: object
   auth.SignupRequestModel:
     properties:
       dob:
@@ -333,7 +338,7 @@ definitions:
       weight:
         type: number
     type: object
-  response.BaseError:
+  response.Failure:
     properties:
       message:
         type: string
@@ -351,7 +356,7 @@ definitions:
       message:
         type: string
     type: object
-  response.ValidationError:
+  response.ValidationFailure:
     properties:
       invalid_fields:
         items:
@@ -473,11 +478,11 @@ paths:
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/response.ValidationError'
+            $ref: '#/definitions/response.ValidationFailure'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
       summary: Forgotten password
       tags:
       - auth
@@ -502,11 +507,11 @@ paths:
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/response.ValidationError'
+            $ref: '#/definitions/response.ValidationFailure'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
       summary: Forgotten password
       tags:
       - auth
@@ -532,11 +537,11 @@ paths:
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/response.ValidationError'
+            $ref: '#/definitions/response.ValidationFailure'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
       summary: Signup
       tags:
       - auth
@@ -562,19 +567,26 @@ paths:
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/response.ValidationError'
+            $ref: '#/definitions/response.ValidationFailure'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
       summary: Login
       tags:
       - auth
   /v1/auth/tokens/refresh:
-    get:
+    post:
       consumes:
       - application/json
       description: Get a refreshed access token
+      parameters:
+      - description: Request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/auth.RefreshTokenRequestModel'
       produces:
       - application/json
       responses:
@@ -585,7 +597,7 @@ paths:
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
       summary: Refresh token
       tags:
       - auth
@@ -604,15 +616,15 @@ paths:
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/response.ValidationError'
+            $ref: '#/definitions/response.ValidationFailure'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
       security:
       - BearerAuth: []
       summary: Get
@@ -639,15 +651,15 @@ paths:
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/response.ValidationError'
+            $ref: '#/definitions/response.ValidationFailure'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
       security:
       - BearerAuth: []
       summary: Create
@@ -670,19 +682,19 @@ paths:
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/response.ValidationError'
+            $ref: '#/definitions/response.ValidationFailure'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "404":
           description: Not found
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
       security:
       - BearerAuth: []
       summary: Delete
@@ -706,19 +718,19 @@ paths:
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/response.ValidationError'
+            $ref: '#/definitions/response.ValidationFailure'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "404":
           description: Not found
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
       security:
       - BearerAuth: []
       summary: Get by id
@@ -750,19 +762,19 @@ paths:
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/response.ValidationError'
+            $ref: '#/definitions/response.ValidationFailure'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "404":
           description: Not found
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
       security:
       - BearerAuth: []
       summary: Update
@@ -779,15 +791,15 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "404":
           description: Not found
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
       security:
       - BearerAuth: []
       summary: Delete
@@ -805,11 +817,11 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
       security:
       - BearerAuth: []
       summary: Get
@@ -836,19 +848,19 @@ paths:
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/response.ValidationError'
+            $ref: '#/definitions/response.ValidationFailure'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "404":
           description: Not found
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
       security:
       - BearerAuth: []
       summary: Update
@@ -869,15 +881,15 @@ paths:
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/response.ValidationError'
+            $ref: '#/definitions/response.ValidationFailure'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
       security:
       - BearerAuth: []
       summary: Get
@@ -902,19 +914,19 @@ paths:
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/response.ValidationError'
+            $ref: '#/definitions/response.ValidationFailure'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "404":
           description: Not found
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
       security:
       - BearerAuth: []
       summary: Get by id
@@ -946,19 +958,19 @@ paths:
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/response.ValidationError'
+            $ref: '#/definitions/response.ValidationFailure'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "404":
           description: Not found
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
       security:
       - BearerAuth: []
       summary: Update
@@ -979,15 +991,15 @@ paths:
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/response.ValidationError'
+            $ref: '#/definitions/response.ValidationFailure'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
       security:
       - BearerAuth: []
       summary: Get
@@ -1014,15 +1026,15 @@ paths:
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/response.ValidationError'
+            $ref: '#/definitions/response.ValidationFailure'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
       security:
       - BearerAuth: []
       summary: Create
@@ -1045,19 +1057,19 @@ paths:
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/response.ValidationError'
+            $ref: '#/definitions/response.ValidationFailure'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "404":
           description: Not found
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
       security:
       - BearerAuth: []
       summary: Delete
@@ -1081,19 +1093,19 @@ paths:
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/response.ValidationError'
+            $ref: '#/definitions/response.ValidationFailure'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "404":
           description: Not found
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
       security:
       - BearerAuth: []
       summary: Get by id
@@ -1125,19 +1137,19 @@ paths:
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/response.ValidationError'
+            $ref: '#/definitions/response.ValidationFailure'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "404":
           description: Not found
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
       security:
       - BearerAuth: []
       summary: Update
@@ -1164,15 +1176,15 @@ paths:
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/response.ValidationError'
+            $ref: '#/definitions/response.ValidationFailure'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
       security:
       - BearerAuth: []
       summary: Get
@@ -1204,15 +1216,15 @@ paths:
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/response.ValidationError'
+            $ref: '#/definitions/response.ValidationFailure'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
       security:
       - BearerAuth: []
       summary: Create
@@ -1240,19 +1252,19 @@ paths:
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/response.ValidationError'
+            $ref: '#/definitions/response.ValidationFailure'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "404":
           description: Not found
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
       security:
       - BearerAuth: []
       summary: Delete
@@ -1281,19 +1293,19 @@ paths:
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/response.ValidationError'
+            $ref: '#/definitions/response.ValidationFailure'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "404":
           description: Not found
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
       security:
       - BearerAuth: []
       summary: Get by id
@@ -1330,19 +1342,19 @@ paths:
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/response.ValidationError'
+            $ref: '#/definitions/response.ValidationFailure'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "404":
           description: Not found
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
       security:
       - BearerAuth: []
       summary: Update
@@ -1374,15 +1386,15 @@ paths:
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/response.ValidationError'
+            $ref: '#/definitions/response.ValidationFailure'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
       security:
       - BearerAuth: []
       summary: Get
@@ -1419,15 +1431,15 @@ paths:
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/response.ValidationError'
+            $ref: '#/definitions/response.ValidationFailure'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
       security:
       - BearerAuth: []
       summary: Create
@@ -1460,19 +1472,19 @@ paths:
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/response.ValidationError'
+            $ref: '#/definitions/response.ValidationFailure'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "404":
           description: Not found
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
       security:
       - BearerAuth: []
       summary: Delete
@@ -1506,19 +1518,19 @@ paths:
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/response.ValidationError'
+            $ref: '#/definitions/response.ValidationFailure'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "404":
           description: Not found
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
       security:
       - BearerAuth: []
       summary: Get by id
@@ -1560,19 +1572,19 @@ paths:
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/response.ValidationError'
+            $ref: '#/definitions/response.ValidationFailure'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "404":
           description: Not found
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
       security:
       - BearerAuth: []
       summary: Update
@@ -1604,15 +1616,15 @@ paths:
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/response.ValidationError'
+            $ref: '#/definitions/response.ValidationFailure'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.BaseError'
+            $ref: '#/definitions/response.Failure'
       security:
       - BearerAuth: []
       summary: Get

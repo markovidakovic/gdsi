@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -27,7 +28,7 @@ func (s *service) signup(ctx context.Context, model SignupRequestModel) (string,
 	model.Password = string(pwdBytes)
 
 	// Check if email exists
-	existingAccount, err := s.store.readAccountByEmail(ctx, model.Email)
+	existingAccount, err := s.store.findAccountByEmail(ctx, model.Email)
 	if err != nil {
 		if !errors.Is(err, response.ErrNotFound) {
 			return "", "", err
@@ -54,7 +55,7 @@ func (s *service) signup(ctx context.Context, model SignupRequestModel) (string,
 
 func (s *service) login(ctx context.Context, model LoginRequestModel) (string, string, error) {
 	// Call the store
-	account, err := s.store.readAccountByEmail(ctx, model.Email)
+	account, err := s.store.findAccountByEmail(ctx, model.Email)
 	if err != nil {
 		return "", "", err
 	}
@@ -72,6 +73,47 @@ func (s *service) login(ctx context.Context, model LoginRequestModel) (string, s
 	}
 
 	return accessToken, refreshToken, nil
+}
+
+func (s *service) refreshTokens(ctx context.Context, model RefreshTokenRequestModel) (string, string, error) {
+	// hash the incoming refresh token
+	rtHash := hashToken(model.RefreshToken)
+
+	fmt.Printf("rtHash: %v\n", rtHash)
+
+	// get the stored refresh token
+	rt, err := s.store.findRefreshToken(ctx, rtHash)
+	if err != nil {
+		return "", "", err
+	}
+
+	fmt.Printf("rt: %+v\n", rt)
+
+	if rt.IsRevoked {
+		// revoke all existing refresh tokens for the account
+		err := s.store.revokeAllAccountRefreshTokens(ctx, rt.AccountId)
+		if err != nil {
+			return "", "", err
+		}
+		return "", "", fmt.Errorf("%w: refresh token is revoked", response.ErrUnauthorized)
+	}
+
+	if time.Now().After(rt.ExpiresAt) {
+		// revoke the expired refresh token
+		err := s.store.revokeRefreshToken(ctx, rt.Id)
+		if err != nil {
+			return "", "", err
+		}
+		return "", "", fmt.Errorf("%w: refresh token expired", response.ErrUnauthorized)
+	}
+
+	// generate tokens
+	access, refresh, err := s.getAuthTokens(ctx, rt.AccountId)
+	if err != nil {
+		return "", "", err
+	}
+
+	return access, refresh, nil
 }
 
 func (s *service) getAuthTokens(ctx context.Context, accountId string) (access, refresh string, err error) {
@@ -120,16 +162,20 @@ func (s *service) getAuthTokens(ctx context.Context, accountId string) (access, 
 	}
 
 	// hash the refresh token for storage
-	hash := sha256.Sum256([]byte(refresh))
-	refreshHashed := hex.EncodeToString(hash[:])
+	refreshHashed := hashToken(refresh)
 
 	// call the store
-	_, err = s.store.insertRefreshToken(ctx, accountId, refreshHashed, now, expRefresh)
+	err = s.store.insertRefreshToken(ctx, accountId, refreshHashed, now, expRefresh)
 	if err != nil {
 		return
 	}
 
 	return
+}
+
+func hashToken(val string) string {
+	hash := sha256.Sum256([]byte(val))
+	return hex.EncodeToString(hash[:])
 }
 
 func newService(cfg *config.Config, store *store) *service {
