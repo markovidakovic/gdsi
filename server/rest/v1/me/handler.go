@@ -24,7 +24,7 @@ type handler struct {
 // @Security BearerAuth
 // @Router /v1/me [get]
 func (h *handler) getMe(w http.ResponseWriter, r *http.Request) {
-	accountId := r.Context().Value(middleware.AccountIdKey).(string)
+	accountId := r.Context().Value(middleware.AccountIdCtxKey).(string)
 
 	result, err := h.service.getMe(r.Context(), accountId)
 	if err != nil {

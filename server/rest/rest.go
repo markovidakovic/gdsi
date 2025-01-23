@@ -10,6 +10,7 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/markovidakovic/gdsi/server/config"
 	"github.com/markovidakovic/gdsi/server/db"
+	"github.com/markovidakovic/gdsi/server/middleware"
 	v1 "github.com/markovidakovic/gdsi/server/rest/v1"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
@@ -64,7 +65,8 @@ func (s *server) setupMiddleware() {
 		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		MaxAge:         300, // Maximum value not ignored by any of major browsers
 	}))
-	s.Rtr.Use(gochimiddleware.Logger)
+	// s.Rtr.Use(gochimiddleware.Logger)
+	s.Rtr.Use(middleware.Logger)
 	s.Rtr.Use(gochimiddleware.AllowContentType("application/json"))
 	s.Rtr.Use(gochimiddleware.CleanPath)
 	s.Rtr.Use(gochimiddleware.NoCache)

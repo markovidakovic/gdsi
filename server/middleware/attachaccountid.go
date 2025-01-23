@@ -8,10 +8,8 @@ import (
 	"github.com/markovidakovic/gdsi/server/response"
 )
 
-type contextKey string
-
-const (
-	AccountIdKey contextKey = "account_id"
+var (
+	AccountIdCtxKey = &contextKey{"account-id"}
 )
 
 // AttachAccountId sets the authenticated account id to the context for easier access in the handlers
@@ -25,8 +23,7 @@ func AttachAccountId(next http.Handler) http.Handler {
 			return
 		}
 
-		// add account_id to the context
-		ctx := context.WithValue(r.Context(), AccountIdKey, accountId)
+		ctx := context.WithValue(r.Context(), AccountIdCtxKey, accountId)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
