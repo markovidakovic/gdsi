@@ -15,6 +15,13 @@ type store struct {
 	db *db.Conn
 }
 
+func newStore(db *db.Conn) *store {
+	var r = &store{
+		db,
+	}
+	return r
+}
+
 func (s *store) insertAccount(ctx context.Context, model SignupRequestModel) (Account, error) {
 	sql1 := `
 		insert into account (name, email, dob, gender, phone_number, password)
@@ -212,11 +219,4 @@ func (s *store) revokeRefreshToken(ctx context.Context, rtId string) error {
 	}
 
 	return nil
-}
-
-func newStore(db *db.Conn) *store {
-	var r = &store{
-		db,
-	}
-	return r
 }

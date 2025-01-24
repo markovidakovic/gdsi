@@ -14,6 +14,13 @@ type handler struct {
 	service *service
 }
 
+func newHandler(cfg *config.Config, db *db.Conn) *handler {
+	h := &handler{}
+	store := newStore(db)
+	h.service = newService(cfg, store)
+	return h
+}
+
 // @Summary Get
 // @Description Get my account and player profile data
 // @Tags me
@@ -69,11 +76,4 @@ func (h *handler) putMe(w http.ResponseWriter, r *http.Request) {
 // @Router /v1/me [delete]
 func (h *handler) deleteMe(w http.ResponseWriter, r *http.Request) {
 	response.WriteSuccess(w, http.StatusNoContent, "deleted me")
-}
-
-func newHandler(cfg *config.Config, db *db.Conn) *handler {
-	h := &handler{}
-	store := newStore(db)
-	h.service = newService(cfg, store)
-	return h
 }

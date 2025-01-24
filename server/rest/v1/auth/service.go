@@ -19,6 +19,14 @@ type service struct {
 	store *store
 }
 
+func newService(cfg *config.Config, store *store) *service {
+	var s = &service{
+		cfg,
+		store,
+	}
+	return s
+}
+
 func (s *service) signup(ctx context.Context, model SignupRequestModel) (string, string, error) {
 	// Hash the password
 	pwdBytes, err := bcrypt.GenerateFromPassword([]byte(model.Password), bcrypt.DefaultCost)
@@ -176,12 +184,4 @@ func (s *service) getAuthTokens(ctx context.Context, accountId string) (access, 
 func hashToken(val string) string {
 	hash := sha256.Sum256([]byte(val))
 	return hex.EncodeToString(hash[:])
-}
-
-func newService(cfg *config.Config, store *store) *service {
-	var s = &service{
-		cfg,
-		store,
-	}
-	return s
 }

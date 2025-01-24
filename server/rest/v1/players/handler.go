@@ -12,6 +12,13 @@ type handler struct {
 	service *service
 }
 
+func newHandler(cfg *config.Config, db *db.Conn) *handler {
+	h := &handler{}
+	store := newStore(db)
+	h.service = newService(cfg, store)
+	return h
+}
+
 // @Summary Get
 // @Description Get players
 // @Tags players
@@ -58,11 +65,4 @@ func (h *handler) getPlayer(w http.ResponseWriter, r *http.Request) {
 // @Router /v1/players/{playerId} [put]
 func (h *handler) putPlayer(w http.ResponseWriter, r *http.Request) {
 	response.WriteSuccess(w, http.StatusOK, "update player")
-}
-
-func newHandler(cfg *config.Config, db *db.Conn) *handler {
-	h := &handler{}
-	store := newStore(db)
-	h.service = newService(cfg, store)
-	return h
 }

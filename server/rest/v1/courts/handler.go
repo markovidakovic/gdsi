@@ -12,6 +12,13 @@ type handler struct {
 	service *service
 }
 
+func newHandler(cfg *config.Config, db *db.Conn) *handler {
+	h := &handler{}
+	store := newStore(db)
+	h.service = newService(cfg, store)
+	return h
+}
+
 // @Summary Create
 // @Description Create a new court
 // @Tags courts
@@ -90,11 +97,4 @@ func (h *handler) putCourt(w http.ResponseWriter, r *http.Request) {
 // @Router /v1/courts/{courtId} [delete]
 func (h *handler) deleteCourt(w http.ResponseWriter, r *http.Request) {
 	response.WriteSuccess(w, http.StatusNoContent, "deleted court")
-}
-
-func newHandler(cfg *config.Config, db *db.Conn) *handler {
-	h := &handler{}
-	store := newStore(db)
-	h.service = newService(cfg, store)
-	return h
 }

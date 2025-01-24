@@ -18,7 +18,7 @@ import (
 	"github.com/markovidakovic/gdsi/server/rest/v1/standings"
 )
 
-func MountHandlers(cfg *config.Config, db *db.Conn) func(r chi.Router) {
+func MountRouter(cfg *config.Config, db *db.Conn) func(r chi.Router) {
 	return func(r chi.Router) {
 		r.Group(func(r chi.Router) {
 			r.Route("/auth", auth.Route(cfg, db))

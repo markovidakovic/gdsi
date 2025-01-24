@@ -16,6 +16,13 @@ type handler struct {
 	service *service
 }
 
+func newHandler(cfg *config.Config, db *db.Conn) *handler {
+	h := &handler{}
+	store := newStore(db)
+	h.service = newService(cfg, store)
+	return h
+}
+
 // @Summary Signup
 // @Description Signup a new account
 // @Tags auth
@@ -196,11 +203,4 @@ func (h *handler) postForgottenPassword(w http.ResponseWriter, r *http.Request) 
 // @Router /v1/auth/passwords/forgotten [put]
 func (h *handler) putForgottenPassword(w http.ResponseWriter, r *http.Request) {
 	response.WriteSuccess(w, http.StatusOK, "email sent")
-}
-
-func newHandler(cfg *config.Config, db *db.Conn) *handler {
-	h := &handler{}
-	store := newStore(db)
-	h.service = newService(cfg, store)
-	return h
 }

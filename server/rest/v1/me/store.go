@@ -14,6 +14,12 @@ type store struct {
 	db *db.Conn
 }
 
+func newStore(db *db.Conn) *store {
+	return &store{
+		db,
+	}
+}
+
 func (s *store) queryMe(ctx context.Context, accountId string) (*MeModel, error) {
 	query := `
 		select 
@@ -100,10 +106,4 @@ func (s *store) queryMe(ctx context.Context, accountId string) (*MeModel, error)
 	}
 
 	return &mm, nil
-}
-
-func newStore(db *db.Conn) *store {
-	return &store{
-		db,
-	}
 }

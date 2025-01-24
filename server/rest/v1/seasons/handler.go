@@ -12,6 +12,13 @@ type handler struct {
 	service *service
 }
 
+func newHandler(cfg *config.Config, db *db.Conn) *handler {
+	h := &handler{}
+	store := newStore(db)
+	h.service = newService(cfg, store)
+	return h
+}
+
 // @Summary Create
 // @Description Create a new season
 // @Tags seasons
@@ -90,11 +97,4 @@ func (h *handler) putSeason(w http.ResponseWriter, r *http.Request) {
 // @Router /v1/seasons/{seasonId} [delete]
 func (h *handler) deleteSeason(w http.ResponseWriter, r *http.Request) {
 	response.WriteSuccess(w, http.StatusNoContent, "deleted season")
-}
-
-func newHandler(cfg *config.Config, db *db.Conn) *handler {
-	h := &handler{}
-	store := newStore(db)
-	h.service = newService(cfg, store)
-	return h
 }

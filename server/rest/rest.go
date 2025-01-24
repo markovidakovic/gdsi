@@ -35,11 +35,11 @@ type serverOption func(*server) error
 // @in header
 // @name Authorization
 // @description Enter the Bearer token in the format: Bearer token
-func (s *server) MountHandlers() {
+func (s *server) MountRouters() {
 	s.setupMiddleware()
 
 	// mount v1 api endpoints
-	s.Rtr.Route("/v1", v1.MountHandlers(s.Cfg, s.Db))
+	s.Rtr.Route("/v1", v1.MountRouter(s.Cfg, s.Db))
 
 	if s.swaggerEnabled {
 		s.Rtr.Get("/swagger/*", httpSwagger.WrapHandler)
