@@ -1,5 +1,6 @@
 -- migrate:up
 create extension if not exists "uuid-ossp";
+create type role as enum ('developer', 'admin', 'user');
 create type gender as enum ('male', 'female');
 
 create table account (
@@ -10,9 +11,11 @@ create table account (
     gender gender not null,
     phone_number varchar(250) not null,
     password text not null,
+    role role not null default 'user',
     created_at timestamptz not null default current_timestamp
 );
 
 -- migrate:down
 drop table if exists account;
 drop type if exists gender;
+drop type if exists role;

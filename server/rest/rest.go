@@ -11,7 +11,7 @@ import (
 	"github.com/markovidakovic/gdsi/server/config"
 	"github.com/markovidakovic/gdsi/server/db"
 	"github.com/markovidakovic/gdsi/server/middleware"
-	v1 "github.com/markovidakovic/gdsi/server/rest/v1"
+	v1 "github.com/markovidakovic/gdsi/server/v1"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 

@@ -8,14 +8,14 @@ import (
 	"github.com/markovidakovic/gdsi/server/config"
 	"github.com/markovidakovic/gdsi/server/db"
 	"github.com/markovidakovic/gdsi/server/middleware"
-	"github.com/markovidakovic/gdsi/server/rest/v1/auth"
-	"github.com/markovidakovic/gdsi/server/rest/v1/courts"
-	"github.com/markovidakovic/gdsi/server/rest/v1/leagues"
-	"github.com/markovidakovic/gdsi/server/rest/v1/matches"
-	"github.com/markovidakovic/gdsi/server/rest/v1/me"
-	"github.com/markovidakovic/gdsi/server/rest/v1/players"
-	"github.com/markovidakovic/gdsi/server/rest/v1/seasons"
-	"github.com/markovidakovic/gdsi/server/rest/v1/standings"
+	"github.com/markovidakovic/gdsi/server/v1/auth"
+	"github.com/markovidakovic/gdsi/server/v1/courts"
+	"github.com/markovidakovic/gdsi/server/v1/leagues"
+	"github.com/markovidakovic/gdsi/server/v1/matches"
+	"github.com/markovidakovic/gdsi/server/v1/me"
+	"github.com/markovidakovic/gdsi/server/v1/players"
+	"github.com/markovidakovic/gdsi/server/v1/seasons"
+	"github.com/markovidakovic/gdsi/server/v1/standings"
 )
 
 func MountRouter(cfg *config.Config, db *db.Conn) func(r chi.Router) {

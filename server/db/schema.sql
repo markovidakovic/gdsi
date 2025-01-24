@@ -44,6 +44,17 @@ CREATE TYPE public.handedness AS ENUM (
 );
 
 
+--
+-- Name: role; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.role AS ENUM (
+    'developer',
+    'admin',
+    'user'
+);
+
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
@@ -60,6 +71,7 @@ CREATE TABLE public.account (
     gender public.gender NOT NULL,
     phone_number character varying(250) NOT NULL,
     password text NOT NULL,
+    role public.role DEFAULT 'user'::public.role NOT NULL,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 

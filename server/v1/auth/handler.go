@@ -3,8 +3,6 @@ package auth
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"net"
 	"net/http"
 
 	"github.com/markovidakovic/gdsi/server/config"
@@ -98,21 +96,21 @@ func (h *handler) postLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// for now not used, just to see in the future what to maybe store
-	ra := r.RemoteAddr
-	host, port, err := net.SplitHostPort(ra)
-	if err != nil {
-		fmt.Printf("err: %v\n", err)
-	}
-	fmt.Printf("ip: %v\n", ra)
-	fmt.Printf("host: %v\n", host)
-	fmt.Printf("port: %v\n", port)
-	fmt.Printf("r.UserAgent(): %v\n", r.UserAgent())
+	// ra := r.RemoteAddr
+	// host, port, err := net.SplitHostPort(ra)
+	// if err != nil {
+	// 	fmt.Printf("err: %v\n", err)
+	// }
+	// fmt.Printf("ip: %v\n", ra)
+	// fmt.Printf("host: %v\n", host)
+	// fmt.Printf("port: %v\n", port)
+	// fmt.Printf("r.UserAgent(): %v\n", r.UserAgent())
 
 	// Call the service
 	accessToken, refreshToken, err := h.service.login(r.Context(), input)
 	if err != nil {
 		switch {
-		case errors.Is(err, response.ErrDuplicateRecord):
+		case errors.Is(err, response.ErrNotFound):
 			response.WriteFailure(w, response.NewBadRequestFailure("invalid email or password"))
 		default:
 			response.WriteFailure(w, response.NewInternalFailure(err))
