@@ -27,7 +27,7 @@ func MountRouter(cfg *config.Config, db *db.Conn) func(r chi.Router) {
 			// seek, verify and validate jwt
 			r.Use(jwtauth.Verifier(cfg.JwtAuth))
 			r.Use(jwtauth.Authenticator(cfg.JwtAuth))
-			r.Use(middleware.AttachAccountId)
+			r.Use(middleware.AccountInfo)
 
 			r.Route("/courts", courts.Route(cfg, db))
 			r.Route("/me", me.Route(cfg, db))

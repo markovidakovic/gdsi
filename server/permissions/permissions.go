@@ -44,7 +44,10 @@ var rolePermissions = map[string][]Permission{
 	},
 }
 
-func HasPermission(role string, perm Permission) bool {
+// Has accepts the account role and the needed permission to access the resource.
+// It gets the permissions for a specific role and looks if the account role
+// satisfies the required permission
+func Has(role string, perm Permission) bool {
 	perms, exists := rolePermissions[role]
 	if !exists {
 		return false

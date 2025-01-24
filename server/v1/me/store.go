@@ -48,7 +48,7 @@ func (s *store) queryMe(ctx context.Context, accountId string) (*MeModel, error)
 			league.id as league_id,
 			league.title as league_title,
 			league.created_at as league_created_at
-		FROM account
+		from account
 		left join player on account.id = player.account_id
 		left join league on player.current_league_id = league.id
 		where account.id = $1

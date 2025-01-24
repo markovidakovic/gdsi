@@ -11,6 +11,7 @@ type Account struct {
 	Gender      string    `json:"gender"`
 	PhoneNumber string    `json:"phone_number"`
 	Password    string    `json:"-"`
+	Role        string    `json:"role"`
 	CreatedAt   time.Time `json:"created_at"`
 }
 

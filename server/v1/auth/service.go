@@ -53,7 +53,7 @@ func (s *service) signup(ctx context.Context, model SignupRequestModel) (string,
 	}
 
 	// Generate jwt
-	accessToken, refreshToken, err := s.getAuthTokens(ctx, newAccount.Id)
+	accessToken, refreshToken, err := s.getAuthTokens(ctx, newAccount.Id, newAccount.Role)
 	if err != nil {
 		return "", "", err
 	}
@@ -75,7 +75,7 @@ func (s *service) login(ctx context.Context, model LoginRequestModel) (string, s
 	}
 
 	// Generate jwt
-	accessToken, refreshToken, err := s.getAuthTokens(ctx, account.Id)
+	accessToken, refreshToken, err := s.getAuthTokens(ctx, account.Id, account.Role)
 	if err != nil {
 		return "", "", err
 	}
@@ -87,15 +87,14 @@ func (s *service) refreshTokens(ctx context.Context, model RefreshTokenRequestMo
 	// hash the incoming refresh token
 	rtHash := hashToken(model.RefreshToken)
 
-	fmt.Printf("rtHash: %v\n", rtHash)
-
 	// get the stored refresh token
-	rt, err := s.store.findRefreshToken(ctx, rtHash)
+	rt, role, err := s.store.findRefreshToken(ctx, rtHash)
 	if err != nil {
 		return "", "", err
 	}
 
 	fmt.Printf("rt: %+v\n", rt)
+	fmt.Printf("role: %v\n", role)
 
 	if rt.IsRevoked {
 		// revoke all existing refresh tokens for the account
@@ -116,7 +115,7 @@ func (s *service) refreshTokens(ctx context.Context, model RefreshTokenRequestMo
 	}
 
 	// generate tokens
-	access, refresh, err := s.getAuthTokens(ctx, rt.AccountId)
+	access, refresh, err := s.getAuthTokens(ctx, rt.AccountId, role)
 	if err != nil {
 		return "", "", err
 	}
@@ -124,7 +123,7 @@ func (s *service) refreshTokens(ctx context.Context, model RefreshTokenRequestMo
 	return access, refresh, nil
 }
 
-func (s *service) getAuthTokens(ctx context.Context, accountId string) (access, refresh string, err error) {
+func (s *service) getAuthTokens(ctx context.Context, id, role string) (access, refresh string, err error) {
 	var iss string = "gdsi api"
 	var aud string = "gdsi app"
 
@@ -146,12 +145,13 @@ func (s *service) getAuthTokens(ctx context.Context, accountId string) (access, 
 
 	// jwt claims
 	var claims = map[string]interface{}{
-		"iss": iss,
-		"sub": accountId,
-		"aud": aud,
-		"exp": expAccess.Unix(),
-		"nbf": now.Unix(),
-		"iat": now.Unix(),
+		"iss":  iss,
+		"sub":  id,
+		"aud":  aud,
+		"exp":  expAccess.Unix(),
+		"nbf":  now.Unix(),
+		"iat":  now.Unix(),
+		"role": role,
 	}
 
 	// create access jwt
@@ -173,7 +173,7 @@ func (s *service) getAuthTokens(ctx context.Context, accountId string) (access, 
 	refreshHashed := hashToken(refresh)
 
 	// call the store
-	err = s.store.insertRefreshToken(ctx, accountId, refreshHashed, now, expRefresh)
+	err = s.store.insertRefreshToken(ctx, id, refreshHashed, now, expRefresh)
 	if err != nil {
 		return
 	}
