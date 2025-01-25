@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/jwtauth/v5"
-	"github.com/markovidakovic/gdsi/server/permissions"
+	"github.com/markovidakovic/gdsi/server/permission"
 	"github.com/markovidakovic/gdsi/server/response"
 )
 
@@ -44,13 +44,13 @@ func AccountInfo(next http.Handler) http.Handler {
 }
 
 // RequirePermission checks if the current account role has permission to access a specific resource
-func RequirePermission(perm permissions.Permission) func(next http.Handler) http.Handler {
+func RequirePermission(perm permission.Permission) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			role := r.Context().Value(AccountRoleCtxKey).(string)
 
 			// check permission
-			if !permissions.Has(role, perm) {
+			if !permission.Has(role, perm) {
 				response.WriteFailure(w, response.NewForbiddenFailure("insufficient permissions"))
 				return
 			}
@@ -62,14 +62,14 @@ func RequirePermission(perm permissions.Permission) func(next http.Handler) http
 
 // RequireOwnershipOrPermission checks if the current authenticated account is the resource owner or if
 // it has rbac permission to access the resource
-func RequireOwnershipOrPermission(perm permissions.Permission, oc OwnershipChecker, resourceUrlPattern string) func(next http.Handler) http.Handler {
+func RequireOwnershipOrPermission(perm permission.Permission, oc OwnershipChecker, resourceUrlPattern string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			accountId := r.Context().Value(AccountIdCtxKey).(string)
 			role := r.Context().Value(AccountRoleCtxKey).(string)
 
 			// check permission
-			if permissions.Has(role, perm) {
+			if permission.Has(role, perm) {
 				next.ServeHTTP(w, r)
 				return
 			}
