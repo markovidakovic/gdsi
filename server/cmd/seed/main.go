@@ -1,5 +1,5 @@
 // seed is used one time for seeding the database with a developer account
-// format of arguments arg1=val1 arg2=val2
+// format of arguments -arg1="val1" -arg2="val2"
 package main
 
 import (
