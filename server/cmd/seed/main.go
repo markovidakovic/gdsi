@@ -4,9 +4,10 @@ package main
 
 import (
 	"context"
+	"flag"
+	"fmt"
 	"log"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -16,87 +17,111 @@ import (
 	"github.com/markovidakovic/gdsi/server/validation"
 )
 
+type input struct {
+	name     string
+	email    string
+	dob      string
+	gender   string
+	phone    string
+	password string
+	role     string
+}
+
 func main() {
-	// get cli arguments
-	var args []string = os.Args[1:]
-	if len(args) == 0 {
-		log.Fatal("no arguments provided")
-	}
-
-	var name, email, dob, gender, phone, password string
-	var role string = "developer"
-
-	// process cli arguments
-	for _, arg := range args {
-		argSl := strings.Split(arg, "=")
-
-		switch argSl[0] {
-		case "name":
-			name = argSl[1]
-		case "email":
-			email = argSl[1]
-		case "dob":
-			dob = argSl[1]
-		case "gender":
-			gender = argSl[1]
-		case "phone":
-			phone = argSl[1]
-		case "password":
-			password = argSl[1]
-		default:
-			log.Fatalf("argument %q not recognized", argSl[1])
-		}
-	}
+	// parse cli args
+	input := parseInput()
 
 	// validate input
-	if name == "" {
-		log.Fatal("argument name empty")
-	}
-	if email == "" {
-		log.Fatalf("argument email empty")
-	} else if !validation.IsValidEmail(email) {
-		log.Fatalf("argument email is invalid")
-	}
-	if dob == "" {
-		log.Fatalf("argument dob empty")
-	} else {
-		if _, err := time.Parse("2006-01-02", dob); err != nil {
-			log.Fatal("argument dob invalid")
-		}
-	}
-	if gender == "" {
-		log.Fatal("argument gender empty")
-	} else if gender != "male" && gender != "female" {
-		log.Fatal("argument gender invalid")
-	}
-	if phone == "" {
-		log.Fatal("argument phone empty")
-	} else if !validation.IsValidPhone(phone) {
-		log.Fatal("argument phone invalid")
-	}
-	if password == "" {
-		log.Fatal("argument password empty")
+	err := validateInput(input)
+	if err != nil {
+		log.Fatalf("invalid input: %v", err)
 	}
 
-	password, err := security.EncryptPwd(password)
+	// encrypt pwd
+	input.password, err = security.EncryptPwd(input.password)
 	if err != nil {
-		log.Fatal("failed to encrypt password")
+		log.Fatalf("encrypting password: %v", err)
 	}
 
 	// load config
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatal("failed to load config")
+		log.Fatalf("loading config: %v", err)
 	}
-
-	ctx := context.Background()
 
 	// connect to the db
 	db, err := db.Connect(cfg)
 	if err != nil {
-		log.Fatal("failed to connect to the database")
+		log.Fatalf("connecting database: %v", err)
 	}
 
+	ctx := context.Background()
+
+	// seed dev account
+	err = seedDeveloperAccount(ctx, db, input)
+	if err != nil {
+		log.Fatalf("seeding developer account: %v", err)
+	}
+
+}
+
+func parseInput() input {
+	in := input{}
+	in.role = "developer"
+
+	flag.StringVar(&in.name, "name", "", "Full name")
+	flag.StringVar(&in.email, "email", "", "Email")
+	flag.StringVar(&in.dob, "dob", "", "Date of birth")
+	flag.StringVar(&in.gender, "gender", "", "Gender (male or female)")
+	flag.StringVar(&in.phone, "phone", "", "Phone number")
+	flag.StringVar(&in.password, "password", "", "Password")
+
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Seed developer account into the database\n")
+		fmt.Fprintf(os.Stderr, "Usage:\n")
+		flag.PrintDefaults()
+	}
+
+	flag.Parse()
+
+	return in
+}
+
+func validateInput(in input) error {
+	if in.name == "" {
+		return fmt.Errorf("name is required")
+	}
+	if in.email == "" {
+		return fmt.Errorf("email is required")
+	} else if !validation.IsValidEmail(in.email) {
+		return fmt.Errorf("email is invalid")
+	}
+	if in.dob == "" {
+		return fmt.Errorf("dob is required")
+	} else {
+		if _, err := time.Parse("2006-01-02", in.dob); err != nil {
+			return fmt.Errorf("dob is invalid")
+		}
+	}
+	if in.gender == "" {
+		return fmt.Errorf("gender is required")
+	} else if in.gender != "male" && in.gender != "female" {
+		return fmt.Errorf("gender is invalid, expected male or female")
+	}
+	if in.phone == "" {
+		return fmt.Errorf("phone number is required")
+	} else if !validation.IsValidPhone(in.phone) {
+		return fmt.Errorf("phone number is invalid")
+	}
+	if in.password == "" {
+		return fmt.Errorf("password is required")
+	}
+
+	return nil
+}
+
+func seedDeveloperAccount(ctx context.Context, db *db.Conn, in input) error {
+	// queries
 	sql1 := `
 		insert into account (name, email, dob, gender, phone_number, password, role)
 		values ($1, $2, $3, $4, $5, $6, $7)
@@ -109,9 +134,10 @@ func main() {
 
 	var dest string
 
+	// begin tx
 	tx, err := db.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	defer func() {
@@ -121,18 +147,22 @@ func main() {
 		log.Println("developer account seeded")
 	}()
 
-	err = db.QueryRow(ctx, sql1, name, email, dob, gender, phone, password, role).Scan(&dest)
+	// account
+	err = db.QueryRow(ctx, sql1, in.name, in.email, in.dob, in.gender, in.phone, in.password, in.role).Scan(&dest)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
+	// player
 	_, err = db.Exec(ctx, sql2, dest)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+
+	return nil
 }
