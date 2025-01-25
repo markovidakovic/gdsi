@@ -12,8 +12,8 @@ func Route(cfg *config.Config, db *db.Conn) func(r chi.Router) {
 	hdl := newHandler(cfg, db)
 	return func(r chi.Router) {
 		r.With(middleware.RequirePermission(permission.CreateCourt)).Post("/", hdl.postCourt)
-		r.Get("/", hdl.getCourt)
-		r.Get("/{courtId}", hdl.getCourtById)
+		r.Get("/", hdl.getCourts)
+		r.Get("/{courtId}", hdl.getCourt)
 		r.With(middleware.RequirePermission(permission.UpdateCourt)).Put("/{courtId}", hdl.putCourt)
 		r.With(middleware.RequirePermission(permission.DeleteCourt)).Delete("/{courtId}", hdl.deleteCourt)
 	}

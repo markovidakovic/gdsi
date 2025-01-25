@@ -6,7 +6,6 @@ import (
 
 	"github.com/markovidakovic/gdsi/server/config"
 	"github.com/markovidakovic/gdsi/server/db"
-	"github.com/markovidakovic/gdsi/server/middleware"
 	"github.com/markovidakovic/gdsi/server/response"
 )
 
@@ -31,9 +30,7 @@ func newHandler(cfg *config.Config, db *db.Conn) *handler {
 // @Security BearerAuth
 // @Router /v1/me [get]
 func (h *handler) getMe(w http.ResponseWriter, r *http.Request) {
-	accountId := r.Context().Value(middleware.AccountIdCtxKey).(string)
-
-	result, err := h.service.getMe(r.Context(), accountId)
+	result, err := h.service.getMe(r.Context())
 	if err != nil {
 		switch {
 		case errors.Is(err, response.ErrNotFound):

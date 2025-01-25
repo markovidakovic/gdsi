@@ -9,11 +9,6 @@ type Court struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-type CreatorModel struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
-}
-
 type CourtModel struct {
 	Id        string       `json:"id"`
 	Name      string       `json:"name"`
@@ -21,8 +16,14 @@ type CourtModel struct {
 	CreatedAt time.Time    `json:"created_at"`
 }
 
-type CreateCourtModel struct {
+type CreatorModel struct {
+	Id   string `json:"id"`
 	Name string `json:"name"`
+}
+
+type CreateCourtModel struct {
+	Name      string `json:"name"`
+	CreatorId string `json:"-"`
 }
 
 type UpdateCourtModel struct {

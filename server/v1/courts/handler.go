@@ -1,6 +1,7 @@
 package courts
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/markovidakovic/gdsi/server/config"
@@ -32,7 +33,31 @@ func newHandler(cfg *config.Config, db *db.Conn) *handler {
 // @Security BearerAuth
 // @Router /v1/courts [post]
 func (h *handler) postCourt(w http.ResponseWriter, r *http.Request) {
-	response.WriteSuccess(w, http.StatusCreated, "create court")
+	var input CreateCourtModel
+	err := json.NewDecoder(r.Body).Decode(&input)
+	if err != nil {
+		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))
+		return
+	}
+
+	// validate
+	valErr := validatePostCourt(input)
+	if valErr != nil {
+		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
+		return
+	}
+
+	// service call
+	result, err := h.service.createCourt(r.Context(), input)
+	if err != nil {
+		switch {
+		default:
+			response.WriteFailure(w, response.NewInternalFailure(err))
+			return
+		}
+	}
+
+	response.WriteSuccess(w, http.StatusCreated, result)
 }
 
 // @Summary Get
@@ -45,8 +70,18 @@ func (h *handler) postCourt(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} response.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/courts [get]
-func (h *handler) getCourt(w http.ResponseWriter, r *http.Request) {
-	response.WriteSuccess(w, http.StatusOK, "get courts")
+func (h *handler) getCourts(w http.ResponseWriter, r *http.Request) {
+	// service call
+	result, err := h.service.getCourts(r.Context())
+	if err != nil {
+		switch {
+		default:
+			response.WriteFailure(w, response.NewInternalFailure(err))
+			return
+		}
+	}
+
+	response.WriteSuccess(w, http.StatusOK, result)
 }
 
 // @Summary Get by id
@@ -61,7 +96,7 @@ func (h *handler) getCourt(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} response.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/courts/{courtId} [get]
-func (h *handler) getCourtById(w http.ResponseWriter, r *http.Request) {
+func (h *handler) getCourt(w http.ResponseWriter, r *http.Request) {
 	response.WriteSuccess(w, http.StatusOK, "get court by id")
 }
 
