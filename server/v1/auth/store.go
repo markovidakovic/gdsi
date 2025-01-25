@@ -34,11 +34,11 @@ func (s *store) insertAccount(ctx context.Context, model SignupRequestModel) (Ac
 		values ($1)
 	`
 
-	var acc Account
+	var dest Account
 
 	tx, err := s.db.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
-		return acc, response.ErrInternal
+		return dest, response.ErrInternal
 	}
 
 	// tx rollback
@@ -48,24 +48,22 @@ func (s *store) insertAccount(ctx context.Context, model SignupRequestModel) (Ac
 		}
 	}()
 
-	err = tx.QueryRow(ctx, sql1, model.Name, model.Email, model.Dob, model.Gender, model.PhoneNumber, model.Password).Scan(&acc.Id, &acc.Name, &acc.Email, &acc.Dob, &acc.Gender, &acc.PhoneNumber, &acc.Password, &acc.Role, &acc.CreatedAt)
+	err = tx.QueryRow(ctx, sql1, model.Name, model.Email, model.Dob, model.Gender, model.PhoneNumber, model.Password).Scan(&dest.Id, &dest.Name, &dest.Email, &dest.Dob, &dest.Gender, &dest.PhoneNumber, &dest.Password, &dest.Role, &dest.CreatedAt)
 	if err != nil {
-		fmt.Printf("err: %v\n", err)
-		return acc, response.ErrInternal
+		return dest, response.ErrInternal
 	}
 
-	_, err = tx.Exec(ctx, sql2, acc.Id)
+	_, err = tx.Exec(ctx, sql2, dest.Id)
 	if err != nil {
-		fmt.Printf("err: %v\n", err)
-		return acc, response.ErrInternal
+		return dest, response.ErrInternal
 	}
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		return acc, response.ErrInternal
+		return dest, response.ErrInternal
 	}
 
-	return acc, nil
+	return dest, nil
 }
 
 func (s *store) findAccountByEmail(ctx context.Context, email string) (*Account, error) {
