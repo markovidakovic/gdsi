@@ -9,6 +9,7 @@ type MeModel struct {
 	Dob           time.Time          `json:"dob"`
 	Gender        string             `json:"gender"`
 	PhoneNumber   string             `json:"phone_number"`
+	Role          string             `json:"role"`
 	CreatedAt     time.Time          `json:"created_at"`
 	PlayerProfile PlayerProfileModel `json:"player_profile"`
 }

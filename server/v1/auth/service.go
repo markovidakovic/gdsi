@@ -12,6 +12,7 @@ import (
 
 	"github.com/markovidakovic/gdsi/server/config"
 	"github.com/markovidakovic/gdsi/server/response"
+	"github.com/markovidakovic/gdsi/server/security"
 )
 
 type service struct {
@@ -27,13 +28,13 @@ func newService(cfg *config.Config, store *store) *service {
 	return s
 }
 
-func (s *service) signup(ctx context.Context, model SignupRequestModel) (string, string, error) {
+func (s *service) processSignup(ctx context.Context, model SignupRequestModel) (string, string, error) {
+	var err error
 	// Hash the password
-	pwdBytes, err := bcrypt.GenerateFromPassword([]byte(model.Password), bcrypt.DefaultCost)
+	model.Password, err = security.EncryptPwd(model.Password)
 	if err != nil {
-		return "", "", err
+		return "", "", fmt.Errorf("encrypting the password: %v", err)
 	}
-	model.Password = string(pwdBytes)
 
 	// Check if email exists
 	existingAccount, err := s.store.findAccountByEmail(ctx, model.Email)
@@ -61,7 +62,7 @@ func (s *service) signup(ctx context.Context, model SignupRequestModel) (string,
 	return accessToken, refreshToken, nil
 }
 
-func (s *service) login(ctx context.Context, model LoginRequestModel) (string, string, error) {
+func (s *service) processLogin(ctx context.Context, model LoginRequestModel) (string, string, error) {
 	// Call the store
 	account, err := s.store.findAccountByEmail(ctx, model.Email)
 	if err != nil {
@@ -83,7 +84,7 @@ func (s *service) login(ctx context.Context, model LoginRequestModel) (string, s
 	return accessToken, refreshToken, nil
 }
 
-func (s *service) refreshTokens(ctx context.Context, model RefreshTokenRequestModel) (string, string, error) {
+func (s *service) processRefreshTokens(ctx context.Context, model RefreshTokenRequestModel) (string, string, error) {
 	// hash the incoming refresh token
 	rtHash := hashToken(model.RefreshToken)
 
@@ -92,9 +93,6 @@ func (s *service) refreshTokens(ctx context.Context, model RefreshTokenRequestMo
 	if err != nil {
 		return "", "", err
 	}
-
-	fmt.Printf("rt: %+v\n", rt)
-	fmt.Printf("role: %v\n", role)
 
 	if rt.IsRevoked {
 		// revoke all existing refresh tokens for the account

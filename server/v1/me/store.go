@@ -20,8 +20,8 @@ func newStore(db *db.Conn) *store {
 	}
 }
 
-func (s *store) queryMe(ctx context.Context, accountId string) (*MeModel, error) {
-	query := `
+func (s *store) findMe(ctx context.Context, accountId string) (*MeModel, error) {
+	sql1 := `
 		select 
 			account.id as account_id,
 			account.name as account_name,
@@ -29,6 +29,7 @@ func (s *store) queryMe(ctx context.Context, accountId string) (*MeModel, error)
 			account.dob as account_dob,
 			account.gender as account_gender,
 			account.phone_number as account_phone_number,
+			account.role as account_role,
 			account.created_at as account_created_at,
 			player.id as player_id,
 			player.height as player_height,
@@ -61,13 +62,14 @@ func (s *store) queryMe(ctx context.Context, accountId string) (*MeModel, error)
 	var leagueTitle sql.NullString
 	var leagueCreatedAt sql.NullTime
 
-	err := s.db.QueryRow(ctx, query, accountId).Scan(
+	err := s.db.QueryRow(ctx, sql1, accountId).Scan(
 		&mm.Id,
 		&mm.Name,
 		&mm.Email,
 		&mm.Dob,
 		&mm.Gender,
 		&mm.PhoneNumber,
+		&mm.Role,
 		&mm.CreatedAt,
 		&mm.PlayerProfile.Id,
 		&mm.PlayerProfile.Height,

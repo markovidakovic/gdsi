@@ -2,21 +2,25 @@ package courts
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/markovidakovic/gdsi/server/config"
 	"github.com/markovidakovic/gdsi/server/db"
+	"github.com/markovidakovic/gdsi/server/middleware"
 	"github.com/markovidakovic/gdsi/server/response"
 )
 
 type handler struct {
+	store   *store
 	service *service
 }
 
 func newHandler(cfg *config.Config, db *db.Conn) *handler {
 	h := &handler{}
-	store := newStore(db)
-	h.service = newService(cfg, store)
+	h.store = newStore(db)
+	h.service = newService(cfg, h.store)
 	return h
 }
 
@@ -47,8 +51,11 @@ func (h *handler) postCourt(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// service call
-	result, err := h.service.createCourt(r.Context(), input)
+	// attach account id
+	input.CreatorId = r.Context().Value(middleware.AccountIdCtxKey).(string)
+
+	// store call
+	result, err := h.store.insertCourt(r.Context(), input)
 	if err != nil {
 		switch {
 		default:
@@ -71,8 +78,8 @@ func (h *handler) postCourt(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/courts [get]
 func (h *handler) getCourts(w http.ResponseWriter, r *http.Request) {
-	// service call
-	result, err := h.service.getCourts(r.Context())
+	// store call
+	result, err := h.store.findCourts(r.Context())
 	if err != nil {
 		switch {
 		default:
@@ -97,7 +104,19 @@ func (h *handler) getCourts(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/courts/{courtId} [get]
 func (h *handler) getCourt(w http.ResponseWriter, r *http.Request) {
-	response.WriteSuccess(w, http.StatusOK, "get court by id")
+	// store call
+	result, err := h.store.findCourt(r.Context(), chi.URLParam(r, "courtId"))
+	if err != nil {
+		switch {
+		case errors.Is(err, response.ErrNotFound):
+			response.WriteFailure(w, response.NewNotFoundFailure("court not found"))
+			return
+		default:
+			response.WriteFailure(w, response.NewInternalFailure(err))
+			return
+		}
+	}
+	response.WriteSuccess(w, http.StatusOK, result)
 }
 
 // @Summary Update
@@ -115,7 +134,33 @@ func (h *handler) getCourt(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/courts/{courtId} [put]
 func (h *handler) putCourt(w http.ResponseWriter, r *http.Request) {
-	response.WriteSuccess(w, http.StatusOK, "update court")
+	var input UpdateCourtModel
+	err := json.NewDecoder(r.Body).Decode(&input)
+	if err != nil {
+		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))
+		return
+	}
+
+	// validate input
+	valErr := validatePutCourt(input)
+	if valErr != nil {
+		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
+		return
+	}
+
+	result, err := h.store.updateCourt(r.Context(), chi.URLParam(r, "courtId"), input)
+	if err != nil {
+		switch {
+		case errors.Is(err, response.ErrNotFound):
+			response.WriteFailure(w, response.NewNotFoundFailure("court not found"))
+			return
+		default:
+			response.WriteFailure(w, response.NewInternalFailure(err))
+			return
+		}
+	}
+
+	response.WriteSuccess(w, http.StatusOK, result)
 }
 
 // @Summary Delete
@@ -131,5 +176,18 @@ func (h *handler) putCourt(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/courts/{courtId} [delete]
 func (h *handler) deleteCourt(w http.ResponseWriter, r *http.Request) {
-	response.WriteSuccess(w, http.StatusNoContent, "deleted court")
+	// call store
+	err := h.store.deleteCourt(r.Context(), chi.URLParam(r, "courtId"))
+	if err != nil {
+		switch {
+		case errors.Is(err, response.ErrNotFound):
+			response.WriteFailure(w, response.NewNotFoundFailure("court not found"))
+			return
+		default:
+			response.WriteFailure(w, response.NewInternalFailure(err))
+			return
+		}
+	}
+
+	response.WriteSuccess(w, http.StatusNoContent, "deleted")
 }

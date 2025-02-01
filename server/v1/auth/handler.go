@@ -49,7 +49,7 @@ func (h *handler) postSignup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// call the service
-	accessToken, refreshToken, err := h.service.signup(r.Context(), input)
+	accessToken, refreshToken, err := h.service.processSignup(r.Context(), input)
 	if err != nil {
 		switch {
 		case errors.Is(err, response.ErrDuplicateRecord):
@@ -107,7 +107,7 @@ func (h *handler) postLogin(w http.ResponseWriter, r *http.Request) {
 	// fmt.Printf("r.UserAgent(): %v\n", r.UserAgent())
 
 	// Call the service
-	accessToken, refreshToken, err := h.service.login(r.Context(), input)
+	accessToken, refreshToken, err := h.service.processLogin(r.Context(), input)
 	if err != nil {
 		switch {
 		case errors.Is(err, response.ErrNotFound):
@@ -152,7 +152,7 @@ func (h *handler) postRefreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	access, refresh, err := h.service.refreshTokens(r.Context(), input)
+	access, refresh, err := h.service.processRefreshTokens(r.Context(), input)
 	if err != nil {
 		switch {
 		case errors.Is(err, response.ErrNotFound):
