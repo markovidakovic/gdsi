@@ -1,6 +1,7 @@
 package me
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -41,8 +42,8 @@ func (h *handler) getMe(w http.ResponseWriter, r *http.Request) {
 			response.WriteFailure(w, response.NewNotFoundFailure("account not found"))
 		default:
 			response.WriteFailure(w, response.NewInternalFailure(err))
+			return
 		}
-		return
 	}
 
 	response.WriteSuccess(w, http.StatusOK, result)
@@ -62,7 +63,28 @@ func (h *handler) getMe(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/me [put]
 func (h *handler) putMe(w http.ResponseWriter, r *http.Request) {
-	response.WriteSuccess(w, http.StatusOK, "update me")
+	var input UpdateMeModel
+	err := json.NewDecoder(r.Body).Decode(&input)
+	if err != nil {
+		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))
+		return
+	}
+
+	// get account id
+	accountId := r.Context().Value(middleware.AccountIdCtxKey).(string)
+
+	result, err := h.store.updateMe(r.Context(), accountId, input)
+	if err != nil {
+		switch {
+		case errors.Is(err, response.ErrNotFound):
+			response.WriteFailure(w, response.NewNotFoundFailure("account not found"))
+		default:
+			response.WriteFailure(w, response.NewInternalFailure(err))
+			return
+		}
+	}
+
+	response.WriteSuccess(w, http.StatusOK, result)
 }
 
 // @Summary Delete

@@ -60,9 +60,34 @@ func RequirePermission(perm permission.Permission) func(next http.Handler) http.
 	}
 }
 
-// RequireOwnershipOrPermission checks if the current authenticated account is the resource owner or if
+// RequireOwnerrship checks if the current authenticated account is the resource owner
+func RequireOwnership(oc OwnershipChecker, resourceUrlPattern string) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			accountId := r.Context().Value(AccountIdCtxKey).(string)
+			resourceId := chi.URLParam(r, resourceUrlPattern)
+
+			fmt.Printf("resourceId: %v\n", resourceId)
+
+			isOwner, err := oc(r.Context(), resourceId, accountId)
+			if err != nil {
+				response.WriteFailure(w, response.NewInternalFailure(err))
+				return
+			}
+
+			if !isOwner {
+				response.WriteFailure(w, response.NewForbiddenFailure("not resource owner"))
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+// RequirePermissionOrOwnership checks if the current authenticated account is the resource owner or if
 // it has rbac permission to access the resource
-func RequireOwnershipOrPermission(perm permission.Permission, oc OwnershipChecker, resourceUrlPattern string) func(next http.Handler) http.Handler {
+func RequirePermissionOrOwnership(perm permission.Permission, oc OwnershipChecker, resourceUrlPattern string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			accountId := r.Context().Value(AccountIdCtxKey).(string)

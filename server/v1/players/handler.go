@@ -1,8 +1,11 @@
 package players
 
 import (
+	"encoding/json"
+	"errors"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/markovidakovic/gdsi/server/config"
 	"github.com/markovidakovic/gdsi/server/db"
 	"github.com/markovidakovic/gdsi/server/response"
@@ -10,12 +13,13 @@ import (
 
 type handler struct {
 	service *service
+	store   *store
 }
 
 func newHandler(cfg *config.Config, db *db.Conn) *handler {
 	h := &handler{}
-	store := newStore(db)
-	h.service = newService(cfg, store)
+	h.store = newStore(db)
+	h.service = newService(cfg, h.store)
 	return h
 }
 
@@ -30,7 +34,17 @@ func newHandler(cfg *config.Config, db *db.Conn) *handler {
 // @Security BearerAuth
 // @Router /v1/players [get]
 func (h *handler) getPlayers(w http.ResponseWriter, r *http.Request) {
-	response.WriteSuccess(w, http.StatusOK, "get players")
+	// call store
+	result, err := h.store.findPlayers(r.Context())
+	if err != nil {
+		switch {
+		default:
+			response.WriteFailure(w, response.NewInternalFailure(err))
+			return
+		}
+	}
+
+	response.WriteSuccess(w, http.StatusOK, result)
 }
 
 // @Summary Get by id
@@ -46,7 +60,20 @@ func (h *handler) getPlayers(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/players/{playerId} [get]
 func (h *handler) getPlayer(w http.ResponseWriter, r *http.Request) {
-	response.WriteSuccess(w, http.StatusOK, "get player by id")
+	// call store
+	result, err := h.store.findPlayer(r.Context(), chi.URLParam(r, "playerId"))
+	if err != nil {
+		switch {
+		case errors.Is(err, response.ErrNotFound):
+			response.WriteFailure(w, response.NewNotFoundFailure("player not found"))
+			return
+		default:
+			response.WriteFailure(w, response.NewInternalFailure(err))
+			return
+		}
+	}
+
+	response.WriteSuccess(w, http.StatusOK, result)
 }
 
 // @Summary Update
@@ -64,5 +91,32 @@ func (h *handler) getPlayer(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/players/{playerId} [put]
 func (h *handler) putPlayer(w http.ResponseWriter, r *http.Request) {
-	response.WriteSuccess(w, http.StatusOK, "update player")
+	var input UpdatePlayerModel
+	err := json.NewDecoder(r.Body).Decode(&input)
+	if err != nil {
+		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))
+		return
+	}
+
+	// validate input
+	valErr := validatePutPlayer(input)
+	if valErr != nil {
+		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
+		return
+	}
+
+	// call store
+	result, err := h.store.updatePlayer(r.Context(), chi.URLParam(r, "playerId"), input)
+	if err != nil {
+		switch {
+		case errors.Is(err, response.ErrNotFound):
+			response.WriteFailure(w, response.NewNotFoundFailure("player not found"))
+			return
+		default:
+			response.WriteFailure(w, response.NewInternalFailure(err))
+			return
+		}
+	}
+
+	response.WriteSuccess(w, http.StatusOK, result)
 }

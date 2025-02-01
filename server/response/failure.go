@@ -45,7 +45,7 @@ type Failure struct {
 }
 
 // Error method implements the standard go error interface which requires an Error() string method
-// if there's a wrapped error (be.Err), it combines both error messages with a colon separator
+// if there's a wrapped error (f.Err), it combines both error messages with a colon separator
 func (f Failure) Error() string {
 	if f.Err != nil {
 		return fmt.Sprintf("%s: %v", f.Message, f.Err)

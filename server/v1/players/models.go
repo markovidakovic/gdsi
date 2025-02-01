@@ -2,6 +2,7 @@ package players
 
 import "time"
 
+// db table
 type Player struct {
 	Id              string    `json:"id"`
 	Height          *float64  `json:"height"`
@@ -21,16 +22,6 @@ type Player struct {
 	CreatedAt       time.Time `json:"created_at"`
 }
 
-type AccountModel struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
-}
-
-type CurrentLeagueModel struct {
-	Id    string `json:"id"`
-	Title string `json:"title"`
-}
-
 type PlayerModel struct {
 	Id              string              `json:"id"`
 	Height          *float64            `json:"height"`
@@ -47,6 +38,17 @@ type PlayerModel struct {
 	Elo             *int                `json:"elo"`
 	Account         AccountModel        `json:"account"`
 	CurrentLeague   *CurrentLeagueModel `json:"current_league"`
+	CreatedAt       time.Time           `json:"created_at"`
+}
+
+type AccountModel struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type CurrentLeagueModel struct {
+	Id    string `json:"id"`
+	Title string `json:"title"`
 }
 
 type UpdatePlayerModel struct {

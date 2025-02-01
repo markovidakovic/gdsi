@@ -23,6 +23,10 @@ const (
 	UpdateMatch Permission = "update:match"
 	DeleteMatch Permission = "delete:match"
 	SubmitScore Permission = "submit:score"
+
+	// player permission
+	UpdatePlayer Permission = "update:player"
+	DeletePlayer Permission = "delete:player"
 )
 
 var rolePermissions = map[string][]Permission{
@@ -31,6 +35,7 @@ var rolePermissions = map[string][]Permission{
 		CreateSeason, UpdateSeason, DeleteSeason,
 		CreateLeague, UpdateLeague, DeleteLeague,
 		CreateMatch, UpdateMatch, DeleteMatch, SubmitScore,
+		UpdatePlayer, DeletePlayer,
 	},
 	"admin": {
 		CreateCourt, UpdateCourt, DeleteCourt,
