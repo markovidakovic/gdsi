@@ -25,7 +25,7 @@ func newHandler(cfg *config.Config, db *db.Conn) *handler {
 // @Accept json
 // @Produce json
 // @Param seasonId path string true "Season id"
-// @Param body body leagues.CreateLeagueModel true "Request body"
+// @Param body body leagues.CreateLeagueRequestModel true "Request body"
 // @Success 201 {object} leagues.LeagueModel "OK"
 // @Failure 400 {object} response.ValidationFailure "Bad request"
 // @Failure 401 {object} response.Failure "Unauthorized"
@@ -75,7 +75,7 @@ func (h *handler) getLeague(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param seasonId path string true "Season id"
 // @Param leagueId path string true "League id"
-// @Param body body leagues.UpdateLeagueModel true "Request body"
+// @Param body body leagues.UpdateLeagueRequestModel true "Request body"
 // @Success 200 {object} leagues.LeagueModel "OK"
 // @Failure 400 {object} response.ValidationFailure "Bad request"
 // @Failure 401 {object} response.Failure "Unauthorized"

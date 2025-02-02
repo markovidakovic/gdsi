@@ -29,7 +29,7 @@ func newHandler(cfg *config.Config, db *db.Conn) *handler {
 // @Tags courts
 // @Accept json
 // @Produce json
-// @Param body body courts.CreateCourtModel true "Request body"
+// @Param body body courts.CreateCourtRequestModel true "Request body"
 // @Success 200 {object} courts.CourtModel "OK"
 // @Failure 400 {object} response.ValidationFailure "Bad request"
 // @Failure 401 {object} response.Failure "Unauthorized"
@@ -37,7 +37,7 @@ func newHandler(cfg *config.Config, db *db.Conn) *handler {
 // @Security BearerAuth
 // @Router /v1/courts [post]
 func (h *handler) postCourt(w http.ResponseWriter, r *http.Request) {
-	var input CreateCourtModel
+	var input CreateCourtRequestModel
 	err := json.NewDecoder(r.Body).Decode(&input)
 	if err != nil {
 		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))
@@ -125,7 +125,7 @@ func (h *handler) getCourt(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param courtId path string true "Court id"
-// @Param body body courts.UpdateCourtModel true "Request body"
+// @Param body body courts.UpdateCourtRequestModel true "Request body"
 // @Success 200 {object} courts.CourtModel "OK"
 // @Failure 400 {object} response.ValidationFailure "Bad request"
 // @Failure 401 {object} response.Failure "Unauthorized"
@@ -134,7 +134,7 @@ func (h *handler) getCourt(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/courts/{courtId} [put]
 func (h *handler) putCourt(w http.ResponseWriter, r *http.Request) {
-	var input UpdateCourtModel
+	var input UpdateCourtRequestModel
 	err := json.NewDecoder(r.Body).Decode(&input)
 	if err != nil {
 		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))

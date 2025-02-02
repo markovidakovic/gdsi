@@ -51,7 +51,7 @@ type CurrentLeagueModel struct {
 	Title string `json:"title"`
 }
 
-type UpdatePlayerModel struct {
+type UpdatePlayerRequestModel struct {
 	Height     *float64 `json:"height"`
 	Weight     *float64 `json:"weight"`
 	Handedness *string  `json:"handedness"`

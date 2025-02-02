@@ -26,7 +26,7 @@ func newHandler(cfg *config.Config, db *db.Conn) *handler {
 // @Produce json
 // @Param seasonId path string true "Season id"
 // @Param leagueId path string true "League id"
-// @Param body body matches.CreateMatchModel true "Request body"
+// @Param body body matches.CreateMatchRequestModel true "Request body"
 // @Success 201 {object} matches.MatchModel "OK"
 // @Failure 400 {object} response.ValidationFailure "Bad request"
 // @Failure 401 {object} response.Failure "Unauthorized"
@@ -79,7 +79,7 @@ func (h *handler) getMatch(w http.ResponseWriter, r *http.Request) {
 // @Param seasonId path string true "Season id"
 // @Param leagueId path string true "League id"
 // @Param matchId path string true "Match id"
-// @Param body body matches.UpdateMatchModel true "Request body"
+// @Param body body matches.UpdateMatchRequestModel true "Request body"
 // @Success 200 {object} matches.MatchModel "OK"
 // @Failure 400 {object} response.ValidationFailure "Bad request"
 // @Failure 401 {object} response.Failure "Unauthorized"

@@ -54,7 +54,7 @@ func (h *handler) getMe(w http.ResponseWriter, r *http.Request) {
 // @Tags me
 // @Accept json
 // @Produce json
-// @Param body body me.UpdateMeModel true "Request body"
+// @Param body body me.UpdateMeRequestModel true "Request body"
 // @Success 200 {object} me.MeModel "OK"
 // @Failure 400 {object} response.ValidationFailure "Bad request"
 // @Failure 401 {object} response.Failure "Unauthorized"
@@ -63,7 +63,7 @@ func (h *handler) getMe(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/me [put]
 func (h *handler) putMe(w http.ResponseWriter, r *http.Request) {
-	var input UpdateMeModel
+	var input UpdateMeRequestModel
 	err := json.NewDecoder(r.Body).Decode(&input)
 	if err != nil {
 		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))

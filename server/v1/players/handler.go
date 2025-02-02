@@ -82,7 +82,7 @@ func (h *handler) getPlayer(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param playerId path string true "Player id"
-// @Param body body players.UpdatePlayerModel true "Request body"
+// @Param body body players.UpdatePlayerRequestModel true "Request body"
 // @Success 200 {object} players.PlayerModel "OK"
 // @Failure 400 {object} response.ValidationFailure "Bad request"
 // @Failure 401 {object} response.Failure "Unauthorized"
@@ -91,7 +91,7 @@ func (h *handler) getPlayer(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/players/{playerId} [put]
 func (h *handler) putPlayer(w http.ResponseWriter, r *http.Request) {
-	var input UpdatePlayerModel
+	var input UpdatePlayerRequestModel
 	err := json.NewDecoder(r.Body).Decode(&input)
 	if err != nil {
 		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))

@@ -6,7 +6,7 @@ import (
 	"github.com/markovidakovic/gdsi/server/response"
 )
 
-func validatePutPlayer(input UpdatePlayerModel) []response.InvalidField {
+func validatePutPlayer(input UpdatePlayerRequestModel) []response.InvalidField {
 	var inv []response.InvalidField
 	fmt.Printf("input: %v\n", input)
 

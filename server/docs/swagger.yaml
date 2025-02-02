@@ -71,7 +71,7 @@ definitions:
       name:
         type: string
     type: object
-  courts.CreateCourtModel:
+  courts.CreateCourtRequestModel:
     properties:
       name:
         type: string
@@ -83,12 +83,12 @@ definitions:
       name:
         type: string
     type: object
-  courts.UpdateCourtModel:
+  courts.UpdateCourtRequestModel:
     properties:
       name:
         type: string
     type: object
-  leagues.CreateLeagueModel:
+  leagues.CreateLeagueRequestModel:
     properties:
       description:
         type: string
@@ -128,7 +128,7 @@ definitions:
       title:
         type: string
     type: object
-  leagues.UpdateLeagueModel:
+  leagues.UpdateLeagueRequestModel:
     properties:
       description:
         type: string
@@ -142,7 +142,7 @@ definitions:
       name:
         type: string
     type: object
-  matches.CreateMatchModel:
+  matches.CreateMatchRequestModel:
     properties:
       court_id:
         type: string
@@ -199,7 +199,7 @@ definitions:
       title:
         type: string
     type: object
-  matches.UpdateMatchModel:
+  matches.UpdateMatchRequestModel:
     properties:
       court_id:
         type: string
@@ -277,7 +277,7 @@ definitions:
       winning_ratio:
         type: number
     type: object
-  me.UpdateMeModel:
+  me.UpdateMeRequestModel:
     properties:
       name:
         type: string
@@ -345,7 +345,7 @@ definitions:
       winning_ratio:
         type: number
     type: object
-  players.UpdatePlayerModel:
+  players.UpdatePlayerRequestModel:
     properties:
       handedness:
         type: string
@@ -385,7 +385,7 @@ definitions:
       status:
         type: integer
     type: object
-  seasons.CreateSeasonModel:
+  seasons.CreateSeasonRequestModel:
     properties:
       description:
         type: string
@@ -412,7 +412,7 @@ definitions:
       title:
         type: string
     type: object
-  seasons.UpdateSeasonModel:
+  seasons.UpdateSeasonRequestModel:
     properties:
       description:
         type: string
@@ -658,7 +658,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/courts.CreateCourtModel'
+          $ref: '#/definitions/courts.CreateCourtRequestModel'
       produces:
       - application/json
       responses:
@@ -769,7 +769,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/courts.UpdateCourtModel'
+          $ref: '#/definitions/courts.UpdateCourtRequestModel'
       produces:
       - application/json
       responses:
@@ -855,7 +855,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/me.UpdateMeModel'
+          $ref: '#/definitions/me.UpdateMeRequestModel'
       produces:
       - application/json
       responses:
@@ -1005,7 +1005,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/players.UpdatePlayerModel'
+          $ref: '#/definitions/players.UpdatePlayerRequestModel'
       produces:
       - application/json
       responses:
@@ -1073,7 +1073,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/seasons.CreateSeasonModel'
+          $ref: '#/definitions/seasons.CreateSeasonRequestModel'
       produces:
       - application/json
       responses:
@@ -1184,7 +1184,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/seasons.UpdateSeasonModel'
+          $ref: '#/definitions/seasons.UpdateSeasonRequestModel'
       produces:
       - application/json
       responses:
@@ -1263,7 +1263,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/leagues.CreateLeagueModel'
+          $ref: '#/definitions/leagues.CreateLeagueRequestModel'
       produces:
       - application/json
       responses:
@@ -1389,7 +1389,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/leagues.UpdateLeagueModel'
+          $ref: '#/definitions/leagues.UpdateLeagueRequestModel'
       produces:
       - application/json
       responses:
@@ -1478,7 +1478,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/matches.CreateMatchModel'
+          $ref: '#/definitions/matches.CreateMatchRequestModel'
       produces:
       - application/json
       responses:
@@ -1619,7 +1619,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/matches.UpdateMatchModel'
+          $ref: '#/definitions/matches.UpdateMatchRequestModel'
       produces:
       - application/json
       responses:

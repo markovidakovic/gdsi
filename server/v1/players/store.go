@@ -133,7 +133,7 @@ func (s *store) findPlayer(ctx context.Context, playerId string) (*PlayerModel, 
 	return &dest, nil
 }
 
-func (s *store) updatePlayer(ctx context.Context, playerId string, input UpdatePlayerModel) (*PlayerModel, error) {
+func (s *store) updatePlayer(ctx context.Context, playerId string, input UpdatePlayerRequestModel) (*PlayerModel, error) {
 	sql1 := `
 		with updated_player as (
 			update player 

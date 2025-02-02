@@ -24,7 +24,7 @@ func newHandler(cfg *config.Config, db *db.Conn) *handler {
 // @Tags seasons
 // @Accept json
 // @Produce json
-// @Param body body seasons.CreateSeasonModel true "Request body"
+// @Param body body seasons.CreateSeasonRequestModel true "Request body"
 // @Success 201 {object} seasons.SeasonModel "OK"
 // @Failure 400 {object} response.ValidationFailure "Bad request"
 // @Failure 401 {object} response.Failure "Unauthorized"
@@ -71,7 +71,7 @@ func (h *handler) getSeason(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param seasonId path string true "Season id"
-// @Param body body seasons.UpdateSeasonModel true "Request body"
+// @Param body body seasons.UpdateSeasonRequestModel true "Request body"
 // @Success 200 {object} seasons.SeasonModel "OK"
 // @Failure 400 {object} response.ValidationFailure "Bad request"
 // @Failure 401 {object} response.Failure "Unauthorized"

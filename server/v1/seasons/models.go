@@ -23,12 +23,12 @@ type SeasonModel struct {
 	CreatedAt   time.Time    `json:"created_at"`
 }
 
-type CreateSeasonModel struct {
+type CreateSeasonRequestModel struct {
 	Title       string  `json:"title"`
 	Description *string `json:"description"`
 }
 
-type UpdateSeasonModel struct {
+type UpdateSeasonRequestModel struct {
 	Title       string  `json:"title"`
 	Description *string `json:"description"`
 }

@@ -34,12 +34,12 @@ type LeagueModel struct {
 	CreatedAt   time.Time    `json:"created_at"`
 }
 
-type CreateLeagueModel struct {
+type CreateLeagueRequestModel struct {
 	Title       string  `json:"title"`
 	Description *string `json:"description"`
 }
 
-type UpdateLeagueModel struct {
+type UpdateLeagueRequestModel struct {
 	Title       string  `json:"title"`
 	Description *string `json:"description"`
 }

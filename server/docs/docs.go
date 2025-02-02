@@ -306,7 +306,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/courts.CreateCourtModel"
+                            "$ref": "#/definitions/courts.CreateCourtRequestModel"
                         }
                     }
                 ],
@@ -426,7 +426,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/courts.UpdateCourtModel"
+                            "$ref": "#/definitions/courts.UpdateCourtRequestModel"
                         }
                     }
                 ],
@@ -577,7 +577,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/me.UpdateMeModel"
+                            "$ref": "#/definitions/me.UpdateMeRequestModel"
                         }
                     }
                 ],
@@ -850,7 +850,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/players.UpdatePlayerModel"
+                            "$ref": "#/definitions/players.UpdatePlayerRequestModel"
                         }
                     }
                 ],
@@ -957,7 +957,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/seasons.CreateSeasonModel"
+                            "$ref": "#/definitions/seasons.CreateSeasonRequestModel"
                         }
                     }
                 ],
@@ -1077,7 +1077,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/seasons.UpdateSeasonModel"
+                            "$ref": "#/definitions/seasons.UpdateSeasonRequestModel"
                         }
                     }
                 ],
@@ -1253,7 +1253,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/leagues.CreateLeagueModel"
+                            "$ref": "#/definitions/leagues.CreateLeagueRequestModel"
                         }
                     }
                 ],
@@ -1387,7 +1387,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/leagues.UpdateLeagueModel"
+                            "$ref": "#/definitions/leagues.UpdateLeagueRequestModel"
                         }
                     }
                 ],
@@ -1584,7 +1584,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/matches.CreateMatchModel"
+                            "$ref": "#/definitions/matches.CreateMatchRequestModel"
                         }
                     }
                 ],
@@ -1732,7 +1732,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/matches.UpdateMatchModel"
+                            "$ref": "#/definitions/matches.UpdateMatchRequestModel"
                         }
                     }
                 ],
@@ -2012,7 +2012,7 @@ const docTemplate = `{
                 }
             }
         },
-        "courts.CreateCourtModel": {
+        "courts.CreateCourtRequestModel": {
             "type": "object",
             "properties": {
                 "name": {
@@ -2031,7 +2031,7 @@ const docTemplate = `{
                 }
             }
         },
-        "courts.UpdateCourtModel": {
+        "courts.UpdateCourtRequestModel": {
             "type": "object",
             "properties": {
                 "name": {
@@ -2039,7 +2039,7 @@ const docTemplate = `{
                 }
             }
         },
-        "leagues.CreateLeagueModel": {
+        "leagues.CreateLeagueRequestModel": {
             "type": "object",
             "properties": {
                 "description": {
@@ -2101,7 +2101,7 @@ const docTemplate = `{
                 }
             }
         },
-        "leagues.UpdateLeagueModel": {
+        "leagues.UpdateLeagueRequestModel": {
             "type": "object",
             "properties": {
                 "description": {
@@ -2123,7 +2123,7 @@ const docTemplate = `{
                 }
             }
         },
-        "matches.CreateMatchModel": {
+        "matches.CreateMatchRequestModel": {
             "type": "object",
             "properties": {
                 "court_id": {
@@ -2211,7 +2211,7 @@ const docTemplate = `{
                 }
             }
         },
-        "matches.UpdateMatchModel": {
+        "matches.UpdateMatchRequestModel": {
             "type": "object",
             "properties": {
                 "court_id": {
@@ -2330,7 +2330,7 @@ const docTemplate = `{
                 }
             }
         },
-        "me.UpdateMeModel": {
+        "me.UpdateMeRequestModel": {
             "type": "object",
             "properties": {
                 "name": {
@@ -2435,7 +2435,7 @@ const docTemplate = `{
                 }
             }
         },
-        "players.UpdatePlayerModel": {
+        "players.UpdatePlayerRequestModel": {
             "type": "object",
             "properties": {
                 "handedness": {
@@ -2495,7 +2495,7 @@ const docTemplate = `{
                 }
             }
         },
-        "seasons.CreateSeasonModel": {
+        "seasons.CreateSeasonRequestModel": {
             "type": "object",
             "properties": {
                 "description": {
@@ -2537,7 +2537,7 @@ const docTemplate = `{
                 }
             }
         },
-        "seasons.UpdateSeasonModel": {
+        "seasons.UpdateSeasonRequestModel": {
             "type": "object",
             "properties": {
                 "description": {

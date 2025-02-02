@@ -39,7 +39,7 @@ type CurrentLeagueModel struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-type UpdateMeModel struct {
+type UpdateMeRequestModel struct {
 	Name string `json:"name"`
 }
 

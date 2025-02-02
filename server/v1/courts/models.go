@@ -21,11 +21,11 @@ type CreatorModel struct {
 	Name string `json:"name"`
 }
 
-type CreateCourtModel struct {
+type CreateCourtRequestModel struct {
 	Name      string `json:"name"`
 	CreatorId string `json:"-"`
 }
 
-type UpdateCourtModel struct {
+type UpdateCourtRequestModel struct {
 	Name string `json:"name"`
 }

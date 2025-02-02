@@ -20,7 +20,7 @@ func newStore(db *db.Conn) *store {
 	}
 }
 
-func (s *store) insertCourt(ctx context.Context, input CreateCourtModel) (CourtModel, error) {
+func (s *store) insertCourt(ctx context.Context, input CreateCourtRequestModel) (CourtModel, error) {
 	// cte - common table expression
 	sql1 := `
 		with inserted_court as (
@@ -105,7 +105,7 @@ func (s *store) findCourt(ctx context.Context, courtId string) (*CourtModel, err
 	return &dest, nil
 }
 
-func (s *store) updateCourt(ctx context.Context, courtId string, input UpdateCourtModel) (*CourtModel, error) {
+func (s *store) updateCourt(ctx context.Context, courtId string, input UpdateCourtRequestModel) (*CourtModel, error) {
 	var dest CourtModel
 
 	sql1 := `

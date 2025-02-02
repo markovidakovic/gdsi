@@ -48,7 +48,7 @@ type MatchModel struct {
 	CreatedAt   time.Time   `json:"created_at"`
 }
 
-type CreateMatchModel struct {
+type CreateMatchRequestModel struct {
 	CourtId     string  `json:"court_id"`
 	ScheduledAt string  `json:"scheduled_at"`
 	PlayerOneId string  `json:"player_one_id"`
@@ -58,7 +58,7 @@ type CreateMatchModel struct {
 
 // todo: think about what is allowed on an update of a match
 // should it be allowed?
-type UpdateMatchModel struct {
+type UpdateMatchRequestModel struct {
 	CourtId     string  `json:"court_id"`
 	ScheduledAt string  `json:"scheduled_at"`
 	PlayerOneId string  `json:"player_one_id"`

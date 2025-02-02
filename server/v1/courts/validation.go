@@ -2,7 +2,7 @@ package courts
 
 import "github.com/markovidakovic/gdsi/server/response"
 
-func validatePostCourt(input CreateCourtModel) []response.InvalidField {
+func validatePostCourt(input CreateCourtRequestModel) []response.InvalidField {
 	var inv []response.InvalidField
 
 	if input.Name == "" {
@@ -20,7 +20,7 @@ func validatePostCourt(input CreateCourtModel) []response.InvalidField {
 	return nil
 }
 
-func validatePutCourt(input UpdateCourtModel) []response.InvalidField {
+func validatePutCourt(input UpdateCourtRequestModel) []response.InvalidField {
 	var inv []response.InvalidField
 	if input.Name == "" {
 		inv = append(inv, response.InvalidField{

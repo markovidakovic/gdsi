@@ -109,7 +109,7 @@ func (s *store) findMe(ctx context.Context, accountId string) (*MeModel, error) 
 	return &mm, nil
 }
 
-func (s *store) updateMe(ctx context.Context, accountId string, input UpdateMeModel) (*MeModel, error) {
+func (s *store) updateMe(ctx context.Context, accountId string, input UpdateMeRequestModel) (*MeModel, error) {
 	var dest MeModel
 	dest.PlayerProfile = PlayerProfileModel{}
 	var leagueId, leagueTitle sql.NullString
