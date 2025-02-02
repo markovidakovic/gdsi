@@ -653,6 +653,69 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/me/password": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Change password of the authenticated account",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "me"
+                ],
+                "summary": "Update password",
+                "parameters": [
+                    {
+                        "description": "Request body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/me.UpdatePasswordRequestModel"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/me.UpdatePasswordResponseModel"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ValidationFailure"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/players": {
             "get": {
                 "security": [
@@ -2208,6 +2271,9 @@ const docTemplate = `{
                 },
                 "player_profile": {
                     "$ref": "#/definitions/me.PlayerProfileModel"
+                },
+                "role": {
+                    "type": "string"
                 }
             }
         },
@@ -2272,6 +2338,28 @@ const docTemplate = `{
                 }
             }
         },
+        "me.UpdatePasswordRequestModel": {
+            "type": "object",
+            "properties": {
+                "new_password": {
+                    "type": "string"
+                },
+                "old_password": {
+                    "type": "string"
+                },
+                "repeated_new_password": {
+                    "type": "string"
+                }
+            }
+        },
+        "me.UpdatePasswordResponseModel": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "players.AccountModel": {
             "type": "object",
             "properties": {
@@ -2302,6 +2390,9 @@ const docTemplate = `{
                 },
                 "activity_ratio": {
                     "type": "number"
+                },
+                "created_at": {
+                    "type": "string"
                 },
                 "current_league": {
                     "$ref": "#/definitions/players.CurrentLeagueModel"

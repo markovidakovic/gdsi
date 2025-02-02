@@ -42,3 +42,13 @@ type CurrentLeagueModel struct {
 type UpdateMeModel struct {
 	Name string `json:"name"`
 }
+
+type UpdatePasswordRequestModel struct {
+	OldPassword         string `json:"old_password"`
+	NewPassword         string `json:"new_password"`
+	RepeatedNewPassword string `json:"repeated_new_password"`
+}
+
+type UpdatePasswordResponseModel struct {
+	Message string `json:"message"`
+}

@@ -12,5 +12,6 @@ func Route(cfg *config.Config, db *db.Conn) func(r chi.Router) {
 		r.Get("/", hdl.getMe)
 		r.Put("/", hdl.putMe)
 		r.Delete("/", hdl.deleteMe)
+		r.Put("/password", hdl.putPassword)
 	}
 }

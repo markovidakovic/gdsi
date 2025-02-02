@@ -100,3 +100,20 @@ func (h *handler) putMe(w http.ResponseWriter, r *http.Request) {
 func (h *handler) deleteMe(w http.ResponseWriter, r *http.Request) {
 	response.WriteSuccess(w, http.StatusNoContent, "deleted me")
 }
+
+// @Summary Update password
+// @Description Change password of the authenticated account
+// @Tags me
+// @Accept json
+// @Produce json
+// @Param body body me.UpdatePasswordRequestModel true "Request body"
+// @Success 200 {object} me.UpdatePasswordResponseModel
+// @Failure 400 {object} response.ValidationFailure "Bad request"
+// @Failure 401 {object} response.Failure "Unauthorized"
+// @Failure 404 {object} response.Failure "Not found"
+// @Failure 500 {object} response.Failure "Internal server error"
+// @Security BearerAuth
+// @Router /v1/me/password [put]
+func (h *handler) putPassword(w http.ResponseWriter, r *http.Request) {
+	response.WriteSuccess(w, http.StatusOK, "password changed")
+}

@@ -239,6 +239,8 @@ definitions:
         type: string
       player_profile:
         $ref: '#/definitions/me.PlayerProfileModel'
+      role:
+        type: string
     type: object
   me.PlayerProfileModel:
     properties:
@@ -280,6 +282,20 @@ definitions:
       name:
         type: string
     type: object
+  me.UpdatePasswordRequestModel:
+    properties:
+      new_password:
+        type: string
+      old_password:
+        type: string
+      repeated_new_password:
+        type: string
+    type: object
+  me.UpdatePasswordResponseModel:
+    properties:
+      message:
+        type: string
+    type: object
   players.AccountModel:
     properties:
       id:
@@ -300,6 +316,8 @@ definitions:
         $ref: '#/definitions/players.AccountModel'
       activity_ratio:
         type: number
+      created_at:
+        type: string
       current_league:
         $ref: '#/definitions/players.CurrentLeagueModel'
       elo:
@@ -864,6 +882,46 @@ paths:
       security:
       - BearerAuth: []
       summary: Update
+      tags:
+      - me
+  /v1/me/password:
+    put:
+      consumes:
+      - application/json
+      description: Change password of the authenticated account
+      parameters:
+      - description: Request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/me.UpdatePasswordRequestModel'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/me.UpdatePasswordResponseModel'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/response.ValidationFailure'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Failure'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/response.Failure'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Failure'
+      security:
+      - BearerAuth: []
+      summary: Update password
       tags:
       - me
   /v1/players:
