@@ -3,6 +3,8 @@ create table season(
     id uuid primary key not null default  uuid_generate_v4(),
     title varchar(250) not null,
     description varchar(500),
+    start_date date not null,
+    end_date date not null,
     creator_id uuid not null references account (id),
     created_at timestamptz not null default current_timestamp
 );

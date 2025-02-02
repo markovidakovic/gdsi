@@ -2501,6 +2501,12 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
+                "end_date": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
                 "title": {
                     "type": "string"
                 }

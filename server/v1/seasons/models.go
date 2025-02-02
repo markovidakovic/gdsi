@@ -1,6 +1,10 @@
 package seasons
 
-import "time"
+import (
+	"time"
+
+	"github.com/markovidakovic/gdsi/server/types"
+)
 
 type Season struct {
 	Id          string    `json:"id"`
@@ -24,8 +28,10 @@ type SeasonModel struct {
 }
 
 type CreateSeasonRequestModel struct {
-	Title       string  `json:"title"`
-	Description *string `json:"description"`
+	Title       string     `json:"title"`
+	Description *string    `json:"description"`
+	StartDate   types.Date `json:"start_date"`
+	EndDate     types.Date `json:"end_date"`
 }
 
 type UpdateSeasonRequestModel struct {

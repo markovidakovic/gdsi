@@ -180,6 +180,8 @@ CREATE TABLE public.season (
     id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     title character varying(250) NOT NULL,
     description character varying(500),
+    start_date date NOT NULL,
+    end_date date NOT NULL,
     creator_id uuid NOT NULL,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );

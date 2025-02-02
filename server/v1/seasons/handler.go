@@ -1,6 +1,8 @@
 package seasons
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/markovidakovic/gdsi/server/config"
@@ -32,7 +34,32 @@ func newHandler(cfg *config.Config, db *db.Conn) *handler {
 // @Security BearerAuth
 // @Router /v1/seasons [post]
 func (h *handler) postSeason(w http.ResponseWriter, r *http.Request) {
-	response.WriteSuccess(w, http.StatusCreated, "create season")
+	var input CreateSeasonRequestModel
+	err := json.NewDecoder(r.Body).Decode(&input)
+	if err != nil {
+		fmt.Printf("err: %v\n", err)
+		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))
+		return
+	}
+
+	// validate input
+	valErr := validatePostSeason(input)
+	if valErr != nil {
+		response.WriteFailure(w, response.NewBadRequestFailure("validation failed"))
+		return
+	}
+
+	// call the service
+	result, err := h.service.processCreateSeason(r.Context(), input)
+	if err != nil {
+		switch {
+		default:
+			response.WriteFailure(w, response.NewInternalFailure(err))
+			return
+		}
+	}
+
+	response.WriteSuccess(w, http.StatusCreated, result)
 }
 
 // @Summary Get
