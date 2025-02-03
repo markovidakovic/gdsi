@@ -411,7 +411,11 @@ definitions:
         $ref: '#/definitions/seasons.CreatorModel'
       description:
         type: string
+      end_date:
+        type: string
       id:
+        type: string
+      start_date:
         type: string
       title:
         type: string
@@ -419,6 +423,10 @@ definitions:
   seasons.UpdateSeasonRequestModel:
     properties:
       description:
+        type: string
+      end_date:
+        type: string
+      start_date:
         type: string
       title:
         type: string

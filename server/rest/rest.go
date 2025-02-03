@@ -24,6 +24,25 @@ type server struct {
 
 type serverOption func(*server) error
 
+func NewServer() (*server, error) {
+	var srv = &server{}
+
+	opts := []serverOption{
+		withConfig(),
+		withDatabase(),
+		withRouter(),
+		withSwagger(),
+	}
+
+	for _, opt := range opts {
+		if err := opt(srv); err != nil {
+			return nil, err
+		}
+	}
+
+	return srv, nil
+}
+
 // @title Gdsi API
 // @version 1.0.0
 // @description Documentation for the gdsi API
@@ -72,25 +91,6 @@ func (s *server) setupMiddleware() {
 	s.Rtr.Use(gochimiddleware.NoCache)
 	s.Rtr.Use(gochimiddleware.StripSlashes)
 	s.Rtr.Use(gochimiddleware.Heartbeat("/"))
-}
-
-func NewServer() (*server, error) {
-	var srv = &server{}
-
-	opts := []serverOption{
-		withConfig(),
-		withDatabase(),
-		withRouter(),
-		withSwagger(),
-	}
-
-	for _, opt := range opts {
-		if err := opt(srv); err != nil {
-			return nil, err
-		}
-	}
-
-	return srv, nil
 }
 
 func withConfig() serverOption {

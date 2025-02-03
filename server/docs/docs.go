@@ -2535,7 +2535,13 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
+                "end_date": {
+                    "type": "string"
+                },
                 "id": {
+                    "type": "string"
+                },
+                "start_date": {
                     "type": "string"
                 },
                 "title": {
@@ -2547,6 +2553,12 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "description": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "start_date": {
                     "type": "string"
                 },
                 "title": {

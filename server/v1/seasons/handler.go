@@ -2,9 +2,10 @@ package seasons
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/markovidakovic/gdsi/server/config"
 	"github.com/markovidakovic/gdsi/server/db"
 	"github.com/markovidakovic/gdsi/server/response"
@@ -12,12 +13,13 @@ import (
 
 type handler struct {
 	service *service
+	store   *store
 }
 
 func newHandler(cfg *config.Config, db *db.Conn) *handler {
 	h := &handler{}
-	store := newStore(db)
-	h.service = newService(cfg, store)
+	h.store = newStore(db)
+	h.service = newService(cfg, h.store)
 	return h
 }
 
@@ -37,7 +39,6 @@ func (h *handler) postSeason(w http.ResponseWriter, r *http.Request) {
 	var input CreateSeasonRequestModel
 	err := json.NewDecoder(r.Body).Decode(&input)
 	if err != nil {
-		fmt.Printf("err: %v\n", err)
 		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))
 		return
 	}
@@ -73,7 +74,17 @@ func (h *handler) postSeason(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/seasons [get]
 func (h *handler) getSeasons(w http.ResponseWriter, r *http.Request) {
-	response.WriteSuccess(w, http.StatusOK, "get seasons")
+	// call the store
+	result, err := h.store.findSeasons(r.Context())
+	if err != nil {
+		switch {
+		default:
+			response.WriteFailure(w, response.NewInternalFailure(err))
+			return
+		}
+	}
+
+	response.WriteSuccess(w, http.StatusOK, result)
 }
 
 // @Summary Get by id
@@ -89,7 +100,20 @@ func (h *handler) getSeasons(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId} [get]
 func (h *handler) getSeason(w http.ResponseWriter, r *http.Request) {
-	response.WriteSuccess(w, http.StatusOK, "get season by id")
+	// call the store
+	result, err := h.store.findSeason(r.Context(), chi.URLParam(r, "seasonId"))
+	if err != nil {
+		switch {
+		case errors.Is(err, response.ErrNotFound):
+			response.WriteFailure(w, response.NewNotFoundFailure("season not found"))
+			return
+		default:
+			response.WriteFailure(w, response.NewInternalFailure(err))
+			return
+		}
+	}
+
+	response.WriteSuccess(w, http.StatusOK, result)
 }
 
 // @Summary Update
@@ -107,7 +131,33 @@ func (h *handler) getSeason(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId} [put]
 func (h *handler) putSeason(w http.ResponseWriter, r *http.Request) {
-	response.WriteSuccess(w, http.StatusOK, "update season")
+	// decode req body
+	var input UpdateSeasonRequestModel
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))
+		return
+	}
+
+	// validate input
+	if valErr := validatePutSeason(input); valErr != nil {
+		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
+		return
+	}
+
+	// call the store
+	result, err := h.store.updateSeason(r.Context(), chi.URLParam(r, "seasonId"), input)
+	if err != nil {
+		switch {
+		case errors.Is(err, response.ErrNotFound):
+			response.WriteFailure(w, response.NewNotFoundFailure("season not found"))
+			return
+		default:
+			response.WriteFailure(w, response.NewInternalFailure(err))
+			return
+		}
+	}
+
+	response.WriteSuccess(w, http.StatusOK, result)
 }
 
 // @Summary Delete
@@ -123,5 +173,17 @@ func (h *handler) putSeason(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId} [delete]
 func (h *handler) deleteSeason(w http.ResponseWriter, r *http.Request) {
-	response.WriteSuccess(w, http.StatusNoContent, "deleted season")
+	// call the store
+	err := h.store.deleteSeason(r.Context(), chi.URLParam(r, "seasonId"))
+	if err != nil {
+		switch {
+		case errors.Is(err, response.ErrNotFound):
+			response.WriteFailure(w, response.NewNotFoundFailure("season not found"))
+			return
+		default:
+			response.WriteFailure(w, response.NewInternalFailure(err))
+			return
+		}
+	}
+	response.WriteSuccess(w, http.StatusNoContent, "deleted")
 }
