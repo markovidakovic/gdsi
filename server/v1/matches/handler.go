@@ -1,8 +1,11 @@
 package matches
 
 import (
+	"encoding/json"
+	"errors"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/markovidakovic/gdsi/server/config"
 	"github.com/markovidakovic/gdsi/server/db"
 	"github.com/markovidakovic/gdsi/server/response"
@@ -34,7 +37,40 @@ func newHandler(cfg *config.Config, db *db.Conn) *handler {
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId}/matches [post]
 func (h *handler) postMatch(w http.ResponseWriter, r *http.Request) {
-	response.WriteSuccess(w, http.StatusCreated, "create match")
+	// decode input
+	var input CreateMatchRequestModel
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))
+		return
+	}
+
+	// validate input
+	if valErr := validatePostMatch(input); valErr != nil {
+		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
+		return
+	}
+
+	// set additional values in input
+	input.SeasonId = chi.URLParam(r, "seasonId")
+	input.LeagueId = chi.URLParam(r, "leagueId")
+
+	// call the service
+	result, err := h.service.processCreateMatch(r.Context(), input)
+	if err != nil {
+		switch {
+		case errors.Is(err, response.ErrBadRequest):
+			response.WriteFailure(w, response.NewBadRequestFailure(err.Error()))
+			return
+		case errors.Is(err, response.ErrNotFound):
+			response.WriteFailure(w, response.NewNotFoundFailure(err.Error()))
+			return
+		default:
+			response.WriteFailure(w, response.NewInternalFailure(err))
+			return
+		}
+	}
+
+	response.WriteSuccess(w, http.StatusCreated, result)
 }
 
 // @Summary Get
