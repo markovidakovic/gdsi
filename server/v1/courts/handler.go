@@ -189,5 +189,5 @@ func (h *handler) deleteCourt(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	response.WriteSuccess(w, http.StatusNoContent, "deleted")
+	response.WriteSuccess(w, http.StatusNoContent, nil)
 }

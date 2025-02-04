@@ -13,18 +13,6 @@ type League struct {
 	CreatedAt   time.Time `json:"created_at"`
 }
 
-type CreatorModel struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
-}
-
-type SeasonModel struct {
-	Id          string    `json:"id"`
-	Title       string    `json:"title"`
-	Description *string   `json:"description"`
-	CreatedAt   time.Time `json:"created_at"`
-}
-
 type LeagueModel struct {
 	Id          string       `json:"id"`
 	Title       string       `json:"title"`
@@ -34,12 +22,26 @@ type LeagueModel struct {
 	CreatedAt   time.Time    `json:"created_at"`
 }
 
+type CreatorModel struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type SeasonModel struct {
+	Id    string `json:"id"`
+	Title string `json:"title"`
+}
+
 type CreateLeagueRequestModel struct {
 	Title       string  `json:"title"`
 	Description *string `json:"description"`
+	CreatorId   string  `json:"-"`
+	SeasonId    string  `json:"-"`
 }
 
 type UpdateLeagueRequestModel struct {
 	Title       string  `json:"title"`
 	Description *string `json:"description"`
+	SeasonId    string  `json:"-"`
+	LeagueId    string  `json:"-"`
 }

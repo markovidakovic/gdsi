@@ -106,5 +106,5 @@ func (h *handler) putMatch(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId}/matches/{matchId} [delete]
 func (h *handler) deleteMatch(w http.ResponseWriter, r *http.Request) {
-	response.WriteSuccess(w, http.StatusNoContent, "deleted match")
+	response.WriteSuccess(w, http.StatusNoContent, nil)
 }

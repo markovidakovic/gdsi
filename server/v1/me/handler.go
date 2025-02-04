@@ -98,7 +98,7 @@ func (h *handler) putMe(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/me [delete]
 func (h *handler) deleteMe(w http.ResponseWriter, r *http.Request) {
-	response.WriteSuccess(w, http.StatusNoContent, "deleted me")
+	response.WriteSuccess(w, http.StatusNoContent, nil)
 }
 
 // @Summary Update password

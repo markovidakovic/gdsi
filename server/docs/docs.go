@@ -2087,12 +2087,6 @@ const docTemplate = `{
         "leagues.SeasonModel": {
             "type": "object",
             "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
                 "id": {
                     "type": "string"
                 },

@@ -185,5 +185,5 @@ func (h *handler) deleteSeason(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	response.WriteSuccess(w, http.StatusNoContent, "deleted")
+	response.WriteSuccess(w, http.StatusNoContent, nil)
 }

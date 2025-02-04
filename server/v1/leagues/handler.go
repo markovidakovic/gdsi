@@ -1,21 +1,26 @@
 package leagues
 
 import (
+	"encoding/json"
+	"errors"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/markovidakovic/gdsi/server/config"
 	"github.com/markovidakovic/gdsi/server/db"
+	"github.com/markovidakovic/gdsi/server/middleware"
 	"github.com/markovidakovic/gdsi/server/response"
 )
 
 type handler struct {
 	service *service
+	store   *store
 }
 
 func newHandler(cfg *config.Config, db *db.Conn) *handler {
 	h := &handler{}
-	store := newStore(db)
-	h.service = newService(cfg, store)
+	h.store = newStore(db)
+	h.service = newService(cfg, h.store)
 	return h
 }
 
@@ -33,7 +38,36 @@ func newHandler(cfg *config.Config, db *db.Conn) *handler {
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues [post]
 func (h *handler) postLeague(w http.ResponseWriter, r *http.Request) {
-	response.WriteSuccess(w, http.StatusCreated, "create league")
+	// decode input
+	var input CreateLeagueRequestModel
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))
+		return
+	}
+
+	// validate input
+	if valErr := validatePostLeague(input); valErr != nil {
+		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
+		return
+	}
+
+	input.SeasonId = chi.URLParam(r, "seasonId")
+	input.CreatorId = r.Context().Value(middleware.AccountIdCtxKey).(string)
+
+	// call the service
+	result, err := h.service.processLeagueCreation(r.Context(), input)
+	if err != nil {
+		switch {
+		case errors.Is(err, response.ErrNotFound):
+			response.WriteFailure(w, response.NewNotFoundFailure(err.Error()))
+			return
+		default:
+			response.WriteFailure(w, response.NewInternalFailure(err))
+			return
+		}
+	}
+
+	response.WriteSuccess(w, http.StatusCreated, result)
 }
 
 // @Summary Get
@@ -48,7 +82,17 @@ func (h *handler) postLeague(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues [get]
 func (h *handler) getLeagues(w http.ResponseWriter, r *http.Request) {
-	response.WriteSuccess(w, http.StatusOK, "get leagues")
+	// call the service
+	result, err := h.service.processFindLeagues(r.Context(), chi.URLParam(r, "seasonId"))
+	if err != nil {
+		switch {
+		default:
+			response.WriteFailure(w, response.NewInternalFailure(err))
+			return
+		}
+	}
+
+	response.WriteSuccess(w, http.StatusOK, result)
 }
 
 // @Summary Get by id
@@ -65,7 +109,20 @@ func (h *handler) getLeagues(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId} [get]
 func (h *handler) getLeague(w http.ResponseWriter, r *http.Request) {
-	response.WriteSuccess(w, http.StatusOK, "get league by id")
+	// call the service
+	result, err := h.service.processFindLeague(r.Context(), chi.URLParam(r, "seasonId"), chi.URLParam(r, "leagueId"))
+	if err != nil {
+		switch {
+		case errors.Is(err, response.ErrNotFound):
+			response.WriteFailure(w, response.NewNotFoundFailure(err.Error()))
+			return
+		default:
+			response.WriteFailure(w, response.NewInternalFailure(err))
+			return
+		}
+	}
+
+	response.WriteSuccess(w, http.StatusOK, result)
 }
 
 // @Summary Update
@@ -84,7 +141,36 @@ func (h *handler) getLeague(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId} [put]
 func (h *handler) putLeague(w http.ResponseWriter, r *http.Request) {
-	response.WriteSuccess(w, http.StatusOK, "update league")
+	// decode input
+	var input UpdateLeagueRequestModel
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))
+		return
+	}
+
+	// validate input
+	if valErr := validatePutLeague(input); valErr != nil {
+		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
+		return
+	}
+
+	input.SeasonId = chi.URLParam(r, "seasonId")
+	input.LeagueId = chi.URLParam(r, "leagueId")
+
+	// call the service
+	result, err := h.service.processUpdateLeague(r.Context(), input)
+	if err != nil {
+		switch {
+		case errors.Is(err, response.ErrNotFound):
+			response.WriteFailure(w, response.NewNotFoundFailure(err.Error()))
+			return
+		default:
+			response.WriteFailure(w, response.NewInternalFailure(err))
+			return
+		}
+	}
+
+	response.WriteSuccess(w, http.StatusOK, result)
 }
 
 // @Summary Delete
@@ -101,5 +187,18 @@ func (h *handler) putLeague(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId} [delete]
 func (h *handler) deleteLeague(w http.ResponseWriter, r *http.Request) {
-	response.WriteSuccess(w, http.StatusNoContent, "deleted league")
+	// call the service
+	err := h.service.processDeleteLeague(r.Context(), chi.URLParam(r, "seasonId"), chi.URLParam(r, "leagueId"))
+	if err != nil {
+		switch {
+		case errors.Is(err, response.ErrNotFound):
+			response.WriteFailure(w, response.NewNotFoundFailure(err.Error()))
+			return
+		default:
+			response.WriteFailure(w, response.NewInternalFailure(err))
+			return
+		}
+	}
+
+	response.WriteSuccess(w, http.StatusNoContent, nil)
 }
