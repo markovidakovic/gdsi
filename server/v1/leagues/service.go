@@ -20,7 +20,7 @@ func newService(cfg *config.Config, store *store) *service {
 	}
 }
 
-func (s *service) processLeagueCreation(ctx context.Context, input CreateLeagueRequestModel) (*LeagueModel, error) {
+func (s *service) processCreateLeague(ctx context.Context, input CreateLeagueRequestModel) (*LeagueModel, error) {
 	// check if season exists
 	seasonExists, err := s.store.checkSeasonExistance(ctx, input.SeasonId)
 	if err != nil {

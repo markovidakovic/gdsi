@@ -55,7 +55,7 @@ func (h *handler) postLeague(w http.ResponseWriter, r *http.Request) {
 	input.CreatorId = r.Context().Value(middleware.AccountIdCtxKey).(string)
 
 	// call the service
-	result, err := h.service.processLeagueCreation(r.Context(), input)
+	result, err := h.service.processCreateLeague(r.Context(), input)
 	if err != nil {
 		switch {
 		case errors.Is(err, response.ErrNotFound):
