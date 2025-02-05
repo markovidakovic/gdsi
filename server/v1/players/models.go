@@ -57,3 +57,7 @@ type UpdatePlayerRequestModel struct {
 	Handedness *string  `json:"handedness"`
 	Racket     *string  `json:"racket"`
 }
+
+type UpdateLeaguePlayerRequestModel struct {
+	CurrentLeagueId *string `json:"current_league_id"`
+}

@@ -188,6 +188,106 @@ func (s *store) updatePlayer(ctx context.Context, playerId string, input UpdateP
 	return &dest, nil
 }
 
+func (s *store) findLeaguePlayers(ctx context.Context, leagueId string) ([]PlayerModel, error) {
+	sql1 := `
+		select
+			player.id,
+			player.height,
+			player.weight,
+			player.handedness,
+			player.racket,
+			player.matches_expected,
+			player.seasons_played,
+			player.winning_ratio,
+			player.activity_ratio,
+			player.ranking,
+			player.elo,
+			account.id as account_id,
+			account.name as account_name,
+			league.id as current_league_id,
+			league.title as current_league_title
+		from player
+		join account on player.account_id = account.id
+		left join league on player.current_league_id = league.id
+		where player.current_league_id = $1
+		order by player.created_at desc
+	`
+
+	dest := []PlayerModel{}
+
+	rows, err := s.db.Query(ctx, sql1, leagueId)
+	if err != nil {
+		return nil, fmt.Errorf("quering league players: %v", err)
+	}
+
+	for rows.Next() {
+		var pm PlayerModel
+		err := rows.Scan(&pm.Id, &pm.Height, &pm.Weight, &pm.Handedness, &pm.Racket, &pm.MatchesExpected, &pm.MatchesPlayed, &pm.MatchesWon, &pm.SeasonsPlayed, &pm.WinningRatio, &pm.ActivityRatio, &pm.Ranking, &pm.Elo, &pm.Account.Id, &pm.Account.Name, &pm.CurrentLeague.Id, &pm.CurrentLeague.Title, &pm.CreatedAt)
+		if err != nil {
+			return nil, fmt.Errorf("scanning league player row: %v", err)
+		}
+
+		dest = append(dest, pm)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterating league player rows: %v", err)
+	}
+
+	return dest, nil
+}
+
+func (s *store) findLeaguePlayer(ctx context.Context, leagueId, playerId string) (PlayerModel, error) {
+	var dest PlayerModel
+	var currLeagueId, currLeagueTitle sql.NullString
+
+	sql := `
+		select 
+			player.id,
+			player.height,
+			player.weight,
+			player.handedness,
+			player.racket,
+			player.matches_expected,
+			player.matches_played,
+			player.matches_won,
+			player.seasons_played,
+			player.winning_ratio,
+			player.activity_ratio,
+			player.ranking,
+			player.elo,
+			account.id as account_id,
+			account.name as account_name,
+			league.id as current_league_id,
+			league.title as current_league_title,
+			player.created_at
+		from player
+		join account on player.account_id = account.id
+		left join league on player.current_league_id = league.id
+		where player.id = $1 and player.current_league_id = $2
+	`
+
+	err := s.db.QueryRow(ctx, sql, playerId, leagueId).Scan(&dest.Id, &dest.Height, &dest.Weight, &dest.Handedness, &dest.Racket, &dest.MatchesExpected, &dest.MatchesPlayed, &dest.MatchesWon, &dest.SeasonsPlayed, &dest.WinningRatio, &dest.ActivityRatio, &dest.Ranking, &dest.Elo, &dest.Account.Id, &dest.Account.Name, &currLeagueId, &currLeagueTitle, &dest.CreatedAt)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return dest, fmt.Errorf("finding league player: %w", response.ErrNotFound)
+		}
+		return dest, err
+	}
+
+	if !currLeagueId.Valid {
+		dest.CurrentLeague = nil
+	} else {
+		dest.CurrentLeague = &CurrentLeagueModel{
+			Id:    currLeagueId.String,
+			Title: currLeagueTitle.String,
+		}
+	}
+
+	return dest, nil
+}
+
+// helper
 func (s *store) checkPlayerOwnership(ctx context.Context, playerId, accountId string) (bool, error) {
 	sql1 := `
 		select exists (
@@ -202,4 +302,53 @@ func (s *store) checkPlayerOwnership(ctx context.Context, playerId, accountId st
 	}
 
 	return exists, nil
+}
+
+// helper
+func (s *store) validateFindLeaguePlayers(ctx context.Context, seasonId, leagueId string) (seasonExists bool, leagueExists bool, leagueInSeason bool, err error) {
+	sql1 := `
+		select
+			exists (
+				select 1 from season where id = $1
+			) as season_exists,
+			exists (
+				select 1 from league where id = $2
+			) as league_exists,
+			exists (
+				select 1 from league where id = $2 and season_id = $1
+			) as league_in_season
+	`
+
+	err = s.db.QueryRow(ctx, sql1, seasonId, leagueId).Scan(&seasonExists, &leagueExists, &leagueInSeason)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+// helper
+func (s *store) validateFindLeaguePlayer(ctx context.Context, seasonId, leagueId, playerId string) (seasonExists bool, leagueExists bool, leagueInSeason bool, playerExists bool, err error) {
+	sql1 := `
+		select
+			exists (
+				select 1 from season where id = $1
+			) as season_exists,
+			exists (
+				select 1 from league where id = $2
+			) as league_exists,
+			exists (
+				select 1 from league where id = $2 and season_id = $1
+			) as league_in_season,
+			exists (
+				select 1 from player where id = $3
+			) as player_exists
+	`
+
+	err = s.db.QueryRow(ctx, sql1, seasonId, leagueId, playerId).Scan(&seasonExists, &leagueExists, &leagueInSeason, &playerExists)
+	if err != nil {
+		return
+	}
+
+	return
 }

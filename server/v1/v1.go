@@ -19,11 +19,15 @@ import (
 )
 
 func MountRouter(cfg *config.Config, db *db.Conn) func(r chi.Router) {
+
 	return func(r chi.Router) {
 		r.Group(func(r chi.Router) {
 			r.Route("/auth", auth.Route(cfg, db))
 		})
 		r.Group(func(r chi.Router) {
+			// initialize routers if necessary
+			playersRtr := players.NewRouter(cfg, db)
+
 			// seek, verify and validate jwt
 			r.Use(jwtauth.Verifier(cfg.JwtAuth))
 			r.Use(jwtauth.Authenticator(cfg.JwtAuth))
@@ -31,9 +35,10 @@ func MountRouter(cfg *config.Config, db *db.Conn) func(r chi.Router) {
 
 			r.Route("/courts", courts.Route(cfg, db))
 			r.Route("/me", me.Route(cfg, db))
-			r.Route("/players", players.Route(cfg, db))
+			r.Route("/players", playersRtr.RouteGlobal())
 			r.Route("/seasons", seasons.Route(cfg, db))
 			r.Route("/seasons/{seasonId}/leagues", leagues.Route(cfg, db))
+			r.Route("/seasons/{seasonId}/leagues/{leagueId}/players", playersRtr.RouteLeague())
 			r.Route("/seasons/{seasonId}/leagues/{leagueId}/matches", matches.Route(cfg, db))
 			r.Route("/seasons/{seasonId}/leagues/{leagueId}/standings", standings.Route(cfg, db))
 		})

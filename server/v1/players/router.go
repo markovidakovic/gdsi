@@ -8,12 +8,28 @@ import (
 	"github.com/markovidakovic/gdsi/server/permission"
 )
 
-func Route(cfg *config.Config, db *db.Conn) func(r chi.Router) {
-	hdl := newHandler(cfg, db)
+type Router struct {
+	hdl *handler
+}
 
-	return func(r chi.Router) {
-		r.Get("/", hdl.getPlayers)
-		r.Get("/{playerId}", hdl.getPlayer)
-		r.With(middleware.RequirePermissionOrOwnership(permission.UpdatePlayer, hdl.store.checkPlayerOwnership, "playerId")).Put("/{playerId}", hdl.putPlayer)
+func NewRouter(cfg *config.Config, db *db.Conn) *Router {
+	return &Router{
+		hdl: newHandler(cfg, db),
+	}
+}
+
+func (r *Router) RouteGlobal() func(cr chi.Router) {
+	return func(cr chi.Router) {
+		cr.Get("/", r.hdl.getPlayers)
+		cr.Get("/{playerId}", r.hdl.getPlayer)
+		cr.With(middleware.RequirePermissionOrOwnership(permission.UpdatePlayer, r.hdl.store.checkPlayerOwnership, "playerId")).Put("/{playerId}", r.hdl.putPlayer)
+	}
+}
+
+func (r *Router) RouteLeague() func(cr chi.Router) {
+	return func(cr chi.Router) {
+		cr.Get("/", r.hdl.getLeaguePlayers)
+		cr.Get("/{playerId}", r.hdl.getLeaguePlayer)
+		cr.With(middleware.RequirePermission(permission.UpdatePlayer)).Put("/", r.hdl.updateLeaguePlayer) // updates player.current_league_id (for now)
 	}
 }
