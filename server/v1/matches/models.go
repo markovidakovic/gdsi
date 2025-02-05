@@ -17,16 +17,16 @@ type Match struct {
 }
 
 type MatchModel struct {
-	Id          string      `json:"id"`
-	Court       CourtModel  `json:"court"`
-	ScheduledAt time.Time   `json:"scheduled_at"`
-	PlayerOne   PlayerModel `json:"player_one"`
-	PlayerTwo   PlayerModel `json:"player_two"`
-	Winner      PlayerModel `json:"winner"`
-	Score       string      `json:"score"`
-	Season      SeasonModel `json:"season"`
-	League      LeagueModel `json:"league"`
-	CreatedAt   time.Time   `json:"created_at"`
+	Id          string       `json:"id"`
+	Court       CourtModel   `json:"court"`
+	ScheduledAt time.Time    `json:"scheduled_at"`
+	PlayerOne   PlayerModel  `json:"player_one"`
+	PlayerTwo   PlayerModel  `json:"player_two"`
+	Winner      *PlayerModel `json:"winner"`
+	Score       string       `json:"score"`
+	Season      SeasonModel  `json:"season"`
+	League      LeagueModel  `json:"league"`
+	CreatedAt   time.Time    `json:"created_at"`
 }
 
 type CourtModel struct {

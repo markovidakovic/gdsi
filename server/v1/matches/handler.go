@@ -86,7 +86,23 @@ func (h *handler) postMatch(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId}/matches [get]
 func (h *handler) getMatches(w http.ResponseWriter, r *http.Request) {
-	response.WriteSuccess(w, http.StatusOK, "get matches")
+	// call the service
+	result, err := h.service.processGetMatches(r.Context(), chi.URLParam(r, "seasonId"), chi.URLParam(r, "leagueId"))
+	if err != nil {
+		switch {
+		case errors.Is(err, response.ErrBadRequest):
+			response.WriteFailure(w, response.NewBadRequestFailure(err.Error()))
+			return
+		case errors.Is(err, response.ErrNotFound):
+			response.WriteFailure(w, response.NewNotFoundFailure(err.Error()))
+			return
+		default:
+			response.WriteFailure(w, response.NewInternalFailure(err))
+			return
+		}
+	}
+
+	response.WriteSuccess(w, http.StatusOK, result)
 }
 
 // @Summary Get by id
