@@ -195,17 +195,18 @@ definitions:
       title:
         type: string
     type: object
+  matches.SubmitMatchScoreRequestModel:
+    properties:
+      score:
+        type: string
+    type: object
   matches.UpdateMatchRequestModel:
     properties:
       court_id:
         type: string
-      player_one_id:
-        type: string
       player_two_id:
         type: string
       scheduled_at:
-        type: string
-      score:
         type: string
     type: object
   me.CurrentLeagueModel:
@@ -1514,50 +1515,6 @@ paths:
       tags:
       - matches
   /v1/seasons/{seasonId}/leagues/{leagueId}/matches/{matchId}:
-    delete:
-      description: Delete an existing league
-      parameters:
-      - description: Season id
-        in: path
-        name: seasonId
-        required: true
-        type: string
-      - description: League id
-        in: path
-        name: leagueId
-        required: true
-        type: string
-      - description: Match id
-        in: path
-        name: matchId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: No content
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/response.ValidationFailure'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.Failure'
-        "404":
-          description: Not found
-          schema:
-            $ref: '#/definitions/response.Failure'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/response.Failure'
-      security:
-      - BearerAuth: []
-      summary: Delete
-      tags:
-      - matches
     get:
       description: Get match by id
       parameters:
@@ -1607,7 +1564,7 @@ paths:
     put:
       consumes:
       - application/json
-      description: Update an existing match
+      description: Update match
       parameters:
       - description: Season id
         in: path
@@ -1656,6 +1613,61 @@ paths:
       security:
       - BearerAuth: []
       summary: Update
+      tags:
+      - matches
+  /v1/seasons/{seasonId}/leagues/{leagueId}/matches/{matchId}/score:
+    post:
+      consumes:
+      - application/json
+      description: Submit a match score
+      parameters:
+      - description: Season id
+        in: path
+        name: seasonId
+        required: true
+        type: string
+      - description: League id
+        in: path
+        name: leagueId
+        required: true
+        type: string
+      - description: Match id
+        in: path
+        name: matchId
+        required: true
+        type: string
+      - description: Request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/matches.SubmitMatchScoreRequestModel'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/matches.MatchModel'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/response.ValidationFailure'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Failure'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/response.Failure'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Failure'
+      security:
+      - BearerAuth: []
+      summary: Score
       tags:
       - matches
   /v1/seasons/{seasonId}/leagues/{leagueId}/players:

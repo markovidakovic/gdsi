@@ -14,6 +14,6 @@ func Route(cfg *config.Config, db *db.Conn) func(r chi.Router) {
 		r.Get("/", hdl.getMatches)
 		r.Get("/{matchId}", hdl.getMatch)
 		r.Put("/{matchId}", hdl.putMatch)
-		r.Delete("/{matchId}", hdl.deleteMatch)
+		r.Post("/{matchId}/score", hdl.postMatchScore)
 	}
 }

@@ -1693,7 +1693,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Update an existing match",
+                "description": "Update match",
                 "consumes": [
                     "application/json"
                 ],
@@ -1768,21 +1768,26 @@ const docTemplate = `{
                         }
                     }
                 }
-            },
-            "delete": {
+            }
+        },
+        "/v1/seasons/{seasonId}/leagues/{leagueId}/matches/{matchId}/score": {
+            "post": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Delete an existing league",
+                "description": "Submit a match score",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "matches"
                 ],
-                "summary": "Delete",
+                "summary": "Score",
                 "parameters": [
                     {
                         "type": "string",
@@ -1804,11 +1809,23 @@ const docTemplate = `{
                         "name": "matchId",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "Request body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/matches.SubmitMatchScoreRequestModel"
+                        }
                     }
                 ],
                 "responses": {
-                    "204": {
-                        "description": "No content"
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/matches.MatchModel"
+                        }
                     },
                     "400": {
                         "description": "Bad request",
@@ -2473,22 +2490,24 @@ const docTemplate = `{
                 }
             }
         },
+        "matches.SubmitMatchScoreRequestModel": {
+            "type": "object",
+            "properties": {
+                "score": {
+                    "type": "string"
+                }
+            }
+        },
         "matches.UpdateMatchRequestModel": {
             "type": "object",
             "properties": {
                 "court_id": {
                     "type": "string"
                 },
-                "player_one_id": {
-                    "type": "string"
-                },
                 "player_two_id": {
                     "type": "string"
                 },
                 "scheduled_at": {
-                    "type": "string"
-                },
-                "score": {
                     "type": "string"
                 }
             }

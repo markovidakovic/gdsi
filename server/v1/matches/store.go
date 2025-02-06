@@ -3,9 +3,12 @@ package matches
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/markovidakovic/gdsi/server/db"
+	"github.com/markovidakovic/gdsi/server/response"
 )
 
 type store struct {
@@ -26,7 +29,7 @@ func (s *store) insertMatch(ctx context.Context, input CreateMatchRequestModel) 
 			returning id, court_id, scheduled_at, player_one_id, player_two_id, winner_id, score, season_id, league_id, created_at
 		)
 		select
-			im.id
+			im.id,
 			court.id as court_id,
 			court.name as court_name,
 			im.scheduled_at,
@@ -42,6 +45,7 @@ func (s *store) insertMatch(ctx context.Context, input CreateMatchRequestModel) 
 			league.id as league_id,
 			league.title as league_title,
 			im.created_at
+		from inserted_match im
 		join court on im.court_id = court.id
 		join player player1 on im.player_one_id = player1.id
 		join account account1 on player1.account_id = account1.id
@@ -54,17 +58,19 @@ func (s *store) insertMatch(ctx context.Context, input CreateMatchRequestModel) 
 	`
 
 	var dest MatchModel
+	var winnerId, winnerName sql.NullString
 
 	err := s.db.QueryRow(ctx, sql1, input.CourtId, input.ScheduledAt, input.PlayerOneId, input.PlayerTwoId, input.WinnerId, input.Score, input.SeasonId, input.LeagueId).Scan(
 		&dest.Id,
 		&dest.Court.Id,
 		&dest.Court.Name,
+		&dest.ScheduledAt,
 		&dest.PlayerOne.Id,
 		&dest.PlayerOne.Name,
 		&dest.PlayerTwo.Id,
 		&dest.PlayerTwo.Name,
-		&dest.Winner.Id,
-		&dest.Winner.Name,
+		&winnerId,
+		&winnerName,
 		&dest.Score,
 		&dest.Season.Id,
 		&dest.Season.Title,
@@ -74,6 +80,15 @@ func (s *store) insertMatch(ctx context.Context, input CreateMatchRequestModel) 
 	)
 	if err != nil {
 		return dest, err
+	}
+
+	if !winnerId.Valid {
+		dest.Winner = nil
+	} else {
+		dest.Winner = &PlayerModel{
+			Id:   winnerId.String,
+			Name: winnerName.String,
+		}
 	}
 
 	return dest, nil
@@ -147,9 +162,127 @@ func (s *store) findMatches(ctx context.Context, seasonId, leagueId string) ([]M
 	return dest, nil
 }
 
-// validateInsertMatch takes the season id, league id, player ids and checks if: season, league, players exists and if
-// league is part of the season and players are part of the league
-func (s *store) validateInsertMatch(ctx context.Context, courtId, seasonId, leagueId, player1Id, player2Id string) (courtExists bool, seasonExists bool, leagueExists bool, leagueInSeason bool, playerOneExists bool, playerTwoExists bool, playersInLeague bool, err error) {
+func (s *store) findMatch(ctx context.Context, seasonId, leagueId, matchId string) (*MatchModel, error) {
+	sql1 := `
+		select
+			match.id,
+			court.id as court_id,
+			court.name as court_name,
+			match.scheduled_at,
+			player1.id as player_one_id,
+			account1.name as player_one_name,
+			player2.id as player_two_id,
+			account2.name as player_two_name,
+			winner.id as winner_id,
+			account3.name as winner_name,
+			match.score,
+			season.id as season_id,
+			season.title as season_title,
+			league.id as league_id,
+			league.title as league_title,
+			match.created_at
+		from match
+		join court on match.court_id = court.id
+		join player player1 on match.player_one_id = player1.id
+		join account account1 on player1.account_id = account1.id
+		join player player2 on match.player_two_id = player2.id
+		join account account2 on player2.account_id = account2.id
+		left join player winner on match.winner_id = winner.id
+		left join account account3 on winner.account_id = account3.id
+		join season on match.season_id = season.id
+		join league on match.league_id = league.id
+		where match.id = $1 and match.season_id = $2 and match.league_id = $3
+	`
+
+	var dest MatchModel
+	var winnerId, winnerName sql.NullString
+
+	err := s.db.QueryRow(ctx, sql1, matchId, seasonId, leagueId).Scan(&dest.Id, &dest.Court.Id, &dest.Court.Name, &dest.ScheduledAt, &dest.PlayerOne.Id, &dest.PlayerOne.Name, &dest.PlayerTwo.Id, &dest.PlayerTwo.Name, &winnerId, &winnerName, &dest.Score, &dest.Season.Id, &dest.Season.Title, &dest.League.Id, &dest.League.Title, &dest.CreatedAt)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("finding match: %w", response.ErrNotFound)
+		}
+		return nil, err
+	}
+
+	if !winnerId.Valid {
+		dest.Winner = nil
+	} else {
+		dest.Winner = &PlayerModel{
+			Id:   winnerId.String,
+			Name: winnerName.String,
+		}
+	}
+
+	return &dest, nil
+}
+
+func (s *store) updateMatch(ctx context.Context, input UpdateMatchRequestModel) (*MatchModel, error) {
+	sql1 := `
+		with updated_match as (
+			update match 
+			set court_id = $1, scheduled_at = $2, player_two_id = $3
+			where id = $4 and season_id = $5 and league_id = $6
+			returning id, court_id, scheduled_at, player_one_id, player_two_id, winner_id, score, season_id, league_id, created_at
+		)
+		select
+			um.id,
+			court.id as court_id,
+			court.name as court_name,
+			um.scheduled_at,
+			player1.id as player_one_id,
+			account1.name as player_one_name,
+			player2.id as player_two_id,
+			account2.name as player_two_name,
+			winner.id as winner_id,
+			account3.name as winner_name,
+			um.score,
+			season.id as season_id,
+			season.title as season_title,
+			league.id as league_id,
+			league.title as league_title,
+			um.created_at
+		from updated_match um
+		join court on um.court_id = court.id
+		join player player1 on um.player_one_id = player1.id
+		join account account1 on player1.account_id = account1.id
+		join player player2 on um.player_two_id = player2.id
+		join account account2 on player2.account_id = account2.id
+		left join player winner on um.winner_id = winner.id
+		left join account account3 on winner.account_id = account3.id
+		join season on um.season_id = season.id
+		join league on um.league_id = league.id
+	`
+
+	var dest MatchModel
+	var winnerId, winnerName sql.NullString
+
+	err := s.db.QueryRow(ctx, sql1, input.CourtId, input.ScheduledAt, input.PlayerTwoId, input.MatchId, input.SeasonId, input.LeagueId).Scan(&dest.Id, &dest.Court.Id, &dest.Court.Name, &dest.ScheduledAt, &dest.PlayerOne.Id, &dest.PlayerOne.Name, &dest.PlayerTwo.Id, &dest.PlayerTwo.Name, &winnerId, &winnerName, &dest.Score, &dest.Season.Id, &dest.Season.Title, &dest.League.Id, &dest.League.Title, &dest.CreatedAt)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("finding match: %w", response.ErrNotFound)
+		}
+		return nil, err
+	}
+
+	if !winnerId.Valid {
+		dest.Winner = nil
+	} else {
+		dest.Winner = &PlayerModel{
+			Id:   winnerId.String,
+			Name: winnerName.String,
+		}
+	}
+
+	return &dest, nil
+}
+
+func (s *store) submitMatchScore(ctx context.Context) {
+
+}
+
+// helper
+func (s *store) validateInsertUpdateMatch(ctx context.Context, courtId, seasonId, leagueId, player1Id, player2Id string) (courtExists bool, seasonExists bool, leagueExists bool, leagueInSeason bool, playerOneExists bool, playerTwoExists bool, playersInLeague bool, err error) {
 	sql1 := `
 		select
 			exists (
@@ -186,6 +319,7 @@ func (s *store) validateInsertMatch(ctx context.Context, courtId, seasonId, leag
 	return
 }
 
+// helper
 func (s *store) validateFindMatches(ctx context.Context, seasonId, leagueId string) (seasonExists bool, leagueExists bool, leagueInSeason bool, err error) {
 	sql1 := `
 		select
@@ -205,4 +339,22 @@ func (s *store) validateFindMatches(ctx context.Context, seasonId, leagueId stri
 		return
 	}
 	return
+}
+
+// helper
+func (s *store) checkMatchParticipation(ctx context.Context, matchId, accountId string) (bool, error) {
+	sql := `
+		select exists (
+			select 1 from match
+			where id = $1 and (player_one_id = $2 or player_two_id = $2)
+		)
+	`
+
+	var exists bool
+	err := s.db.QueryRow(ctx, sql, matchId, accountId).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+
+	return exists, nil
 }

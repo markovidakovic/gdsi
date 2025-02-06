@@ -120,11 +120,27 @@ func (h *handler) getMatches(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId}/matches/{matchId} [get]
 func (h *handler) getMatch(w http.ResponseWriter, r *http.Request) {
-	response.WriteSuccess(w, http.StatusOK, "get match by id")
+	// call the service
+	result, err := h.service.processGetMatch(r.Context(), chi.URLParam(r, "seasonId"), chi.URLParam(r, "leagueId"), chi.URLParam(r, "matchId"))
+	if err != nil {
+		switch {
+		case errors.Is(err, response.ErrBadRequest):
+			response.WriteFailure(w, response.NewBadRequestFailure(err.Error()))
+			return
+		case errors.Is(err, response.ErrNotFound):
+			response.WriteFailure(w, response.NewNotFoundFailure(err.Error()))
+			return
+		default:
+			response.WriteFailure(w, response.NewInternalFailure(err))
+			return
+		}
+	}
+
+	response.WriteSuccess(w, http.StatusOK, result)
 }
 
 // @Summary Update
-// @Description Update an existing match
+// @Description Update match
 // @Tags matches
 // @Accept json
 // @Produce json
@@ -140,23 +156,54 @@ func (h *handler) getMatch(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId}/matches/{matchId} [put]
 func (h *handler) putMatch(w http.ResponseWriter, r *http.Request) {
-	response.WriteSuccess(w, http.StatusOK, "update match")
+	// decode input
+	var input UpdateMatchRequestModel
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))
+		return
+	}
+
+	// todo: validate input
+
+	input.SeasonId = chi.URLParam(r, "seasonId")
+	input.LeagueId = chi.URLParam(r, "leagueId")
+	input.MatchId = chi.URLParam(r, "matchId")
+
+	// call the service
+	result, err := h.service.processUpdateMatch(r.Context(), input)
+	if err != nil {
+		switch {
+		case errors.Is(err, response.ErrBadRequest):
+			response.WriteFailure(w, response.NewBadRequestFailure(err.Error()))
+			return
+		case errors.Is(err, response.ErrNotFound):
+			response.WriteFailure(w, response.NewNotFoundFailure(err.Error()))
+			return
+		default:
+			response.WriteFailure(w, response.NewInternalFailure(err))
+			return
+		}
+	}
+
+	response.WriteSuccess(w, http.StatusOK, result)
 }
 
-// @Summary Delete
-// @Description Delete an existing league
+// @Summary Score
+// @Description Submit a match score
 // @Tags matches
+// @Accept json
 // @Produce json
 // @Param seasonId path string true "Season id"
 // @Param leagueId path string true "League id"
 // @Param matchId path string true "Match id"
-// @Success 204 "No content"
+// @Param body body matches.SubmitMatchScoreRequestModel true "Request body"
+// @Success 200 {object} matches.MatchModel "OK"
 // @Failure 400 {object} response.ValidationFailure "Bad request"
 // @Failure 401 {object} response.Failure "Unauthorized"
 // @Failure 404 {object} response.Failure "Not found"
 // @Failure 500 {object} response.Failure "Internal server error"
 // @Security BearerAuth
-// @Router /v1/seasons/{seasonId}/leagues/{leagueId}/matches/{matchId} [delete]
-func (h *handler) deleteMatch(w http.ResponseWriter, r *http.Request) {
-	response.WriteSuccess(w, http.StatusNoContent, nil)
+// @Router /v1/seasons/{seasonId}/leagues/{leagueId}/matches/{matchId}/score [post]
+func (h *handler) postMatchScore(w http.ResponseWriter, r *http.Request) {
+	response.WriteSuccess(w, http.StatusOK, "update match")
 }

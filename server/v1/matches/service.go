@@ -22,7 +22,7 @@ func newService(cfg *config.Config, store *store) *service {
 
 func (s *service) processCreateMatch(ctx context.Context, input CreateMatchRequestModel) (*MatchModel, error) {
 	// validate params in the db layer
-	seasonExists, courtExists, leagueExists, leagueInSeason, playerOneExists, playerTwoExists, playersInLeague, err := s.store.validateInsertMatch(ctx, input.CourtId, input.SeasonId, input.LeagueId, input.PlayerOneId, input.PlayerTwoId)
+	seasonExists, courtExists, leagueExists, leagueInSeason, playerOneExists, playerTwoExists, playersInLeague, err := s.store.validateInsertUpdateMatch(ctx, input.CourtId, input.SeasonId, input.LeagueId, input.PlayerOneId, input.PlayerTwoId)
 	if err != nil {
 		return nil, err
 	}
@@ -47,6 +47,10 @@ func (s *service) processCreateMatch(ctx context.Context, input CreateMatchReque
 	}
 	if !playersInLeague {
 		return nil, fmt.Errorf("players not in league: %w", response.ErrBadRequest)
+	}
+
+	if input.Score == nil {
+		input.WinnerId = nil
 	}
 
 	// insert match
@@ -82,4 +86,70 @@ func (s *service) processGetMatches(ctx context.Context, seasonId, leagueId stri
 	}
 
 	return mms, nil
+}
+
+func (s *service) processGetMatch(ctx context.Context, seasonId, leagueId, matchId string) (*MatchModel, error) {
+	// validate params in the db layer
+	seasonExists, leagueExists, leagueInSeason, err := s.store.validateFindMatches(ctx, seasonId, leagueId)
+	if err != nil {
+		return nil, err
+	}
+
+	if !seasonExists {
+		return nil, fmt.Errorf("finding season: %w", response.ErrNotFound)
+	}
+	if !leagueExists {
+		return nil, fmt.Errorf("finding league: %w", response.ErrNotFound)
+	}
+	if !leagueInSeason {
+		return nil, fmt.Errorf("league not in season: %w", response.ErrBadRequest)
+	}
+
+	mm, err := s.store.findMatch(ctx, seasonId, leagueId, matchId)
+	if err != nil {
+		return nil, err
+	}
+
+	return mm, nil
+}
+
+func (s *service) processUpdateMatch(ctx context.Context, input UpdateMatchRequestModel) (*MatchModel, error) {
+	// validate params in the db layer
+	seasonExists, courtExists, leagueExists, leagueInSeason, playerOneExists, playerTwoExists, playersInLeague, err := s.store.validateInsertUpdateMatch(ctx, input.CourtId, input.SeasonId, input.LeagueId, input.PlayerOneId, input.PlayerTwoId)
+	if err != nil {
+		return nil, err
+	}
+
+	if !courtExists {
+		return nil, fmt.Errorf("finding court: %w", response.ErrNotFound)
+	}
+	if !seasonExists {
+		return nil, fmt.Errorf("finding season: %w", response.ErrNotFound)
+	}
+	if !leagueExists {
+		return nil, fmt.Errorf("finding league: %w", response.ErrNotFound)
+	}
+	if !leagueInSeason {
+		return nil, fmt.Errorf("league not in season: %w", response.ErrBadRequest)
+	}
+	if !playerOneExists {
+		return nil, fmt.Errorf("finding player one: %w", response.ErrNotFound)
+	}
+	if !playerTwoExists {
+		return nil, fmt.Errorf("finding player two: %w", response.ErrNotFound)
+	}
+	if !playersInLeague {
+		return nil, fmt.Errorf("players not in league: %w", response.ErrBadRequest)
+	}
+
+	mm, err := s.store.updateMatch(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	return mm, nil
+}
+
+func (s *service) processSubmitMatchScore(ctx context.Context, input SubmitMatchScoreRequestModel) (*MatchModel, error) {
+	return nil, nil
 }

@@ -22,7 +22,7 @@ func newStore(db *db.Conn) *store {
 	return r
 }
 
-func (s *store) insertAccount(ctx context.Context, model SignupRequestModel) (Account, error) {
+func (s *store) insertAccount(ctx context.Context, model SignupRequestModel) (AccountModel, error) {
 	sql1 := `
 		insert into account (name, email, dob, gender, phone_number, password)
 		values ($1, $2, $3, $4, $5, $6)
@@ -32,9 +32,11 @@ func (s *store) insertAccount(ctx context.Context, model SignupRequestModel) (Ac
 	sql2 := `
 		insert into player (account_id)
 		values ($1)
+		returning id
 	`
 
-	var dest Account
+	var dest AccountModel
+	var playerId string
 
 	tx, err := s.db.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
@@ -53,7 +55,7 @@ func (s *store) insertAccount(ctx context.Context, model SignupRequestModel) (Ac
 		return dest, response.ErrInternal
 	}
 
-	_, err = tx.Exec(ctx, sql2, dest.Id)
+	err = tx.QueryRow(ctx, sql2, dest.Id).Scan(&playerId)
 	if err != nil {
 		return dest, response.ErrInternal
 	}
@@ -63,15 +65,18 @@ func (s *store) insertAccount(ctx context.Context, model SignupRequestModel) (Ac
 		return dest, response.ErrInternal
 	}
 
+	dest.PlayerId = playerId
+
 	return dest, nil
 }
 
-func (s *store) findAccountByEmail(ctx context.Context, email string) (*Account, error) {
-	var dest Account
+func (s *store) findAccountByEmail(ctx context.Context, email string) (*AccountModel, error) {
+	var dest AccountModel
 
 	sql := `
-		select account.id, account.name, account.email, account.dob, account.gender, account.phone_number, account.password, account.role, account.created_at
+		select account.id, account.name, account.email, account.dob, account.gender, account.phone_number, account.password, account.role, player.id as player_id, account.created_at
 		from account
+		join player on player.account_id = account.id
 		where account.email = $1
 	`
 
@@ -84,11 +89,12 @@ func (s *store) findAccountByEmail(ctx context.Context, email string) (*Account,
 		&dest.PhoneNumber,
 		&dest.Password,
 		&dest.Role,
+		&dest.PlayerId,
 		&dest.CreatedAt,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("%w: account not found", response.ErrNotFound)
+			return nil, fmt.Errorf("finding account: %w", response.ErrNotFound)
 		}
 		return nil, err
 	}
@@ -141,12 +147,13 @@ func (s *store) insertRefreshToken(ctx context.Context, accountId string, token 
 	return nil
 }
 
-func (s *store) findRefreshToken(ctx context.Context, rt string) (*RefreshToken, string, error) {
+func (s *store) findRefreshToken(ctx context.Context, rt string) (*RefreshTokenModel, error) {
 	// maybe do just an update query where we do returning
 	sql1 := `
 		select
 			refresh_token.id,
-			refresh_token.account_id,
+			account.id as account_id,
+			account.role as account_role,
 			refresh_token.token_hash,
 			refresh_token.device_id,
 			refresh_token.ip_address,
@@ -155,9 +162,10 @@ func (s *store) findRefreshToken(ctx context.Context, rt string) (*RefreshToken,
 			refresh_token.expires_at,
 			refresh_token.last_used_at,
 			refresh_token.is_revoked,
-			account.role
+			player.id as player_id
 		from refresh_token
 		join account on refresh_token.account_id = account.id
+		join player on account.id = player.account_id
 		where refresh_token.token_hash = $1
 	`
 
@@ -169,7 +177,7 @@ func (s *store) findRefreshToken(ctx context.Context, rt string) (*RefreshToken,
 
 	tx, err := s.db.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 
 	defer func() {
@@ -178,30 +186,29 @@ func (s *store) findRefreshToken(ctx context.Context, rt string) (*RefreshToken,
 		}
 	}()
 
-	var dest RefreshToken
-	var accRole string
+	var dest RefreshTokenModel
 
-	err = tx.QueryRow(ctx, sql1, rt).Scan(&dest.Id, &dest.AccountId, &dest.TokenHash, &dest.DeviceId, &dest.IpAddress, &dest.UserAgent, &dest.IssuedAt, &dest.ExpiresAt, &dest.LastUsedAt, &dest.IsRevoked, &accRole)
+	err = tx.QueryRow(ctx, sql1, rt).Scan(&dest.Id, &dest.AccountId, &dest.AccountRole, &dest.TokenHash, &dest.DeviceId, &dest.IpAddress, &dest.UserAgent, &dest.IssuedAt, &dest.ExpiresAt, &dest.LastUsedAt, &dest.IsRevoked, &dest.PlayerId)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, "", fmt.Errorf("%w: refresh token not found", response.ErrNotFound)
+			return nil, fmt.Errorf("finding refresh token: %w", response.ErrNotFound)
 		}
-		return nil, "", err
+		return nil, err
 	}
 
 	lua := time.Now()
 
 	_, err = tx.Exec(ctx, sql2, lua, rt)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 
-	return &dest, accRole, nil
+	return &dest, nil
 }
 
 func (s *store) revokeAllAccountRefreshTokens(ctx context.Context, accountId string) error {

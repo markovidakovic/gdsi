@@ -14,6 +14,7 @@ import (
 var (
 	AccountIdCtxKey   = &contextKey{"account-id"}
 	AccountRoleCtxKey = &contextKey{"account-role"}
+	PlayerIdCtxKey    = &contextKey{"player-id"}
 )
 
 // OwnershipChecker type is used so we can provide the RequireOwnershipOrPermission middleware with
@@ -34,10 +35,15 @@ func AccountInfo(next http.Handler) http.Handler {
 		if !ok {
 			response.WriteFailure(w, response.NewUnauthorizedFailure("account unauthorized"))
 		}
+		playerId, ok := claims["player_id"].(string)
+		if !ok {
+			response.WriteFailure(w, response.NewUnauthorizedFailure("account unauthorized"))
+		}
 
 		ctx := r.Context()
 		ctx = context.WithValue(ctx, AccountIdCtxKey, accountId)
 		ctx = context.WithValue(ctx, AccountRoleCtxKey, role)
+		ctx = context.WithValue(ctx, PlayerIdCtxKey, playerId)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

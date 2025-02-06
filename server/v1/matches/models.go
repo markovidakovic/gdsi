@@ -9,8 +9,8 @@ type Match struct {
 	ScheduledAt time.Time `json:"scheduled_at"`
 	PlayerOneId string    `json:"player_one_id"`
 	PlayerTwoId string    `json:"player_two_id"`
-	WinnerId    string    `json:"winner_id"`
-	Score       string    `json:"score"`
+	WinnerId    *string   `json:"winner_id"`
+	Score       *string   `json:"score"`
 	SeasonId    string    `json:"season_id"`
 	LeagueId    string    `json:"league_id"`
 	CreatedAt   time.Time `json:"created_at"`
@@ -23,7 +23,7 @@ type MatchModel struct {
 	PlayerOne   PlayerModel  `json:"player_one"`
 	PlayerTwo   PlayerModel  `json:"player_two"`
 	Winner      *PlayerModel `json:"winner"`
-	Score       string       `json:"score"`
+	Score       *string      `json:"score"`
 	Season      SeasonModel  `json:"season"`
 	League      LeagueModel  `json:"league"`
 	CreatedAt   time.Time    `json:"created_at"`
@@ -49,23 +49,33 @@ type LeagueModel struct {
 	Title string `json:"title"`
 }
 
+// create match
 type CreateMatchRequestModel struct {
 	CourtId     string  `json:"court_id"`
 	ScheduledAt string  `json:"scheduled_at"`
 	PlayerOneId string  `json:"player_one_id"`
 	PlayerTwoId string  `json:"player_two_id"`
-	WinnerId    string  `json:"-"`
+	WinnerId    *string `json:"-"`
 	Score       *string `json:"score"`
 	SeasonId    string  `json:"-"`
 	LeagueId    string  `json:"-"`
 }
 
-// todo: think about what is allowed on an update of a match
-// should it be allowed?
+// update match
 type UpdateMatchRequestModel struct {
-	CourtId     string  `json:"court_id"`
-	ScheduledAt string  `json:"scheduled_at"`
-	PlayerOneId string  `json:"player_one_id"`
-	PlayerTwoId string  `json:"player_two_id"`
-	Score       *string `json:"score"`
+	CourtId     string `json:"court_id"`
+	ScheduledAt string `json:"scheduled_at"`
+	PlayerOneId string `json:"-"`
+	PlayerTwoId string `json:"player_two_id"`
+	SeasonId    string `json:"-"`
+	LeagueId    string `json:"-"`
+	MatchId     string `json:"-"`
+}
+
+// submit score
+type SubmitMatchScoreRequestModel struct {
+	Score    string `json:"score"`
+	SeasonId string `json:"-"`
+	LeagueId string `json:"-"`
+	MatchId  string `json:"-"`
 }

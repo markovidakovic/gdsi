@@ -29,6 +29,34 @@ type RefreshToken struct {
 	IsRevoked  bool       `json:"is_revoked"`
 }
 
+type AccountModel struct {
+	Id          string    `json:"id"`
+	Name        string    `json:"name"`
+	Email       string    `json:"email"`
+	Dob         time.Time `json:"dob"`
+	Gender      string    `json:"gender"`
+	PhoneNumber string    `json:"phone_number"`
+	Password    string    `json:"-"`
+	Role        string    `json:"role"`
+	PlayerId    string    `json:"player_id"`
+	CreatedAt   time.Time `json:"created_at"`
+}
+
+type RefreshTokenModel struct {
+	Id          string     `json:"id"`
+	AccountId   string     `json:"account_id"`
+	AccountRole string     `json:"account_role"`
+	TokenHash   string     `json:"token_hash"`
+	DeviceId    *string    `json:"device_id"`
+	IpAddress   *string    `json:"ip_address"`
+	UserAgent   *string    `json:"user_agent"`
+	IssuedAt    time.Time  `json:"issued_at"`
+	ExpiresAt   time.Time  `json:"expires_at"`
+	LastUsedAt  *time.Time `json:"last_used_at"`
+	IsRevoked   bool       `json:"is_revoked"`
+	PlayerId    string     `json:"player_id"`
+}
+
 // signup request body model
 type SignupRequestModel struct {
 	Name        string `json:"name"`
