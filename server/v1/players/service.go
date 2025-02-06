@@ -28,10 +28,10 @@ func (s *service) processGetLeaguePlayers(ctx context.Context, seasonId, leagueI
 	}
 
 	if !seasonExists {
-		return nil, fmt.Errorf("%w: finding season", response.ErrNotFound)
+		return nil, fmt.Errorf("finding season: %w", response.ErrNotFound)
 	}
 	if !leagueExists {
-		return nil, fmt.Errorf("%w: finding league", response.ErrNotFound)
+		return nil, fmt.Errorf("finding league: %w", response.ErrNotFound)
 	}
 	if !leagueInSeason {
 		return nil, fmt.Errorf("%w: league not in season", response.ErrBadRequest)
