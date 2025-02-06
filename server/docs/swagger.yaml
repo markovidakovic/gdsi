@@ -328,6 +328,8 @@ definitions:
         type: integer
       matches_played:
         type: integer
+      matches_scheduled:
+        type: integer
       matches_won:
         type: integer
       racket:
@@ -340,11 +342,6 @@ definitions:
         type: number
       winning_ratio:
         type: number
-    type: object
-  players.UpdateLeaguePlayerRequestModel:
-    properties:
-      current_league_id:
-        type: string
     type: object
   players.UpdatePlayerRequestModel:
     properties:
@@ -1744,7 +1741,8 @@ paths:
       summary: Get
       tags:
       - players
-    put:
+  /v1/seasons/{seasonId}/leagues/{leagueId}/players/{playerId}/assign:
+    delete:
       parameters:
       - description: Season id
         in: path
@@ -1761,17 +1759,13 @@ paths:
         name: playerId
         required: true
         type: string
-      - description: Request body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/players.UpdateLeaguePlayerRequestModel'
       produces:
       - application/json
       responses:
-        "204":
-          description: No content
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/players.PlayerModel'
         "400":
           description: Bad request
           schema:
@@ -1790,7 +1784,52 @@ paths:
             $ref: '#/definitions/response.Failure'
       security:
       - BearerAuth: []
-      summary: Update
+      summary: Remove
+      tags:
+      - players
+    post:
+      parameters:
+      - description: Season id
+        in: path
+        name: seasonId
+        required: true
+        type: string
+      - description: League id
+        in: path
+        name: leagueId
+        required: true
+        type: string
+      - description: Player id
+        in: path
+        name: playerId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/players.PlayerModel'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/response.ValidationFailure'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Failure'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/response.Failure'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Failure'
+      security:
+      - BearerAuth: []
+      summary: Assign
       tags:
       - players
   /v1/seasons/{seasonId}/leagues/{leagueId}/standings:

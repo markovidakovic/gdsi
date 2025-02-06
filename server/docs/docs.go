@@ -1963,8 +1963,10 @@ const docTemplate = `{
                         }
                     }
                 }
-            },
-            "put": {
+            }
+        },
+        "/v1/seasons/{seasonId}/leagues/{leagueId}/players/{playerId}/assign": {
+            "post": {
                 "security": [
                     {
                         "BearerAuth": []
@@ -1976,7 +1978,7 @@ const docTemplate = `{
                 "tags": [
                     "players"
                 ],
-                "summary": "Update",
+                "summary": "Assign",
                 "parameters": [
                     {
                         "type": "string",
@@ -1998,20 +2000,83 @@ const docTemplate = `{
                         "name": "playerId",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "description": "Request body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/players.UpdateLeaguePlayerRequestModel"
-                        }
                     }
                 ],
                 "responses": {
-                    "204": {
-                        "description": "No content"
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/players.PlayerModel"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ValidationFailure"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "players"
+                ],
+                "summary": "Remove",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Season id",
+                        "name": "seasonId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "League id",
+                        "name": "leagueId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Player id",
+                        "name": "playerId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/players.PlayerModel"
+                        }
                     },
                     "400": {
                         "description": "Bad request",
@@ -2612,6 +2677,9 @@ const docTemplate = `{
                 "matches_played": {
                     "type": "integer"
                 },
+                "matches_scheduled": {
+                    "type": "integer"
+                },
                 "matches_won": {
                     "type": "integer"
                 },
@@ -2629,14 +2697,6 @@ const docTemplate = `{
                 },
                 "winning_ratio": {
                     "type": "number"
-                }
-            }
-        },
-        "players.UpdateLeaguePlayerRequestModel": {
-            "type": "object",
-            "properties": {
-                "current_league_id": {
-                    "type": "string"
                 }
             }
         },

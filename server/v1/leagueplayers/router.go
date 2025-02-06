@@ -1,4 +1,4 @@
-package players
+package leagueplayers
 
 import (
 	"github.com/go-chi/chi/v5"
@@ -12,8 +12,9 @@ func Route(cfg *config.Config, db *db.Conn) func(r chi.Router) {
 	hdl := newHandler(cfg, db)
 
 	return func(r chi.Router) {
-		r.Get("/", hdl.getPlayers)
-		r.Get("/{playerId}", hdl.getPlayer)
-		r.With(middleware.RequirePermissionOrOwnership(permission.UpdatePlayer, hdl.store.checkPlayerOwnership, "playerId")).Put("/{playerId}", hdl.putPlayer)
+		r.Get("/", hdl.getLeaguePlayers)
+		r.Get("/{playerId}", hdl.getLeaguePlayer)
+		r.With(middleware.RequirePermission(permission.UpdatePlayer)).Post("/{playerId}/assign", hdl.assignLeaguePlayer)
+		r.With(middleware.RequirePermission(permission.UpdatePlayer)).Delete("/{playerId}/assign", hdl.removeLeaguePlayer)
 	}
 }
