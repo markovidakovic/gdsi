@@ -45,7 +45,7 @@ func (h *handler) postMatch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate input
-	if valErr := validatePostMatch(input); valErr != nil {
+	if valErr := input.Validate(); valErr != nil {
 		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
 		return
 	}
@@ -163,7 +163,10 @@ func (h *handler) putMatch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// todo: validate input
+	if valErr := input.Validate(); valErr != nil {
+		response.WriteFailure(w, response.NewBadRequestFailure("validation failed"))
+		return
+	}
 
 	input.SeasonId = chi.URLParam(r, "seasonId")
 	input.LeagueId = chi.URLParam(r, "leagueId")

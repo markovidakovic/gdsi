@@ -42,8 +42,7 @@ func (h *handler) postSignup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validation
-	valErr := validateSignup(input)
-	if valErr != nil {
+	if valErr := input.Validate(); err != nil {
 		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
 		return
 	}
@@ -89,8 +88,7 @@ func (h *handler) postLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate input
-	valErr := validateLogin(input)
-	if valErr != nil {
+	if valErr := input.Validate(); valErr != nil {
 		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
 		return
 	}
@@ -146,8 +144,7 @@ func (h *handler) postRefreshToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate input
-	valErr := validateRefreshToken(input)
-	if valErr != nil {
+	if valErr := input.Validate(); valErr != nil {
 		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
 		return
 	}

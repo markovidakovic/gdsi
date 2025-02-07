@@ -2408,9 +2408,6 @@ const docTemplate = `{
                 "court_id": {
                     "type": "string"
                 },
-                "player_one_id": {
-                    "type": "string"
-                },
                 "player_two_id": {
                     "type": "string"
                 },

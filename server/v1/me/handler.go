@@ -70,6 +70,12 @@ func (h *handler) putMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// validation
+	if valErr := input.Validate(); valErr != nil {
+		response.WriteFailure(w, response.NewBadRequestFailure("validation failed"))
+		return
+	}
+
 	// get account id
 	accountId := r.Context().Value(middleware.AccountIdCtxKey).(string)
 

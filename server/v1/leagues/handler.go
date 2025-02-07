@@ -46,7 +46,7 @@ func (h *handler) postLeague(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate input
-	if valErr := validatePostLeague(input); valErr != nil {
+	if valErr := input.Validate(); valErr != nil {
 		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
 		return
 	}
@@ -149,7 +149,7 @@ func (h *handler) putLeague(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate input
-	if valErr := validatePutLeague(input); valErr != nil {
+	if valErr := input.Validate(); valErr != nil {
 		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
 		return
 	}

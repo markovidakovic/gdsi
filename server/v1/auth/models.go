@@ -1,6 +1,11 @@
 package auth
 
-import "time"
+import (
+	"time"
+
+	"github.com/markovidakovic/gdsi/server/response"
+	"github.com/markovidakovic/gdsi/server/validation"
+)
 
 // db table model
 type Account struct {
@@ -67,10 +72,120 @@ type SignupRequestModel struct {
 	Password    string `json:"password"`
 }
 
+func (m SignupRequestModel) Validate() []response.InvalidField {
+	var inv []response.InvalidField
+
+	if m.Name == "" {
+		inv = append(inv, response.InvalidField{
+			Field:    "name",
+			Message:  "Name field is required",
+			Location: "body",
+		})
+	}
+	if m.Email == "" {
+		inv = append(inv, response.InvalidField{
+			Field:    "email",
+			Message:  "Email field is required",
+			Location: "body",
+		})
+	} else if !validation.IsValidEmail(m.Email) {
+		inv = append(inv, response.InvalidField{
+			Field:    "email",
+			Message:  "Invalid email",
+			Location: "body",
+		})
+	}
+	if m.Dob == "" {
+		inv = append(inv, response.InvalidField{
+			Field:    "dob",
+			Message:  "Date of birth field is required",
+			Location: "body",
+		})
+	} else {
+		if _, err := time.Parse("2006-01-02", m.Dob); err != nil {
+			inv = append(inv, response.InvalidField{
+				Field:    "dob",
+				Message:  "Invalid date format",
+				Location: "body",
+			})
+		}
+	}
+	if m.Gender == "" {
+		inv = append(inv, response.InvalidField{
+			Field:    "gender",
+			Message:  "Gender field is required",
+			Location: "body",
+		})
+	} else if m.Gender != "male" && m.Gender != "female" {
+		inv = append(inv, response.InvalidField{
+			Field:    "gender",
+			Message:  "Invalid gender, expected male or female",
+			Location: "body",
+		})
+	}
+	if m.PhoneNumber == "" {
+		inv = append(inv, response.InvalidField{
+			Field:    "phone_number",
+			Message:  "Phone number field is required",
+			Location: "body",
+		})
+	} else if !validation.IsValidPhone(m.PhoneNumber) {
+		inv = append(inv, response.InvalidField{
+			Field:    "phone_number",
+			Message:  "Invalid phone number",
+			Location: "body",
+		})
+	}
+	if m.Password == "" {
+		inv = append(inv, response.InvalidField{
+			Field:    "password",
+			Message:  "Password field required",
+			Location: "body",
+		})
+	}
+
+	if len(inv) > 0 {
+		return inv
+	}
+
+	return nil
+}
+
 // login request body model
 type LoginRequestModel struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
+}
+
+func (m LoginRequestModel) Validate() []response.InvalidField {
+	var inv []response.InvalidField
+
+	if m.Email == "" {
+		inv = append(inv, response.InvalidField{
+			Field:    "email",
+			Message:  "Email field is required",
+			Location: "body",
+		})
+	} else if !validation.IsValidEmail(m.Email) {
+		inv = append(inv, response.InvalidField{
+			Field:    "email",
+			Message:  "Invalid email",
+			Location: "body",
+		})
+	}
+	if m.Password == "" {
+		inv = append(inv, response.InvalidField{
+			Field:    "password",
+			Message:  "Password field is required",
+			Location: "body",
+		})
+	}
+
+	if len(inv) > 0 {
+		return inv
+	}
+
+	return nil
 }
 
 // tokens response model
@@ -86,6 +201,16 @@ type ForgottenPasswordRequestModel struct {
 	Email string `json:"email"`
 }
 
+func (m ForgottenPasswordRequestModel) Validate() []response.InvalidField {
+	var inv []response.InvalidField
+
+	if len(inv) > 0 {
+		return inv
+	}
+
+	return nil
+}
+
 // forgotten password response body model
 type ForgottenPasswordResponseModel struct {
 	Message string `json:"message"`
@@ -99,6 +224,16 @@ type ChangeForgottenPasswordRequestModel struct {
 	ConfirmPassword string `json:"confirm_password"`
 }
 
+func (m ChangeForgottenPasswordRequestModel) Validate() []response.InvalidField {
+	var inv []response.InvalidField
+
+	if len(inv) > 0 {
+		return inv
+	}
+
+	return nil
+}
+
 // change forgotten password response body model
 type ChangeForgottenPasswordResponseModel struct {
 	Message string `json:"message"`
@@ -107,4 +242,22 @@ type ChangeForgottenPasswordResponseModel struct {
 // refresh token request
 type RefreshTokenRequestModel struct {
 	RefreshToken string `json:"refresh_token"`
+}
+
+func (m RefreshTokenRequestModel) Validate() []response.InvalidField {
+	var inv []response.InvalidField
+
+	if m.RefreshToken == "" {
+		inv = append(inv, response.InvalidField{
+			Field:    "refresh_token",
+			Message:  "Refresh token field is required",
+			Location: "body",
+		})
+	}
+
+	if len(inv) > 0 {
+		return inv
+	}
+
+	return nil
 }

@@ -45,8 +45,7 @@ func (h *handler) postCourt(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate
-	valErr := validatePostCourt(input)
-	if valErr != nil {
+	if valErr := input.Validate(); valErr != nil {
 		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
 		return
 	}
@@ -142,8 +141,7 @@ func (h *handler) putCourt(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate input
-	valErr := validatePutCourt(input)
-	if valErr != nil {
+	if valErr := input.Validate(); valErr != nil {
 		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
 		return
 	}

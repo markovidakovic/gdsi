@@ -1,20 +1,24 @@
 package me
 
-import "time"
+import (
+	"time"
+
+	"github.com/markovidakovic/gdsi/server/response"
+)
 
 type MeModel struct {
-	Id            string             `json:"id"`
-	Name          string             `json:"name"`
-	Email         string             `json:"email"`
-	Dob           time.Time          `json:"dob"`
-	Gender        string             `json:"gender"`
-	PhoneNumber   string             `json:"phone_number"`
-	Role          string             `json:"role"`
-	CreatedAt     time.Time          `json:"created_at"`
-	PlayerProfile PlayerProfileModel `json:"player_profile"`
+	Id          string      `json:"id"`
+	Name        string      `json:"name"`
+	Email       string      `json:"email"`
+	Dob         time.Time   `json:"dob"`
+	Gender      string      `json:"gender"`
+	PhoneNumber string      `json:"phone_number"`
+	Role        string      `json:"role"`
+	CreatedAt   time.Time   `json:"created_at"`
+	Player      PlayerModel `json:"player"`
 }
 
-type PlayerProfileModel struct {
+type PlayerModel struct {
 	Id               string              `json:"id"`
 	Height           *float64            `json:"height"`
 	Weight           *float64            `json:"weight"`
@@ -43,10 +47,32 @@ type UpdateMeRequestModel struct {
 	Name string `json:"name"`
 }
 
+// todo:
+func (m UpdateMeRequestModel) Validate() []response.InvalidField {
+	var inv []response.InvalidField
+
+	if len(inv) > 0 {
+		return inv
+	}
+
+	return nil
+}
+
 type UpdatePasswordRequestModel struct {
 	OldPassword         string `json:"old_password"`
 	NewPassword         string `json:"new_password"`
 	RepeatedNewPassword string `json:"repeated_new_password"`
+}
+
+// todo:
+func (m UpdatePasswordRequestModel) Validate() []response.InvalidField {
+	var inv []response.InvalidField
+
+	if len(inv) > 0 {
+		return inv
+	}
+
+	return nil
 }
 
 type UpdatePasswordResponseModel struct {

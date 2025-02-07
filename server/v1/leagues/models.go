@@ -2,6 +2,8 @@ package leagues
 
 import (
 	"time"
+
+	"github.com/markovidakovic/gdsi/server/response"
 )
 
 type League struct {
@@ -39,9 +41,45 @@ type CreateLeagueRequestModel struct {
 	SeasonId    string  `json:"-"`
 }
 
+func (m CreateLeagueRequestModel) Validate() []response.InvalidField {
+	var inv []response.InvalidField
+
+	if m.Title == "" {
+		inv = append(inv, response.InvalidField{
+			Field:    "title",
+			Message:  "Title is required",
+			Location: "body",
+		})
+	}
+
+	if len(inv) > 0 {
+		return inv
+	}
+
+	return nil
+}
+
 type UpdateLeagueRequestModel struct {
 	Title       string  `json:"title"`
 	Description *string `json:"description"`
 	SeasonId    string  `json:"-"`
 	LeagueId    string  `json:"-"`
+}
+
+func (m UpdateLeagueRequestModel) Validate() []response.InvalidField {
+	var inv []response.InvalidField
+
+	if m.Title == "" {
+		inv = append(inv, response.InvalidField{
+			Field:    "title",
+			Message:  "Title is required",
+			Location: "body",
+		})
+	}
+
+	if len(inv) > 0 {
+		return inv
+	}
+
+	return nil
 }

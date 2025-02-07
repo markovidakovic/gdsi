@@ -1,6 +1,10 @@
 package matches
 
-import "time"
+import (
+	"time"
+
+	"github.com/markovidakovic/gdsi/server/response"
+)
 
 // db table
 type Match struct {
@@ -53,12 +57,51 @@ type LeagueModel struct {
 type CreateMatchRequestModel struct {
 	CourtId     string  `json:"court_id"`
 	ScheduledAt string  `json:"scheduled_at"`
-	PlayerOneId string  `json:"player_one_id"`
+	PlayerOneId string  `json:"-"`
 	PlayerTwoId string  `json:"player_two_id"`
 	WinnerId    *string `json:"-"`
 	Score       *string `json:"score"`
 	SeasonId    string  `json:"-"`
 	LeagueId    string  `json:"-"`
+}
+
+func (m CreateMatchRequestModel) Validate() []response.InvalidField {
+	var inv []response.InvalidField
+
+	if m.CourtId == "" {
+		inv = append(inv, response.InvalidField{
+			Field:    "court_id",
+			Message:  "Court id is required",
+			Location: "body",
+		})
+	}
+	if m.ScheduledAt == "" {
+		inv = append(inv, response.InvalidField{
+			Field:    "scheduled_at",
+			Message:  "Scheduled at is required",
+			Location: "body",
+		})
+	}
+	if m.PlayerTwoId == "" {
+		inv = append(inv, response.InvalidField{
+			Field:    "player_two_id",
+			Message:  "Player two id is required",
+			Location: "body",
+		})
+	}
+	if *m.Score == "" {
+		inv = append(inv, response.InvalidField{
+			Field:    "score",
+			Message:  "Invalid score value",
+			Location: "body",
+		})
+	}
+
+	if len(inv) > 0 {
+		return inv
+	}
+
+	return nil
 }
 
 // update match
@@ -70,6 +113,17 @@ type UpdateMatchRequestModel struct {
 	SeasonId    string `json:"-"`
 	LeagueId    string `json:"-"`
 	MatchId     string `json:"-"`
+}
+
+// todo:
+func (m UpdateMatchRequestModel) Validate() []response.InvalidField {
+	var inv []response.InvalidField
+
+	if len(inv) > 0 {
+		return inv
+	}
+
+	return nil
 }
 
 // submit score

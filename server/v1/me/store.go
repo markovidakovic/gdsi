@@ -56,7 +56,7 @@ func (s *store) findMe(ctx context.Context, accountId string) (*MeModel, error) 
 	`
 
 	var mm MeModel
-	mm.PlayerProfile = PlayerProfileModel{}
+	mm.Player = PlayerModel{}
 
 	var leagueId, leagueTitle sql.NullString
 	var leagueCreatedAt sql.NullTime
@@ -70,21 +70,21 @@ func (s *store) findMe(ctx context.Context, accountId string) (*MeModel, error) 
 		&mm.PhoneNumber,
 		&mm.Role,
 		&mm.CreatedAt,
-		&mm.PlayerProfile.Id,
-		&mm.PlayerProfile.Height,
-		&mm.PlayerProfile.Weight,
-		&mm.PlayerProfile.Handedness,
-		&mm.PlayerProfile.Racket,
-		&mm.PlayerProfile.MatchesExpected,
-		&mm.PlayerProfile.MatchesPlayed,
-		&mm.PlayerProfile.MatchesWon,
-		&mm.PlayerProfile.MatchesScheduled,
-		&mm.PlayerProfile.SeasonsPlayed,
-		&mm.PlayerProfile.WinningRation,
-		&mm.PlayerProfile.ActivityRatio,
-		&mm.PlayerProfile.Ranking,
-		&mm.PlayerProfile.Elo,
-		&mm.PlayerProfile.CreatedAt,
+		&mm.Player.Id,
+		&mm.Player.Height,
+		&mm.Player.Weight,
+		&mm.Player.Handedness,
+		&mm.Player.Racket,
+		&mm.Player.MatchesExpected,
+		&mm.Player.MatchesPlayed,
+		&mm.Player.MatchesWon,
+		&mm.Player.MatchesScheduled,
+		&mm.Player.SeasonsPlayed,
+		&mm.Player.WinningRation,
+		&mm.Player.ActivityRatio,
+		&mm.Player.Ranking,
+		&mm.Player.Elo,
+		&mm.Player.CreatedAt,
 		&leagueId,
 		&leagueTitle,
 		&leagueCreatedAt,
@@ -97,9 +97,9 @@ func (s *store) findMe(ctx context.Context, accountId string) (*MeModel, error) 
 	}
 
 	if !leagueId.Valid {
-		mm.PlayerProfile.CurrentLeague = nil
+		mm.Player.CurrentLeague = nil
 	} else {
-		mm.PlayerProfile.CurrentLeague = &CurrentLeagueModel{
+		mm.Player.CurrentLeague = &CurrentLeagueModel{
 			Id:        leagueId.String,
 			Title:     leagueTitle.String,
 			CreatedAt: leagueCreatedAt.Time,
@@ -111,7 +111,7 @@ func (s *store) findMe(ctx context.Context, accountId string) (*MeModel, error) 
 
 func (s *store) updateMe(ctx context.Context, accountId string, input UpdateMeRequestModel) (*MeModel, error) {
 	var dest MeModel
-	dest.PlayerProfile = PlayerProfileModel{}
+	dest.Player = PlayerModel{}
 	var leagueId, leagueTitle sql.NullString
 	var leagueCreatedAt sql.NullTime
 
@@ -163,21 +163,21 @@ func (s *store) updateMe(ctx context.Context, accountId string, input UpdateMeRe
 		&dest.PhoneNumber,
 		&dest.Role,
 		&dest.CreatedAt,
-		&dest.PlayerProfile.Id,
-		&dest.PlayerProfile.Height,
-		&dest.PlayerProfile.Weight,
-		&dest.PlayerProfile.Handedness,
-		&dest.PlayerProfile.Racket,
-		&dest.PlayerProfile.MatchesExpected,
-		&dest.PlayerProfile.MatchesPlayed,
-		&dest.PlayerProfile.MatchesWon,
-		&dest.PlayerProfile.MatchesScheduled,
-		&dest.PlayerProfile.SeasonsPlayed,
-		&dest.PlayerProfile.WinningRation,
-		&dest.PlayerProfile.ActivityRatio,
-		&dest.PlayerProfile.Ranking,
-		&dest.PlayerProfile.Elo,
-		&dest.PlayerProfile.CreatedAt,
+		&dest.Player.Id,
+		&dest.Player.Height,
+		&dest.Player.Weight,
+		&dest.Player.Handedness,
+		&dest.Player.Racket,
+		&dest.Player.MatchesExpected,
+		&dest.Player.MatchesPlayed,
+		&dest.Player.MatchesWon,
+		&dest.Player.MatchesScheduled,
+		&dest.Player.SeasonsPlayed,
+		&dest.Player.WinningRation,
+		&dest.Player.ActivityRatio,
+		&dest.Player.Ranking,
+		&dest.Player.Elo,
+		&dest.Player.CreatedAt,
 		&leagueId,
 		&leagueTitle,
 		&leagueCreatedAt,
@@ -190,9 +190,9 @@ func (s *store) updateMe(ctx context.Context, accountId string, input UpdateMeRe
 	}
 
 	if !leagueId.Valid {
-		dest.PlayerProfile.CurrentLeague = nil
+		dest.Player.CurrentLeague = nil
 	} else {
-		dest.PlayerProfile.CurrentLeague = &CurrentLeagueModel{
+		dest.Player.CurrentLeague = &CurrentLeagueModel{
 			Id:        leagueId.String,
 			Title:     leagueTitle.String,
 			CreatedAt: leagueCreatedAt.Time,

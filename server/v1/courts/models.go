@@ -1,6 +1,10 @@
 package courts
 
-import "time"
+import (
+	"time"
+
+	"github.com/markovidakovic/gdsi/server/response"
+)
 
 type Court struct {
 	Id        string    `json:"id"`
@@ -26,6 +30,42 @@ type CreateCourtRequestModel struct {
 	CreatorId string `json:"-"`
 }
 
+func (m CreateCourtRequestModel) Validate() []response.InvalidField {
+	var inv []response.InvalidField
+
+	if m.Name == "" {
+		inv = append(inv, response.InvalidField{
+			Field:    "name",
+			Message:  "Name field is required",
+			Location: "body",
+		})
+	}
+
+	if len(inv) > 0 {
+		return inv
+	}
+
+	return nil
+}
+
 type UpdateCourtRequestModel struct {
 	Name string `json:"name"`
+}
+
+func (m UpdateCourtRequestModel) Validate() []response.InvalidField {
+	var inv []response.InvalidField
+
+	if m.Name == "" {
+		inv = append(inv, response.InvalidField{
+			Field:    "name",
+			Message:  "Name field is required",
+			Location: "body",
+		})
+	}
+
+	if len(inv) > 0 {
+		return inv
+	}
+
+	return nil
 }

@@ -99,8 +99,7 @@ func (h *handler) putPlayer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate input
-	valErr := validatePutPlayer(input)
-	if valErr != nil {
+	if valErr := input.Validate(); valErr != nil {
 		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
 		return
 	}

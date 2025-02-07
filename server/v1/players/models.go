@@ -1,6 +1,10 @@
 package players
 
-import "time"
+import (
+	"time"
+
+	"github.com/markovidakovic/gdsi/server/response"
+)
 
 // db table
 type Player struct {
@@ -57,4 +61,15 @@ type UpdatePlayerRequestModel struct {
 	Weight     *float64 `json:"weight"`
 	Handedness *string  `json:"handedness"`
 	Racket     *string  `json:"racket"`
+}
+
+// todo:
+func (m UpdatePlayerRequestModel) Validate() []response.InvalidField {
+	var inv []response.InvalidField
+
+	if len(inv) > 0 {
+		return inv
+	}
+
+	return nil
 }

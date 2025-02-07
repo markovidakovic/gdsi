@@ -44,8 +44,7 @@ func (h *handler) postSeason(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate input
-	valErr := validatePostSeason(input)
-	if valErr != nil {
+	if valErr := input.Validate(); valErr != nil {
 		response.WriteFailure(w, response.NewBadRequestFailure("validation failed"))
 		return
 	}
@@ -139,7 +138,7 @@ func (h *handler) putSeason(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate input
-	if valErr := validatePutSeason(input); valErr != nil {
+	if valErr := input.Validate(); valErr != nil {
 		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
 		return
 	}
