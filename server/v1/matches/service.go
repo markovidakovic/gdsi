@@ -22,7 +22,7 @@ func newService(cfg *config.Config, store *store) *service {
 
 func (s *service) processCreateMatch(ctx context.Context, input CreateMatchRequestModel) (*MatchModel, error) {
 	// validate params in the db layer
-	seasonExists, courtExists, leagueExists, leagueInSeason, playerOneExists, playerTwoExists, playersInLeague, err := s.store.validateInsertUpdateMatch(ctx, input.CourtId, input.SeasonId, input.LeagueId, input.PlayerOneId, input.PlayerTwoId)
+	courtExists, seasonExists, leagueExists, leagueInSeason, playerOneExists, playerTwoExists, playersInLeague, err := s.store.validateInsertUpdateMatch(ctx, input.CourtId, input.SeasonId, input.LeagueId, input.PlayerOneId, input.PlayerTwoId)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,9 @@ func (s *service) processCreateMatch(ctx context.Context, input CreateMatchReque
 		return nil, fmt.Errorf("players not in league: %w", response.ErrBadRequest)
 	}
 
-	if input.Score == nil {
+	if input.Score != nil {
+		fmt.Println("analize the score and set the winner id")
+	} else {
 		input.WinnerId = nil
 	}
 
@@ -114,8 +116,18 @@ func (s *service) processGetMatch(ctx context.Context, seasonId, leagueId, match
 }
 
 func (s *service) processUpdateMatch(ctx context.Context, input UpdateMatchRequestModel) (*MatchModel, error) {
+	// check if able to modify match
+	hasScore, err := s.store.checkMatchScore(ctx, input.MatchId)
+	if err != nil {
+		return nil, err
+	}
+
+	if hasScore {
+		return nil, fmt.Errorf("%w: not able to modify match result, score already submitted", response.ErrConflict)
+	}
+
 	// validate params in the db layer
-	seasonExists, courtExists, leagueExists, leagueInSeason, playerOneExists, playerTwoExists, playersInLeague, err := s.store.validateInsertUpdateMatch(ctx, input.CourtId, input.SeasonId, input.LeagueId, input.PlayerOneId, input.PlayerTwoId)
+	courtExists, seasonExists, leagueExists, leagueInSeason, playerOneExists, playerTwoExists, playersInLeague, err := s.store.validateInsertUpdateMatch(ctx, input.CourtId, input.SeasonId, input.LeagueId, input.PlayerOneId, input.PlayerTwoId)
 	if err != nil {
 		return nil, err
 	}
@@ -152,4 +164,12 @@ func (s *service) processUpdateMatch(ctx context.Context, input UpdateMatchReque
 
 func (s *service) processSubmitMatchScore(ctx context.Context, input SubmitMatchScoreRequestModel) (*MatchModel, error) {
 	return nil, nil
+}
+
+func (s *service) processDeleteMatch(ctx context.Context, seasonId, leagueId, matchId string) error {
+	err := s.store.deleteMatch(ctx, seasonId, leagueId, matchId)
+	if err != nil {
+		return err
+	}
+	return nil
 }

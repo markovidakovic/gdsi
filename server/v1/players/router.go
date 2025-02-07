@@ -14,6 +14,6 @@ func Route(cfg *config.Config, db *db.Conn) func(r chi.Router) {
 	return func(r chi.Router) {
 		r.Get("/", hdl.getPlayers)
 		r.Get("/{playerId}", hdl.getPlayer)
-		r.With(middleware.RequirePermissionOrOwnership(permission.UpdatePlayer, hdl.store.checkPlayerOwnership, "playerId")).Put("/{playerId}", hdl.putPlayer)
+		r.With(middleware.RequirePermissionOrOwnership(permission.UpdatePlayer, hdl.store.checkPlayerOwnership, "account", "playerId")).Put("/{playerId}", hdl.putPlayer)
 	}
 }

@@ -24,8 +24,8 @@ func newStore(db *db.Conn) *store {
 func (s *store) insertMatch(ctx context.Context, input CreateMatchRequestModel) (MatchModel, error) {
 	sql1 := `
 		with inserted_match as (
-			insert into match (court_id, scheduled_at, player_one_id, player_two_id, winner_id, score, season_id, league_id)
-			values ($1, $2, $3, $4, $5, $6, $7, $8)
+			insert into match (court_id, scheduled_at, player_one_id, player_two_id, winner_id, score, season_id, league_id, creator_id)
+			values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 			returning id, court_id, scheduled_at, player_one_id, player_two_id, winner_id, score, season_id, league_id, created_at
 		)
 		select
@@ -60,7 +60,7 @@ func (s *store) insertMatch(ctx context.Context, input CreateMatchRequestModel) 
 	var dest MatchModel
 	var winnerId, winnerName sql.NullString
 
-	err := s.db.QueryRow(ctx, sql1, input.CourtId, input.ScheduledAt, input.PlayerOneId, input.PlayerTwoId, input.WinnerId, input.Score, input.SeasonId, input.LeagueId).Scan(
+	err := s.db.QueryRow(ctx, sql1, input.CourtId, input.ScheduledAt, input.PlayerOneId, input.PlayerTwoId, input.WinnerId, input.Score, input.SeasonId, input.LeagueId, input.PlayerOneId).Scan(
 		&dest.Id,
 		&dest.Court.Id,
 		&dest.Court.Name,
@@ -277,8 +277,12 @@ func (s *store) updateMatch(ctx context.Context, input UpdateMatchRequestModel) 
 	return &dest, nil
 }
 
-func (s *store) submitMatchScore(ctx context.Context) {
+func (s *store) insertMatchScore(ctx context.Context) error {
+	return nil
+}
 
+func (s *store) deleteMatch(ctx context.Context, seasonId, leagueId, matchId string) error {
+	return nil
 }
 
 // helper
@@ -342,7 +346,7 @@ func (s *store) validateFindMatches(ctx context.Context, seasonId, leagueId stri
 }
 
 // helper
-func (s *store) checkMatchParticipation(ctx context.Context, matchId, accountId string) (bool, error) {
+func (s *store) checkMatchParticipation(ctx context.Context, matchId, playerId string) (bool, error) {
 	sql := `
 		select exists (
 			select 1 from match
@@ -351,10 +355,46 @@ func (s *store) checkMatchParticipation(ctx context.Context, matchId, accountId 
 	`
 
 	var exists bool
-	err := s.db.QueryRow(ctx, sql, matchId, accountId).Scan(&exists)
+	err := s.db.QueryRow(ctx, sql, matchId, playerId).Scan(&exists)
 	if err != nil {
 		return false, err
 	}
 
 	return exists, nil
+}
+
+// helper
+func (s *store) checkMatchOwnership(ctx context.Context, matchId, playerId string) (bool, error) {
+	sql := `
+		select exists (
+			select 1 from match
+			where id = $1 and creator_id = $2
+		)
+	`
+
+	var exists bool
+	err := s.db.QueryRow(ctx, sql, matchId, playerId).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
+}
+
+// helper
+func (s *store) checkMatchScore(ctx context.Context, matchId string) (bool, error) {
+	var score sql.NullString
+
+	err := s.db.QueryRow(ctx, `
+		select score
+		from match
+		where id = $1
+	`, matchId).Scan(&score)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return false, fmt.Errorf("finding match: %w", response.ErrNotFound)
+		}
+		return false, err
+	}
+
+	return score.Valid, nil
 }

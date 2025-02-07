@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -67,15 +66,20 @@ func RequirePermission(perm permission.Permission) func(next http.Handler) http.
 }
 
 // RequireOwnerrship checks if the current authenticated account is the resource owner
-func RequireOwnership(oc OwnershipChecker, resourceUrlPattern string) func(next http.Handler) http.Handler {
+func RequireOwnership(oc OwnershipChecker, owner, resourceUrlPattern string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			accountId := r.Context().Value(AccountIdCtxKey).(string)
+			var ownerId string
+
+			if owner == "account" {
+				ownerId = r.Context().Value(AccountIdCtxKey).(string)
+			} else if owner == "player" {
+				ownerId = r.Context().Value(PlayerIdCtxKey).(string)
+			}
+
 			resourceId := chi.URLParam(r, resourceUrlPattern)
 
-			fmt.Printf("resourceId: %v\n", resourceId)
-
-			isOwner, err := oc(r.Context(), resourceId, accountId)
+			isOwner, err := oc(r.Context(), resourceId, ownerId)
 			if err != nil {
 				response.WriteFailure(w, response.NewInternalFailure(err))
 				return
@@ -93,10 +97,17 @@ func RequireOwnership(oc OwnershipChecker, resourceUrlPattern string) func(next 
 
 // RequirePermissionOrOwnership checks if the current authenticated account is the resource owner or if
 // it has rbac permission to access the resource
-func RequirePermissionOrOwnership(perm permission.Permission, oc OwnershipChecker, resourceUrlPattern string) func(next http.Handler) http.Handler {
+func RequirePermissionOrOwnership(perm permission.Permission, oc OwnershipChecker, owner, resourceUrlPattern string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			accountId := r.Context().Value(AccountIdCtxKey).(string)
+			var ownerId string
+
+			if owner == "account" {
+				ownerId = r.Context().Value(AccountIdCtxKey).(string)
+			} else if owner == "player" {
+				ownerId = r.Context().Value(PlayerIdCtxKey).(string)
+			}
+
 			role := r.Context().Value(AccountRoleCtxKey).(string)
 
 			// check permission
@@ -107,10 +118,9 @@ func RequirePermissionOrOwnership(perm permission.Permission, oc OwnershipChecke
 
 			// get resource id of the url param with the provided pattern
 			resourceId := chi.URLParam(r, resourceUrlPattern)
-			fmt.Printf("resourceId: %v\n", resourceId)
 
 			// call the ownership checker func
-			isOwner, err := oc(r.Context(), resourceId, accountId)
+			isOwner, err := oc(r.Context(), resourceId, ownerId)
 			if err != nil {
 				response.WriteFailure(w, response.NewInternalFailure(err))
 				return

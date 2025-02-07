@@ -9,6 +9,7 @@ create table match(
     score text,
     season_id uuid not null references season (id) on delete cascade,
     league_id uuid not null references league (id) on delete cascade,
+    creator_id uuid not null references player (id) on delete cascade,
     created_at timestamptz not null default current_timestamp
 );
 

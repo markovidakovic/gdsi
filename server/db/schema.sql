@@ -116,6 +116,7 @@ CREATE TABLE public.match (
     score text,
     season_id uuid NOT NULL,
     league_id uuid NOT NULL,
+    creator_id uuid NOT NULL,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
@@ -325,6 +326,14 @@ ALTER TABLE ONLY public.league
 
 ALTER TABLE ONLY public.match
     ADD CONSTRAINT match_court_id_fkey FOREIGN KEY (court_id) REFERENCES public.court(id);
+
+
+--
+-- Name: match match_creator_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.match
+    ADD CONSTRAINT match_creator_id_fkey FOREIGN KEY (creator_id) REFERENCES public.player(id) ON DELETE CASCADE;
 
 
 --

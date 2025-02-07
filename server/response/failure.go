@@ -16,6 +16,7 @@ var (
 	ErrDuplicateRecord = errors.New("resource already exists")
 	ErrUnauthorized    = errors.New("access unathorized")
 	ErrForbidden       = errors.New("access forbidden")
+	ErrConflict        = errors.New("conflict")
 	ErrInternal        = errors.New("internal server error")
 )
 
@@ -112,6 +113,13 @@ func NewUnauthorizedFailure(message string) Failure {
 func NewForbiddenFailure(message string) Failure {
 	return Failure{
 		Status:  http.StatusForbidden,
+		Message: message,
+	}
+}
+
+func NewConflictFailure(message string) Failure {
+	return Failure{
+		Status:  http.StatusConflict,
 		Message: message,
 	}
 }
