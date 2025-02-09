@@ -16,6 +16,5 @@ func Route(cfg *config.Config, db *db.Conn) func(r chi.Router) {
 		r.Get("/{matchId}", hdl.getMatch)
 		r.With(middleware.RequireOwnership(hdl.store.checkMatchOwnership, "player", "matchId")).Put("/{matchId}", hdl.putMatch)
 		r.With(middleware.RequireOwnership(hdl.store.checkMatchParticipation, "player", "matchId")).Post("/{matchId}/score", hdl.postMatchScore)
-		r.With(middleware.RequireOwnership(hdl.store.checkMatchOwnership, "player", "matchId")).Delete("/{matchId}", hdl.deleteMatch)
 	}
 }

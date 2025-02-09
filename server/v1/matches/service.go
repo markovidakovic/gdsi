@@ -3,6 +3,8 @@ package matches
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/markovidakovic/gdsi/server/config"
 	"github.com/markovidakovic/gdsi/server/response"
@@ -22,7 +24,7 @@ func newService(cfg *config.Config, store *store) *service {
 
 func (s *service) processCreateMatch(ctx context.Context, input CreateMatchRequestModel) (*MatchModel, error) {
 	// validate params in the db layer
-	courtExists, seasonExists, leagueExists, leagueInSeason, playerOneExists, playerTwoExists, playersInLeague, err := s.store.validateInsertUpdateMatch(ctx, input.CourtId, input.SeasonId, input.LeagueId, input.PlayerOneId, input.PlayerTwoId)
+	courtExists, seasonExists, leagueExists, playerOneExists, playerTwoExists, playersInLeague, err := s.store.validateInsertUpdateMatch(ctx, input.CourtId, input.SeasonId, input.LeagueId, input.PlayerOneId, input.PlayerTwoId)
 	if err != nil {
 		return nil, err
 	}
@@ -35,9 +37,6 @@ func (s *service) processCreateMatch(ctx context.Context, input CreateMatchReque
 	}
 	if !leagueExists {
 		return nil, fmt.Errorf("finding league: %w", response.ErrNotFound)
-	}
-	if !leagueInSeason {
-		return nil, fmt.Errorf("league not in season: %w", response.ErrBadRequest)
 	}
 	if !playerOneExists {
 		return nil, fmt.Errorf("finding player one: %w", response.ErrNotFound)
@@ -66,7 +65,7 @@ func (s *service) processCreateMatch(ctx context.Context, input CreateMatchReque
 
 func (s *service) processGetMatches(ctx context.Context, seasonId, leagueId string) ([]MatchModel, error) {
 	// validate params in the db layer
-	seasonExists, leagueExists, leagueInSeason, err := s.store.validateFindMatches(ctx, seasonId, leagueId)
+	seasonExists, leagueExists, err := s.store.validateFindMatches(ctx, seasonId, leagueId)
 	if err != nil {
 		return nil, err
 	}
@@ -76,9 +75,6 @@ func (s *service) processGetMatches(ctx context.Context, seasonId, leagueId stri
 	}
 	if !leagueExists {
 		return nil, fmt.Errorf("finding league: %w", response.ErrNotFound)
-	}
-	if !leagueInSeason {
-		return nil, fmt.Errorf("league not in season: %w", response.ErrBadRequest)
 	}
 
 	// call the store
@@ -92,7 +88,7 @@ func (s *service) processGetMatches(ctx context.Context, seasonId, leagueId stri
 
 func (s *service) processGetMatch(ctx context.Context, seasonId, leagueId, matchId string) (*MatchModel, error) {
 	// validate params in the db layer
-	seasonExists, leagueExists, leagueInSeason, err := s.store.validateFindMatches(ctx, seasonId, leagueId)
+	seasonExists, leagueExists, err := s.store.validateFindMatches(ctx, seasonId, leagueId)
 	if err != nil {
 		return nil, err
 	}
@@ -102,9 +98,6 @@ func (s *service) processGetMatch(ctx context.Context, seasonId, leagueId, match
 	}
 	if !leagueExists {
 		return nil, fmt.Errorf("finding league: %w", response.ErrNotFound)
-	}
-	if !leagueInSeason {
-		return nil, fmt.Errorf("league not in season: %w", response.ErrBadRequest)
 	}
 
 	mm, err := s.store.findMatch(ctx, seasonId, leagueId, matchId)
@@ -123,11 +116,11 @@ func (s *service) processUpdateMatch(ctx context.Context, input UpdateMatchReque
 	}
 
 	if hasScore {
-		return nil, fmt.Errorf("%w: not able to modify match result, score already submitted", response.ErrConflict)
+		return nil, fmt.Errorf("%w: not able to modify a match that has a score", response.ErrConflict)
 	}
 
 	// validate params in the db layer
-	courtExists, seasonExists, leagueExists, leagueInSeason, playerOneExists, playerTwoExists, playersInLeague, err := s.store.validateInsertUpdateMatch(ctx, input.CourtId, input.SeasonId, input.LeagueId, input.PlayerOneId, input.PlayerTwoId)
+	courtExists, seasonExists, leagueExists, playerOneExists, playerTwoExists, playersInLeague, err := s.store.validateInsertUpdateMatch(ctx, input.CourtId, input.SeasonId, input.LeagueId, input.PlayerOneId, input.PlayerTwoId)
 	if err != nil {
 		return nil, err
 	}
@@ -140,9 +133,6 @@ func (s *service) processUpdateMatch(ctx context.Context, input UpdateMatchReque
 	}
 	if !leagueExists {
 		return nil, fmt.Errorf("finding league: %w", response.ErrNotFound)
-	}
-	if !leagueInSeason {
-		return nil, fmt.Errorf("league not in season: %w", response.ErrBadRequest)
 	}
 	if !playerOneExists {
 		return nil, fmt.Errorf("finding player one: %w", response.ErrNotFound)
@@ -163,13 +153,60 @@ func (s *service) processUpdateMatch(ctx context.Context, input UpdateMatchReque
 }
 
 func (s *service) processSubmitMatchScore(ctx context.Context, input SubmitMatchScoreRequestModel) (*MatchModel, error) {
-	return nil, nil
-}
-
-func (s *service) processDeleteMatch(ctx context.Context, seasonId, leagueId, matchId string) error {
-	err := s.store.deleteMatch(ctx, seasonId, leagueId, matchId)
+	seasonExists, leagueExists, matchExists, err := s.store.validateSubmitMatchScore(ctx, input.SeasonId, input.LeagueId, input.MatchId)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	if !seasonExists {
+		return nil, fmt.Errorf("finding season: %w", response.ErrNotFound)
+	}
+	if !leagueExists {
+		return nil, fmt.Errorf("finding league: %w", response.ErrNotFound)
+	}
+	if !matchExists {
+		return nil, fmt.Errorf("finding match: %w", response.ErrNotFound)
+	}
+
+	// find the existing match
+	match, err := s.store.findMatch(ctx, input.SeasonId, input.LeagueId, input.MatchId)
+	if err != nil {
+		return nil, err
+	}
+
+	// check if able to submit result
+	if match.Score != nil {
+		return nil, fmt.Errorf("%w: not able to submit match result, score already exists", response.ErrConflict)
+	}
+
+	// determine the winner
+	sets := strings.Split(input.Score, ",")
+	var pl1SetsWon int
+
+	for _, set := range sets {
+		setSl := strings.Split(set, "-")
+		pl1Score, _ := strconv.Atoi(setSl[0])
+		pl2Score, _ := strconv.Atoi(setSl[1])
+
+		if pl1Score > pl2Score {
+			pl1SetsWon++
+		}
+	}
+
+	if pl1SetsWon == 2 {
+		input.WinnerId = match.PlayerOne.Id
+	} else {
+		input.WinnerId = match.PlayerTwo.Id
+	}
+
+	// also add the match p1 and p2 info to the input struct
+	input.PlayerOneId = match.PlayerOne.Id
+	input.PlayerTwoId = match.PlayerTwo.Id
+
+	// call the store
+	result, err := s.store.insertMatchScore(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }

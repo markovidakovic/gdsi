@@ -1,7 +1,6 @@
 package matches
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -157,10 +156,13 @@ func (m UpdateMatchRequestModel) Validate() []response.InvalidField {
 
 // submit score
 type SubmitMatchScoreRequestModel struct {
-	Score    string `json:"score"`
-	SeasonId string `json:"-"`
-	LeagueId string `json:"-"`
-	MatchId  string `json:"-"`
+	Score       string `json:"score"`
+	SeasonId    string `json:"-"`
+	LeagueId    string `json:"-"`
+	MatchId     string `json:"-"`
+	WinnerId    string `json:"-"`
+	PlayerOneId string `json:"-"`
+	PlayerTwoId string `json:"-"`
 }
 
 // todo
@@ -184,59 +186,107 @@ func (m SubmitMatchScoreRequestModel) Validate() []response.InvalidField {
 func isValidScore(score string) bool {
 	sets := strings.Split(score, ",")
 
-	fmt.Printf("sets: %v\n", sets)
-
-	if len(sets) < 2 || len(sets) > 3 {
+	if len(sets) < 2 {
 		return false
 	}
 
 	var pl1SetsWon, pl2SetsWon int
 
-	for i, set := range sets {
-		setSl := strings.Split(set, "-")
+	// check first two sets
+	for i := 0; i < 2; i++ {
+		setSl := strings.Split(sets[i], "-")
 		if len(setSl) != 2 {
 			return false
 		}
 
-		fmt.Printf("setSl: %v\n", setSl)
-
-		gamesPl1, err1 := strconv.Atoi(setSl[0])
-		gamesPl2, err2 := strconv.Atoi(setSl[1])
+		pl1Games, err1 := strconv.Atoi(setSl[0])
+		pl2Games, err2 := strconv.Atoi(setSl[1])
 		if err1 != nil || err2 != nil {
 			return false
 		}
 
-		fmt.Printf("gamesPl1: %v\n", gamesPl1)
-		fmt.Printf("gamesPl2: %v\n", gamesPl2)
-
-		// set games validation (first two sets, and a possible third set)
-		if i < 2 {
-			if !isValidRegularSet(gamesPl1, gamesPl2) {
-				return false
-			}
-		} else {
-			if !isValidThirdSet(gamesPl1, gamesPl2) {
-				return false
-			}
+		if !isValidSet(pl1Games, pl2Games) {
+			return false
 		}
 
-		if gamesPl1 > gamesPl2 {
+		if pl1Games > pl2Games {
 			pl1SetsWon++
 		} else {
 			pl2SetsWon++
 		}
 	}
 
-	fmt.Printf("pl1SetsWon: %v\n", pl1SetsWon)
-	fmt.Printf("pl2SetsWon: %v\n", pl2SetsWon)
+	// after two sets, check if someone won both
+	if pl1SetsWon == 2 || pl2SetsWon == 2 {
+		return len(sets) == 2 // can't have more than two sets in the score
+	}
 
+	// must be 1-1 at this point and must have a 3rd set or super tie-break
+	if len(sets) != 3 {
+		return false
+	}
+
+	// validate 3rd set or tie-break
+	setSl := strings.Split(sets[2], "-")
+	if len(setSl) != 2 {
+		return false
+	}
+
+	pl1Games, err1 := strconv.Atoi(setSl[0])
+	pl2Games, err2 := strconv.Atoi(setSl[1])
+	if err1 != nil || err2 != nil {
+		return false
+	}
+
+	if pl1Games >= 10 || pl2Games >= 10 {
+		if !isValidTieBreak(pl1Games, pl2Games) {
+			return false
+		}
+	} else if !isValidSet(pl1Games, pl2Games) {
+		return false
+	}
+
+	if pl1Games > pl2Games {
+		pl1SetsWon++
+	} else {
+		pl2SetsWon++
+	}
+
+	// final score must be 2-1 either way
+	return (pl1SetsWon == 2 && pl2SetsWon == 1) || (pl2SetsWon == 2 && pl1SetsWon == 1)
+}
+
+func isValidSet(games1, games2 int) bool {
+	if games1 == 7 {
+		return games2 == 5 || games2 == 6 // 7-5 or 7-6 (tie-break)
+	}
+	if games2 == 7 {
+		return games1 == 5 || games1 == 6 // 5-7 or 6-7 (tie-break)
+	}
+	if games1 == 6 {
+		return games2 <= 4 // 6-0 through 6-4
+	}
+	if games2 == 6 {
+		return games1 <= 4 // 0-6 through 4-6
+	}
 	return false
 }
 
-func isValidRegularSet(gamesPl1, gamesPl2 int) bool {
-	return false
-}
-
-func isValidThirdSet(scorePl1, scorePl2 int) bool {
+func isValidTieBreak(score1, score2 int) bool {
+	// super tie-break
+	if score1 == 10 {
+		// if excatly 10, opponent must have 8 or less
+		return score2 <= 8
+	}
+	if score2 == 10 {
+		return score1 <= 8
+	}
+	// if more than 10, must win by 2
+	if score1 > 10 {
+		return score1-score2 == 2
+	}
+	if score2 > 10 {
+		return score2-score1 == 2
+	}
 	return false
 }

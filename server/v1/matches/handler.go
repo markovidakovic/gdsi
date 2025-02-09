@@ -157,6 +157,7 @@ func (h *handler) getMatch(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {object} response.ValidationFailure "Bad request"
 // @Failure 401 {object} response.Failure "Unauthorized"
 // @Failure 404 {object} response.Failure "Not found"
+// @Failure 409 {object} response.Failure "Conflict"
 // @Failure 500 {object} response.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId}/matches/{matchId} [put]
@@ -212,6 +213,7 @@ func (h *handler) putMatch(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {object} response.ValidationFailure "Bad request"
 // @Failure 401 {object} response.Failure "Unauthorized"
 // @Failure 404 {object} response.Failure "Not found"
+// @Failure 409 {object} response.Failure "Conflict"
 // @Failure 500 {object} response.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId}/matches/{matchId}/score [post]
@@ -254,38 +256,4 @@ func (h *handler) postMatchScore(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.WriteSuccess(w, http.StatusOK, result)
-}
-
-// @Summary Delete
-// @Description Delete a match
-// @Tags matches
-// @Accept json
-// @Produce json
-// @Param seasonId path string true "Season id"
-// @Param leagueId path string true "League id"
-// @Param matchId path string true "Match id"
-// @Success 204 "No content"
-// @Failure 400 {object} response.ValidationFailure "Bad request"
-// @Failure 401 {object} response.Failure "Unauthorized"
-// @Failure 404 {object} response.Failure "Not found"
-// @Failure 500 {object} response.Failure "Internal server error"
-// @Security BearerAuth
-// @Router /v1/seasons/{seasonId}/leagues/{leagueId}/matches/{matchId} [delete]
-func (h *handler) deleteMatch(w http.ResponseWriter, r *http.Request) {
-	err := h.service.processDeleteMatch(r.Context(), chi.URLParam(r, "seasonId"), chi.URLParam(r, "leagueId"), chi.URLParam(r, "matchId"))
-	if err != nil {
-		switch {
-		case errors.Is(err, response.ErrBadRequest):
-			response.WriteFailure(w, response.NewBadRequestFailure(err.Error()))
-			return
-		case errors.Is(err, response.ErrNotFound):
-			response.WriteFailure(w, response.NewNotFoundFailure(err.Error()))
-			return
-		default:
-			response.WriteFailure(w, response.NewInternalFailure(err))
-			return
-		}
-	}
-
-	response.WriteSuccess(w, http.StatusNoContent, nil)
 }

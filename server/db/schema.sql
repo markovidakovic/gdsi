@@ -297,6 +297,14 @@ ALTER TABLE ONLY public.standing
 
 
 --
+-- Name: standing standing_season_id_league_id_player_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.standing
+    ADD CONSTRAINT standing_season_id_league_id_player_id_key UNIQUE (season_id, league_id, player_id);
+
+
+--
 -- Name: court court_creator_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
