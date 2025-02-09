@@ -42,7 +42,7 @@ func (h *handler) postSignup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validation
-	if valErr := input.Validate(); err != nil {
+	if valErr := input.Validate(); valErr != nil {
 		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
 		return
 	}
