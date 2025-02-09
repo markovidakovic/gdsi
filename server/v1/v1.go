@@ -20,7 +20,6 @@ import (
 )
 
 func MountRouter(cfg *config.Config, db *db.Conn) func(r chi.Router) {
-
 	return func(r chi.Router) {
 		r.Group(func(r chi.Router) {
 			r.Route("/auth", auth.Route(cfg, db))
