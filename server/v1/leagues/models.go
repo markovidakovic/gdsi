@@ -6,15 +6,6 @@ import (
 	"github.com/markovidakovic/gdsi/server/response"
 )
 
-type League struct {
-	Id          string    `json:"id"`
-	Title       string    `json:"title"`
-	Description *string   `json:"description"`
-	SeasonId    string    `json:"season_id"`
-	CreatorId   string    `json:"creator_id"`
-	CreatedAt   time.Time `json:"created_at"`
-}
-
 type LeagueModel struct {
 	Id          string       `json:"id"`
 	Title       string       `json:"title"`

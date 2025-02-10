@@ -12,10 +12,8 @@ create table player(
     matches_won integer not null default 0,
     matches_scheduled integer not null default 0,
     seasons_played integer not null default 0,
-    winning_ratio double precision not null default 0.0,
-    activity_ratio double precision not null default 0.0,
-    ranking integer,
-    elo integer,
+    -- ranking integer,
+    -- elo integer,
     account_id uuid not null references account (id) on delete cascade,
     current_league_id uuid references league (id),
     created_at timestamptz not null default current_timestamp

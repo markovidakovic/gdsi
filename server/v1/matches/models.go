@@ -8,20 +8,6 @@ import (
 	"github.com/markovidakovic/gdsi/server/response"
 )
 
-// db table
-type Match struct {
-	Id          string    `json:"id"`
-	CourtId     string    `json:"court_id"`
-	ScheduledAt time.Time `json:"scheduled_at"`
-	PlayerOneId string    `json:"player_one_id"`
-	PlayerTwoId string    `json:"player_two_id"`
-	WinnerId    *string   `json:"winner_id"`
-	Score       *string   `json:"score"`
-	SeasonId    string    `json:"season_id"`
-	LeagueId    string    `json:"league_id"`
-	CreatedAt   time.Time `json:"created_at"`
-}
-
 type MatchModel struct {
 	Id          string       `json:"id"`
 	Court       CourtModel   `json:"court"`

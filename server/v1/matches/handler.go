@@ -38,7 +38,7 @@ func newHandler(cfg *config.Config, db *db.Conn) *handler {
 // @Failure 500 {object} response.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId}/matches [post]
-func (h *handler) postMatch(w http.ResponseWriter, r *http.Request) {
+func (h *handler) createMatch(w http.ResponseWriter, r *http.Request) {
 	// decode input
 	var input CreateMatchRequestModel
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
@@ -161,7 +161,7 @@ func (h *handler) getMatch(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} response.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId}/matches/{matchId} [put]
-func (h *handler) putMatch(w http.ResponseWriter, r *http.Request) {
+func (h *handler) updateMatch(w http.ResponseWriter, r *http.Request) {
 	// decode input
 	var input UpdateMatchRequestModel
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
@@ -217,7 +217,7 @@ func (h *handler) putMatch(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} response.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId}/matches/{matchId}/score [post]
-func (h *handler) postMatchScore(w http.ResponseWriter, r *http.Request) {
+func (h *handler) submitMatchScore(w http.ResponseWriter, r *http.Request) {
 	// decode input
 	var input SubmitMatchScoreRequestModel
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {

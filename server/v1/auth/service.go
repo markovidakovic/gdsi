@@ -2,8 +2,6 @@ package auth
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"time"
@@ -12,7 +10,7 @@ import (
 
 	"github.com/markovidakovic/gdsi/server/config"
 	"github.com/markovidakovic/gdsi/server/response"
-	"github.com/markovidakovic/gdsi/server/security"
+	"github.com/markovidakovic/gdsi/server/sec"
 )
 
 type service struct {
@@ -30,13 +28,13 @@ func newService(cfg *config.Config, store *store) *service {
 
 func (s *service) processSignup(ctx context.Context, model SignupRequestModel) (string, string, error) {
 	var err error
-	// Hash the password
-	model.Password, err = security.EncryptPwd(model.Password)
+	// hash the password
+	model.Password, err = sec.EncryptPwd(model.Password)
 	if err != nil {
 		return "", "", fmt.Errorf("encrypting the password: %v", err)
 	}
 
-	// Check if email exists
+	// check if email exists
 	existingAccount, err := s.store.findAccountByEmail(ctx, model.Email)
 	if err != nil {
 		if !errors.Is(err, response.ErrNotFound) {
@@ -47,13 +45,13 @@ func (s *service) processSignup(ctx context.Context, model SignupRequestModel) (
 		return "", "", response.ErrDuplicateRecord
 	}
 
-	// Insert account
+	// insert account
 	newAccount, err := s.store.insertAccount(ctx, model)
 	if err != nil {
 		return "", "", err
 	}
 
-	// Generate jwt
+	// generate jwt
 	accessToken, refreshToken, err := s.getAuthTokens(ctx, newAccount.Id, newAccount.Role, newAccount.PlayerId)
 	if err != nil {
 		return "", "", err
@@ -63,19 +61,19 @@ func (s *service) processSignup(ctx context.Context, model SignupRequestModel) (
 }
 
 func (s *service) processLogin(ctx context.Context, model LoginRequestModel) (string, string, error) {
-	// Call the store
+	// call the store
 	account, err := s.store.findAccountByEmail(ctx, model.Email)
 	if err != nil {
 		return "", "", err
 	}
 
-	// Validate password
+	// validate password
 	err = bcrypt.CompareHashAndPassword([]byte(account.Password), []byte(model.Password))
 	if err != nil {
 		return "", "", response.ErrNotFound
 	}
 
-	// Generate jwt
+	// generate jwt
 	accessToken, refreshToken, err := s.getAuthTokens(ctx, account.Id, account.Role, account.PlayerId)
 	if err != nil {
 		return "", "", err
@@ -86,7 +84,7 @@ func (s *service) processLogin(ctx context.Context, model LoginRequestModel) (st
 
 func (s *service) processRefreshTokens(ctx context.Context, model RefreshTokenRequestModel) (string, string, error) {
 	// hash the incoming refresh token
-	rtHash := hashToken(model.RefreshToken)
+	rtHash := sec.HashToken(model.RefreshToken)
 
 	// get the stored refresh token
 	rt, err := s.store.findRefreshToken(ctx, rtHash)
@@ -169,7 +167,7 @@ func (s *service) getAuthTokens(ctx context.Context, accountId, role, playerId s
 	}
 
 	// hash the refresh token for storage
-	refreshHashed := hashToken(refresh)
+	refreshHashed := sec.HashToken(refresh)
 
 	// call the store
 	err = s.store.insertRefreshToken(ctx, accountId, refreshHashed, now, expRefresh)
@@ -178,9 +176,4 @@ func (s *service) getAuthTokens(ctx context.Context, accountId, role, playerId s
 	}
 
 	return
-}
-
-func hashToken(val string) string {
-	hash := sha256.Sum256([]byte(val))
-	return hex.EncodeToString(hash[:])
 }

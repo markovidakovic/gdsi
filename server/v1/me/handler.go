@@ -62,7 +62,7 @@ func (h *handler) getMe(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} response.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/me [put]
-func (h *handler) putMe(w http.ResponseWriter, r *http.Request) {
+func (h *handler) updateMe(w http.ResponseWriter, r *http.Request) {
 	var input UpdateMeRequestModel
 	err := json.NewDecoder(r.Body).Decode(&input)
 	if err != nil {
@@ -120,6 +120,6 @@ func (h *handler) deleteMe(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} response.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/me/password [put]
-func (h *handler) putPassword(w http.ResponseWriter, r *http.Request) {
+func (h *handler) updatePassword(w http.ResponseWriter, r *http.Request) {
 	response.WriteSuccess(w, http.StatusOK, "password changed")
 }

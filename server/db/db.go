@@ -14,18 +14,18 @@ type Conn struct {
 }
 
 func Connect(c *config.Config) (*Conn, error) {
-	// Construct the db connection string
+	// construct the db connection string
 	connStr := fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=%s", c.DbDriver, c.DbUser, c.DbPassword, c.DbHost, c.DbPort, c.DbName, c.DbSslMode)
 
 	ctx := context.Background()
 
-	// Connect to the db using pgx
+	// connect to the db using pgx
 	conn, err := pgx.Connect(ctx, connStr)
 	if err != nil {
 		return nil, fmt.Errorf("could not connect to the database: %v", err)
 	}
 
-	// Check if the connection is alive
+	// check if the connection is alive
 	err = conn.Ping(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not ping the database: %v", err)

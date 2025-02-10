@@ -6,11 +6,10 @@ import (
 	"log"
 
 	"github.com/go-chi/chi/v5"
-	gochimiddleware "github.com/go-chi/chi/v5/middleware"
+	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/markovidakovic/gdsi/server/config"
 	"github.com/markovidakovic/gdsi/server/db"
-	"github.com/markovidakovic/gdsi/server/middleware"
 	v1 "github.com/markovidakovic/gdsi/server/v1"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
@@ -57,8 +56,8 @@ func NewServer() (*server, error) {
 func (s *server) MountRouters() {
 	s.setupMiddleware()
 
-	// mount v1 api endpoints
-	s.Rtr.Route("/v1", v1.MountRouter(s.Cfg, s.Db))
+	// mount v1
+	s.Rtr.Route("/v1", v1.New(s.Cfg, s.Db).Mount)
 
 	if s.swaggerEnabled {
 		s.Rtr.Get("/swagger/*", httpSwagger.WrapHandler)
@@ -82,15 +81,14 @@ func (s *server) setupMiddleware() {
 	s.Rtr.Use(cors.Handler(cors.Options{
 		AllowedOrigins: []string{"https://*", "http://*"},
 		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		MaxAge:         300, // Maximum value not ignored by any of major browsers
+		MaxAge:         300, // maximum value not ignored by any of major browsers
 	}))
-	// s.Rtr.Use(gochimiddleware.Logger)
-	s.Rtr.Use(middleware.Logger)
-	s.Rtr.Use(gochimiddleware.AllowContentType("application/json"))
-	s.Rtr.Use(gochimiddleware.CleanPath)
-	s.Rtr.Use(gochimiddleware.NoCache)
-	s.Rtr.Use(gochimiddleware.StripSlashes)
-	s.Rtr.Use(gochimiddleware.Heartbeat("/"))
+	s.Rtr.Use(chimiddleware.Logger)
+	s.Rtr.Use(chimiddleware.AllowContentType("application/json"))
+	s.Rtr.Use(chimiddleware.CleanPath)
+	s.Rtr.Use(chimiddleware.NoCache)
+	s.Rtr.Use(chimiddleware.StripSlashes)
+	s.Rtr.Use(chimiddleware.Heartbeat("/"))
 }
 
 func withConfig() serverOption {

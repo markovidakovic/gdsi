@@ -36,7 +36,7 @@ func newHandler(cfg *config.Config, db *db.Conn) *handler {
 // @Failure 500 {object} response.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/courts [post]
-func (h *handler) postCourt(w http.ResponseWriter, r *http.Request) {
+func (h *handler) createCourt(w http.ResponseWriter, r *http.Request) {
 	var input CreateCourtRequestModel
 	err := json.NewDecoder(r.Body).Decode(&input)
 	if err != nil {
@@ -132,7 +132,7 @@ func (h *handler) getCourt(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} response.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/courts/{courtId} [put]
-func (h *handler) putCourt(w http.ResponseWriter, r *http.Request) {
+func (h *handler) updateCourt(w http.ResponseWriter, r *http.Request) {
 	var input UpdateCourtRequestModel
 	err := json.NewDecoder(r.Body).Decode(&input)
 	if err != nil {

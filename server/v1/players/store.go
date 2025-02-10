@@ -34,10 +34,6 @@ func (s *store) findPlayers(ctx context.Context) ([]PlayerModel, error) {
 			player.matches_won,
 			player.matches_scheduled,
 			player.seasons_played,
-			player.winning_ratio,
-			player.activity_ratio,
-			player.ranking,
-			player.elo,
 			account.id as account_id,
 			account.name as account_name,
 			league.id as league_id,
@@ -60,7 +56,7 @@ func (s *store) findPlayers(ctx context.Context) ([]PlayerModel, error) {
 	for rows.Next() {
 		var pm PlayerModel
 		var leagueId, leagueTitle sql.NullString
-		err := rows.Scan(&pm.Id, &pm.Height, &pm.Weight, &pm.Handedness, &pm.Racket, &pm.MatchesExpected, &pm.MatchesPlayed, &pm.MatchesWon, &pm.MatchesScheduled, &pm.SeasonsPlayed, &pm.WinningRatio, &pm.ActivityRatio, &pm.Ranking, &pm.Elo, &pm.Account.Id, &pm.Account.Name, &leagueId, &leagueTitle, &pm.CreatedAt)
+		err := rows.Scan(&pm.Id, &pm.Height, &pm.Weight, &pm.Handedness, &pm.Racket, &pm.MatchesExpected, &pm.MatchesPlayed, &pm.MatchesWon, &pm.MatchesScheduled, &pm.SeasonsPlayed, &pm.Account.Id, &pm.Account.Name, &leagueId, &leagueTitle, &pm.CreatedAt)
 		if err != nil {
 			return nil, fmt.Errorf("scanning player row: %v", err)
 		}
@@ -97,10 +93,6 @@ func (s *store) findPlayer(ctx context.Context, playerId string) (*PlayerModel, 
 			player.matches_won,
 			player.matches_scheduled,
 			player.seasons_played,
-			player.winning_ratio,
-			player.activity_ratio,
-			player.ranking,
-			player.elo,
 			account.id as account_id,
 			account.name as account_name,
 			league.id as league_id,
@@ -115,7 +107,7 @@ func (s *store) findPlayer(ctx context.Context, playerId string) (*PlayerModel, 
 	var dest PlayerModel
 	var leagueId, leagueTitle sql.NullString
 
-	err := s.db.QueryRow(ctx, sql1, playerId).Scan(&dest.Id, &dest.Height, &dest.Weight, &dest.Handedness, &dest.Racket, &dest.MatchesExpected, &dest.MatchesPlayed, &dest.MatchesWon, &dest.MatchesScheduled, &dest.SeasonsPlayed, &dest.WinningRatio, &dest.ActivityRatio, &dest.Ranking, &dest.Elo, &dest.Account.Id, &dest.Account.Name, &leagueId, &leagueTitle, &dest.CreatedAt)
+	err := s.db.QueryRow(ctx, sql1, playerId).Scan(&dest.Id, &dest.Height, &dest.Weight, &dest.Handedness, &dest.Racket, &dest.MatchesExpected, &dest.MatchesPlayed, &dest.MatchesWon, &dest.MatchesScheduled, &dest.SeasonsPlayed, &dest.Account.Id, &dest.Account.Name, &leagueId, &leagueTitle, &dest.CreatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, response.ErrNotFound
@@ -141,7 +133,7 @@ func (s *store) updatePlayer(ctx context.Context, playerId string, input UpdateP
 			update player 
 			set height = $1, weight = $2, handedness = $3, racket = $4
 			where id = $5
-			returning id, height, weight, handedness, racket, matches_expected, matches_played, matches_won, matches_scheduled, seasons_played, winning_ratio, activity_ratio, ranking, elo, account_id, current_league_id, created_at
+			returning id, height, weight, handedness, racket, matches_expected, matches_played, matches_won, matches_scheduled, seasons_played, account_id, current_league_id, created_at
 		)
 		select 
 			up.id,
@@ -154,10 +146,6 @@ func (s *store) updatePlayer(ctx context.Context, playerId string, input UpdateP
 			up.matches_won,
 			up.matches_scheduled,
 			up.seasons_played,
-			up.winning_ratio,
-			up.activity_ratio,
-			up.ranking,
-			up.elo,
 			account.id as account_id,
 			account.name as account_name,
 			league.id as league_id,
@@ -171,7 +159,7 @@ func (s *store) updatePlayer(ctx context.Context, playerId string, input UpdateP
 	var dest PlayerModel
 	var leagueId, leagueTitle sql.NullString
 
-	err := s.db.QueryRow(ctx, sql1, input.Height, input.Weight, input.Handedness, input.Racket, playerId).Scan(&dest.Id, &dest.Height, &dest.Weight, &dest.Handedness, &dest.Racket, &dest.MatchesExpected, &dest.MatchesPlayed, &dest.MatchesWon, &dest.MatchesScheduled, &dest.SeasonsPlayed, &dest.WinningRatio, &dest.ActivityRatio, &dest.Ranking, &dest.Elo, &dest.Account.Id, &dest.Account.Name, &leagueId, &leagueTitle, &dest.CreatedAt)
+	err := s.db.QueryRow(ctx, sql1, input.Height, input.Weight, input.Handedness, input.Racket, playerId).Scan(&dest.Id, &dest.Height, &dest.Weight, &dest.Handedness, &dest.Racket, &dest.MatchesExpected, &dest.MatchesPlayed, &dest.MatchesWon, &dest.MatchesScheduled, &dest.SeasonsPlayed, &dest.Account.Id, &dest.Account.Name, &leagueId, &leagueTitle, &dest.CreatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, response.ErrNotFound

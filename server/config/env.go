@@ -26,14 +26,14 @@ func loadEnv(filenames []string) (err error) {
 func readEnvFile(filename string) (map[string]string, error) {
 	envVars := make(map[string]string)
 
-	// Open the file
+	// open the file
 	f, err := os.Open(filename)
 	if err != nil {
 		return envVars, fmt.Errorf("error loading environment file %s -> %w", filename, err)
 	}
 	defer f.Close()
 
-	// Start scanning the file
+	// start scanning the file
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		key, val, err := parseEnvFileLine(scanner.Text())
@@ -41,7 +41,7 @@ func readEnvFile(filename string) (map[string]string, error) {
 			return envVars, fmt.Errorf("error parsing line in environment file %q -> %w", filename, err)
 		}
 
-		// Skip if key empty (line commented or empty)
+		// skip if key empty (line commented or empty)
 		if key == "" {
 			continue
 		}
@@ -49,7 +49,7 @@ func readEnvFile(filename string) (map[string]string, error) {
 		envVars[key] = val
 	}
 
-	// Check for scanning error
+	// check for scanning error
 	err = scanner.Err()
 	if err != nil {
 		return envVars, fmt.Errorf("error scanning the environment variables file %q -> %w", filename, err)
@@ -61,12 +61,12 @@ func readEnvFile(filename string) (map[string]string, error) {
 func parseEnvFileLine(line string) (key string, value string, err error) {
 	line = strings.TrimSpace(line)
 
-	// Check if line is commented or is empty
+	// check if line is commented or is empty
 	if strings.HasPrefix(line, "#") || len(line) == 0 {
 		return "", "", nil
 	}
 
-	// Split key-value pairs
+	// split key-value pairs
 	lineParts := strings.SplitN(line, "=", 2)
 
 	if len(lineParts) < 2 {
@@ -75,28 +75,28 @@ func parseEnvFileLine(line string) (key string, value string, err error) {
 
 	key, value = strings.TrimSpace(lineParts[0]), strings.TrimSpace(lineParts[1])
 
-	// Handle invalid key
+	// handle invalid key
 	if !regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`).MatchString(key) {
 		return "", "", fmt.Errorf("invalid environment variable key: %q", key)
 	}
 
-	// Handle invalid value
+	// handle invalid value
 	if strings.Contains(value, "\n") {
 		return "", "", fmt.Errorf("environment variable %q has an invalid multiline value", key)
 	}
 
-	// Handle empty value
+	// handle empty value
 	if value == "" {
 		return "", "", fmt.Errorf("environment variable %q has an empty value", key)
 	}
 
-	// Remove quotes around values, if present
+	// remove quotes around values, if present
 	if strings.HasPrefix(value, "\"") || strings.HasSuffix(value, "\"") {
 		value = strings.Trim(value, "\"")
 	} else if strings.HasPrefix(value, "'") || strings.HasSuffix(value, "'") {
 		value = strings.Trim(value, "'")
 	} else {
-		// If not qouted, trim inline comments
+		// if not qouted, trim inline comments
 		if commIdx := strings.Index(value, "#"); commIdx != -1 {
 			value = strings.TrimSpace(value[:commIdx])
 		}
@@ -107,12 +107,12 @@ func parseEnvFileLine(line string) (key string, value string, err error) {
 
 func setEnvVars(envVars map[string]string) error {
 	for k, v := range envVars {
-		// Check if var already exist
+		// check if var already exist
 		if existing := os.Getenv(k); existing != "" {
 			log.Printf("WARNING: overwriting existing environment variable %q: %s -> %s", k, existing, v)
 		}
 
-		// Set the env var
+		// set the env var
 		err := os.Setenv(k, v)
 		if err != nil {
 			return fmt.Errorf("failed setting environment variable %q -> %w", k, err)

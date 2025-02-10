@@ -35,7 +35,7 @@ func newHandler(cfg *config.Config, db *db.Conn) *handler {
 // @Failure 500 {object} response.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/seasons [post]
-func (h *handler) postSeason(w http.ResponseWriter, r *http.Request) {
+func (h *handler) createSeason(w http.ResponseWriter, r *http.Request) {
 	var input CreateSeasonRequestModel
 	err := json.NewDecoder(r.Body).Decode(&input)
 	if err != nil {
@@ -129,7 +129,7 @@ func (h *handler) getSeason(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} response.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId} [put]
-func (h *handler) putSeason(w http.ResponseWriter, r *http.Request) {
+func (h *handler) updateSeason(w http.ResponseWriter, r *http.Request) {
 	// decode req body
 	var input UpdateSeasonRequestModel
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {

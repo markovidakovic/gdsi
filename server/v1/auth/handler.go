@@ -31,7 +31,7 @@ func newHandler(cfg *config.Config, db *db.Conn) *handler {
 // @Failure 400 {object} response.ValidationFailure "Bad request"
 // @Failure 500 {object} response.Failure "Internal server error"
 // @Router /v1/auth/signup [post]
-func (h *handler) postSignup(w http.ResponseWriter, r *http.Request) {
+func (h *handler) signup(w http.ResponseWriter, r *http.Request) {
 	var input SignupRequestModel
 
 	// decode request body
@@ -77,7 +77,7 @@ func (h *handler) postSignup(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {object} response.ValidationFailure "Bad request"
 // @Failure 500 {object} response.Failure "Internal server error"
 // @Router /v1/auth/tokens/access [post]
-func (h *handler) postLogin(w http.ResponseWriter, r *http.Request) {
+func (h *handler) login(w http.ResponseWriter, r *http.Request) {
 	var input LoginRequestModel
 
 	// decode request body
@@ -133,7 +133,7 @@ func (h *handler) postLogin(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} auth.TokensResponseModel "OK"
 // @Failure 500 {object} response.Failure "Internal server error"
 // @Router /v1/auth/tokens/refresh [post]
-func (h *handler) postRefreshToken(w http.ResponseWriter, r *http.Request) {
+func (h *handler) refreshToken(w http.ResponseWriter, r *http.Request) {
 	var input RefreshTokenRequestModel
 
 	// decode request body
@@ -182,7 +182,7 @@ func (h *handler) postRefreshToken(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {object} response.ValidationFailure "Bad request"
 // @Failure 500 {object} response.Failure "Internal server error"
 // @Router /v1/auth/passwords/forgotten [post]
-func (h *handler) postForgottenPassword(w http.ResponseWriter, r *http.Request) {
+func (h *handler) forgottenPasswordLink(w http.ResponseWriter, r *http.Request) {
 	response.WriteSuccess(w, http.StatusOK, "email sent")
 }
 
@@ -196,6 +196,6 @@ func (h *handler) postForgottenPassword(w http.ResponseWriter, r *http.Request) 
 // @Failure 400 {object} response.ValidationFailure "Bad request"
 // @Failure 500 {object} response.Failure "Internal server error"
 // @Router /v1/auth/passwords/forgotten [put]
-func (h *handler) putForgottenPassword(w http.ResponseWriter, r *http.Request) {
+func (h *handler) forgottenPassword(w http.ResponseWriter, r *http.Request) {
 	response.WriteSuccess(w, http.StatusOK, "email sent")
 }

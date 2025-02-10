@@ -37,7 +37,7 @@ func newHandler(cfg *config.Config, db *db.Conn) *handler {
 // @Failure 500 {object} response.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues [post]
-func (h *handler) postLeague(w http.ResponseWriter, r *http.Request) {
+func (h *handler) createLeague(w http.ResponseWriter, r *http.Request) {
 	// decode input
 	var input CreateLeagueRequestModel
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
@@ -140,7 +140,7 @@ func (h *handler) getLeague(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} response.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId} [put]
-func (h *handler) putLeague(w http.ResponseWriter, r *http.Request) {
+func (h *handler) updateLeague(w http.ResponseWriter, r *http.Request) {
 	// decode input
 	var input UpdateLeagueRequestModel
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {

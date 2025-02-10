@@ -6,13 +6,6 @@ import (
 	"github.com/markovidakovic/gdsi/server/response"
 )
 
-type Court struct {
-	Id        string    `json:"id"`
-	Name      string    `json:"name"`
-	CreatorId string    `json:"creator_id"`
-	CreatedAt time.Time `json:"created_at"`
-}
-
 type CourtModel struct {
 	Id        string       `json:"id"`
 	Name      string       `json:"name"`

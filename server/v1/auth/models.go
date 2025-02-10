@@ -4,35 +4,8 @@ import (
 	"time"
 
 	"github.com/markovidakovic/gdsi/server/response"
-	"github.com/markovidakovic/gdsi/server/validation"
+	"github.com/markovidakovic/gdsi/server/sec"
 )
-
-// db table model
-type Account struct {
-	Id          string    `json:"id"`
-	Name        string    `json:"name"`
-	Email       string    `json:"email"`
-	Dob         time.Time `json:"dob"`
-	Gender      string    `json:"gender"`
-	PhoneNumber string    `json:"phone_number"`
-	Password    string    `json:"-"`
-	Role        string    `json:"role"`
-	CreatedAt   time.Time `json:"created_at"`
-}
-
-// db table model
-type RefreshToken struct {
-	Id         string     `json:"id"`
-	AccountId  string     `json:"account_id"`
-	TokenHash  string     `json:"token_hash"`
-	DeviceId   *string    `json:"device_id"`
-	IpAddress  *string    `json:"ip_address"`
-	UserAgent  *string    `json:"user_agent"`
-	IssuedAt   time.Time  `json:"issued_at"`
-	ExpiresAt  time.Time  `json:"expires_at"`
-	LastUsedAt *time.Time `json:"last_used_at"`
-	IsRevoked  bool       `json:"is_revoked"`
-}
 
 type AccountModel struct {
 	Id          string    `json:"id"`
@@ -88,7 +61,7 @@ func (m SignupRequestModel) Validate() []response.InvalidField {
 			Message:  "Email field is required",
 			Location: "body",
 		})
-	} else if !validation.IsValidEmail(m.Email) {
+	} else if !sec.IsValidEmail(m.Email) {
 		inv = append(inv, response.InvalidField{
 			Field:    "email",
 			Message:  "Invalid email",
@@ -129,7 +102,7 @@ func (m SignupRequestModel) Validate() []response.InvalidField {
 			Message:  "Phone number field is required",
 			Location: "body",
 		})
-	} else if !validation.IsValidPhone(m.PhoneNumber) {
+	} else if !sec.IsValidPhone(m.PhoneNumber) {
 		inv = append(inv, response.InvalidField{
 			Field:    "phone_number",
 			Message:  "Invalid phone number",
@@ -166,7 +139,7 @@ func (m LoginRequestModel) Validate() []response.InvalidField {
 			Message:  "Email field is required",
 			Location: "body",
 		})
-	} else if !validation.IsValidEmail(m.Email) {
+	} else if !sec.IsValidEmail(m.Email) {
 		inv = append(inv, response.InvalidField{
 			Field:    "email",
 			Message:  "Invalid email",

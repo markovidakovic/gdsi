@@ -13,8 +13,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/markovidakovic/gdsi/server/config"
 	"github.com/markovidakovic/gdsi/server/db"
-	"github.com/markovidakovic/gdsi/server/security"
-	"github.com/markovidakovic/gdsi/server/validation"
+	"github.com/markovidakovic/gdsi/server/sec"
 )
 
 type input struct {
@@ -38,7 +37,7 @@ func main() {
 	}
 
 	// encrypt pwd
-	input.password, err = security.EncryptPwd(input.password)
+	input.password, err = sec.EncryptPwd(input.password)
 	if err != nil {
 		log.Fatalf("encrypting password: %v", err)
 	}
@@ -93,7 +92,7 @@ func validateInput(in input) error {
 	}
 	if in.email == "" {
 		return fmt.Errorf("email is required")
-	} else if !validation.IsValidEmail(in.email) {
+	} else if !sec.IsValidEmail(in.email) {
 		return fmt.Errorf("email is invalid")
 	}
 	if in.dob == "" {
@@ -110,7 +109,7 @@ func validateInput(in input) error {
 	}
 	if in.phone == "" {
 		return fmt.Errorf("phone number is required")
-	} else if !validation.IsValidPhone(in.phone) {
+	} else if !sec.IsValidPhone(in.phone) {
 		return fmt.Errorf("phone number is invalid")
 	}
 	if in.password == "" {

@@ -90,7 +90,7 @@ func (h *handler) getPlayer(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} response.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/players/{playerId} [put]
-func (h *handler) putPlayer(w http.ResponseWriter, r *http.Request) {
+func (h *handler) updatePlayer(w http.ResponseWriter, r *http.Request) {
 	var input UpdatePlayerRequestModel
 	err := json.NewDecoder(r.Body).Decode(&input)
 	if err != nil {

@@ -59,7 +59,7 @@ func Load(envFiles ...string) (*Config, error) {
 		JwtRefreshExpiration: getEnvVar("JWT_REFRESH_EXPIRATION", ""),
 	}
 
-	// Add jwt auth
+	// add jwt auth
 	cfg.JwtAuth = jwtauth.New("HS256", []byte(cfg.JwtSecret), nil)
 
 	log.Println("config loaded")

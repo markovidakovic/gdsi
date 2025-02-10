@@ -6,13 +6,13 @@ import (
 )
 
 func TestGetEnvVar(t *testing.T) {
-	// Set environment variables
+	// set environment variables
 	os.Setenv("EXISTING_VAR", "test_value")
 	defer os.Unsetenv("EXISTING_VAR")
 	os.Setenv("EMPTY_VAR", "")
 	defer os.Unsetenv("EMPTY_VAR")
 
-	// Test data
+	// test data
 	testCases := []struct {
 		name         string
 		key          string
@@ -50,7 +50,7 @@ func TestGetEnvVar(t *testing.T) {
 }
 
 func TestSetEnvVars(t *testing.T) {
-	// Test data
+	// test data
 	testCases := []struct {
 		name          string
 		input         map[string]string
@@ -99,7 +99,7 @@ func TestSetEnvVars(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			// Set existing environment variables
+			// set existing environment variables
 			for k, v := range tc.existingVars {
 				os.Setenv(k, v)
 				defer os.Unsetenv(k)
@@ -107,12 +107,12 @@ func TestSetEnvVars(t *testing.T) {
 
 			err := setEnvVars(tc.input)
 
-			// Check for unexpected errors
+			// check for unexpected errors
 			if (err != nil) != tc.expectedError {
 				t.Errorf("setEnvVars() error = %v, expectedError %v", err, tc.expectedError)
 			}
 
-			// Verify the environment variables
+			// verify the environment variables
 			for k, expected := range tc.expectedVars {
 				actual := os.Getenv(k)
 				if actual != expected {
@@ -120,7 +120,7 @@ func TestSetEnvVars(t *testing.T) {
 				}
 			}
 
-			// Verify no unexpected variables are set
+			// verify no unexpected variables are set
 			for k := range tc.input {
 				if _, exists := tc.expectedVars[k]; !exists {
 					actual := os.Getenv(k)
@@ -238,17 +238,17 @@ func TestParseEnvFileLine(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			key, value, err := parseEnvFileLine(tc.input)
 
-			// Check for unexpected errors
+			// check for unexpected errors
 			if (err != nil) != tc.expectedError {
 				t.Errorf("parseEnvFileLine(%q) error = %v, expectedError %v", tc.input, err, tc.expectedError)
 			}
 
-			// Verify the key
+			// verify the key
 			if key != tc.expectedKey {
 				t.Errorf("parseEnvFileLine(%q) key = %q, want %q", tc.input, key, tc.expectedKey)
 			}
 
-			// Verify the value
+			// verify the value
 			if value != tc.expectedValue {
 				t.Errorf("parseEnvFileLine(%q) value = %q, want %q", tc.input, value, tc.expectedValue)
 			}
@@ -305,7 +305,7 @@ func TestReadEnvFile(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			// Create a temporary file with the given content
+			// create a temporary file with the given content
 			tmpFile, err := createTempFile(tc.fileContent)
 			if err != nil {
 				t.Fatalf("failed to create temp file: %v", err)
@@ -320,7 +320,7 @@ func TestReadEnvFile(t *testing.T) {
 			}
 
 			if !tc.expectedError {
-				// Verify the map content
+				// verify the map content
 				for key, expectedVal := range tc.expected {
 					if val, exists := envVars[key]; !exists || val != expectedVal {
 						t.Errorf("readEnvFile() = %v, want %s", envVars, tc.expected)
@@ -333,7 +333,7 @@ func TestReadEnvFile(t *testing.T) {
 
 func TestLoadEnv(t *testing.T) {
 	t.Run("ValidFiles", func(t *testing.T) {
-		// Create temp files with valid content
+		// create temp files with valid content
 		filename1, err := createTempFile("KEY1=VALUE1\nKEY2=VALUE2\n")
 		if err != nil {
 			t.Fatalf("error creating temp file: %v", err)
@@ -353,7 +353,7 @@ func TestLoadEnv(t *testing.T) {
 	})
 
 	t.Run("FileReadError", func(t *testing.T) {
-		// Test non-existing file to trigger a read error
+		// test non-existing file to trigger a read error
 		err := loadEnv([]string{"non_existing_file.env"})
 		if err == nil {
 			t.Errorf("expected error loading environment file, go: %v", err)
@@ -367,7 +367,7 @@ func TestLoadEnv(t *testing.T) {
 		}
 		defer os.Remove(filename)
 
-		// Test invalid key
+		// test invalid key
 		err = loadEnv([]string{filename})
 		if err == nil {
 			t.Errorf("expected invalid key error, got: %v", err)
@@ -375,14 +375,14 @@ func TestLoadEnv(t *testing.T) {
 	})
 
 	t.Run("EmptyFile", func(t *testing.T) {
-		// Create an empty file
+		// create an empty file
 		filename, err := createTempFile("")
 		if err != nil {
 			t.Fatalf("error creating temp file: %v", err)
 		}
 		defer os.Remove(filename)
 
-		// Test with an empty file
+		// test with an empty file
 		err = loadEnv([]string{filename})
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
@@ -390,7 +390,7 @@ func TestLoadEnv(t *testing.T) {
 	})
 
 	t.Run("FileWithComments", func(t *testing.T) {
-		// Create a file with comments and key-value pairs
+		// create a file with comments and key-value pairs
 		filename, err := createTempFile("# This is a comment\nKEY1=VALUE1\n# Another comment\nKEY2=VALUE2\n")
 		if err != nil {
 			t.Fatalf("error creating temp file: %v", err)
@@ -405,7 +405,7 @@ func TestLoadEnv(t *testing.T) {
 }
 
 func TestLoad(t *testing.T) {
-	// Cleanup environment variables after each test
+	// cleanup environment variables after each test
 	resetEnv := func() {
 		for _, v := range []string{"API_PORT", "DB_HOST", "DB_NAME", "DB_PORT", "DB_USER", "DB_PASSWORD", "DB_SSL_MODE"} {
 			os.Unsetenv(v)
@@ -415,7 +415,7 @@ func TestLoad(t *testing.T) {
 	t.Run("ValidConfigFromEnvFile", func(t *testing.T) {
 		defer resetEnv()
 
-		// Create a temp file
+		// create a temp file
 		tmpFile, err := createTempFile("API_PORT=9090\nDB_HOST=localhost\nDB_NAME=testdb\nDB_PORT=5432\nDB_USER=testuser\nDB_PASSWORD=testpass\nDB_SSL_MODE=enable")
 		if err != nil {
 			t.Fatalf("error creating temp file: %v", err)
@@ -427,7 +427,7 @@ func TestLoad(t *testing.T) {
 			t.Fatalf("unexpected error: %v", err)
 		}
 
-		// Validate the config
+		// validate the config
 		expected := &Config{
 			ApiPort:    "9090",
 			DbHost:     "localhost",
@@ -452,7 +452,7 @@ func TestLoad(t *testing.T) {
 		}
 		defer os.Remove(tempFile)
 
-		// Adjust required env variables
+		// adjust required env variables
 		requiredEnvVars = []string{"DB_NAME", "DB_USER"}
 
 		cfg, err := Load(tempFile)
@@ -467,7 +467,7 @@ func TestLoad(t *testing.T) {
 	t.Run("DefaultEnvFileFallback", func(t *testing.T) {
 		defer resetEnv()
 
-		// Create the default .env file
+		// create the default .env file
 		defaultEnvFile := ".env"
 		err := os.WriteFile(defaultEnvFile, []byte("API_PORT=8000\nDB_HOST=defaultdbhost\n"), 0644)
 		if err != nil {
@@ -482,7 +482,7 @@ func TestLoad(t *testing.T) {
 			t.Fatalf("unexpected error: %v", err)
 		}
 
-		// Validate the config
+		// validate the config
 		expected := &Config{
 			ApiPort:    "8000",
 			DbHost:     "defaultdbhost",

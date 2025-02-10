@@ -29,10 +29,6 @@ type PlayerModel struct {
 	MatchesWon       int                 `json:"matches_won"`
 	MatchesScheduled int                 `json:"matches_scheduled"`
 	SeasonsPlayed    int                 `json:"seasons_played"`
-	WinningRation    float64             `json:"winning_ratio"`
-	ActivityRatio    float64             `json:"activity_ratio"`
-	Ranking          *int                `json:"ranking"`
-	Elo              *int                `json:"elo"`
 	CurrentLeague    *CurrentLeagueModel `json:"current_league"`
 	CreatedAt        time.Time           `json:"created_at"`
 }

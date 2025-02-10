@@ -7,16 +7,6 @@ import (
 	"github.com/markovidakovic/gdsi/server/types"
 )
 
-type Season struct {
-	Id          string    `json:"id"`
-	Title       string    `json:"title"`
-	Description *string   `json:"description"`
-	StartDate   time.Time `json:"start_date"`
-	EndDate     time.Time `json:"end_date"`
-	CreatorId   string    `json:"created_by"`
-	CreatedAt   time.Time `json:"created_at"`
-}
-
 type CreatorModel struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
