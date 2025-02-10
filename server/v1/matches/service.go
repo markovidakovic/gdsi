@@ -3,9 +3,11 @@ package matches
 import (
 	"context"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/markovidakovic/gdsi/server/config"
 	"github.com/markovidakovic/gdsi/server/response"
 )
@@ -49,13 +51,14 @@ func (s *service) processCreateMatch(ctx context.Context, input CreateMatchReque
 	}
 
 	if input.Score != nil {
-		fmt.Println("analize the score and set the winner id")
+		winnerId := determineMatchWinner(*input.Score, input.PlayerOneId, input.PlayerTwoId)
+		input.WinnerId = &winnerId
 	} else {
 		input.WinnerId = nil
 	}
 
 	// insert match
-	cm, err := s.store.insertMatch(ctx, input)
+	cm, err := s.store.insertMatch(ctx, nil, input)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +81,7 @@ func (s *service) processGetMatches(ctx context.Context, seasonId, leagueId stri
 	}
 
 	// call the store
-	mms, err := s.store.findMatches(ctx, seasonId, leagueId)
+	mms, err := s.store.findMatches(ctx, nil, seasonId, leagueId)
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +103,7 @@ func (s *service) processGetMatch(ctx context.Context, seasonId, leagueId, match
 		return nil, fmt.Errorf("finding league: %w", response.ErrNotFound)
 	}
 
-	mm, err := s.store.findMatch(ctx, seasonId, leagueId, matchId)
+	mm, err := s.store.findMatch(ctx, nil, seasonId, leagueId, matchId)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +147,7 @@ func (s *service) processUpdateMatch(ctx context.Context, input UpdateMatchReque
 		return nil, fmt.Errorf("players not in league: %w", response.ErrBadRequest)
 	}
 
-	mm, err := s.store.updateMatch(ctx, input)
+	mm, err := s.store.updateMatch(ctx, nil, input)
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +171,7 @@ func (s *service) processSubmitMatchScore(ctx context.Context, input SubmitMatch
 	}
 
 	// find the existing match
-	match, err := s.store.findMatch(ctx, input.SeasonId, input.LeagueId, input.MatchId)
+	match, err := s.store.findMatch(ctx, nil, input.SeasonId, input.LeagueId, input.MatchId)
 	if err != nil {
 		return nil, err
 	}
@@ -178,35 +181,140 @@ func (s *service) processSubmitMatchScore(ctx context.Context, input SubmitMatch
 		return nil, fmt.Errorf("%w: not able to submit match result, score already exists", response.ErrConflict)
 	}
 
-	// determine the winner
-	sets := strings.Split(input.Score, ",")
+	// also add the match p1 and p2 info to the input struct
+	input.PlayerOneId = match.PlayerOne.Id
+	input.PlayerTwoId = match.PlayerTwo.Id
+	input.WinnerId = determineMatchWinner(input.Score, match.PlayerOne.Id, match.PlayerTwo.Id)
+
+	// begin tx
+	tx, err := s.store.db.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		err := tx.Rollback(ctx)
+		if err != nil && err != pgx.ErrTxClosed {
+			log.Printf("failed to rollback the insert match tx: %v", err)
+		}
+	}()
+
+	result, err := s.store.updateMatchScore(ctx, tx, input.SeasonId, input.LeagueId, input.MatchId, input.Score, input.WinnerId)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.store.updatePlayerStatistics(ctx, tx, input.WinnerId, input.PlayerOneId, input.PlayerTwoId)
+	if err != nil {
+		return nil, err
+	}
+
+	// calc pl1 & pl2 match stats
+	pl1MatchStats := calcMatchStats(input.Score, true)
+	pl2MatchStats := calcMatchStats(input.Score, false)
+
+	fmt.Printf("pl1MatchStats: %+v\n", pl1MatchStats)
+	fmt.Printf("pl2MatchStats: %+v\n", pl2MatchStats)
+
+	err = s.store.updateStandings(ctx, tx, input.SeasonId, input.LeagueId, input.PlayerOneId, input.PlayerTwoId, pl1MatchStats, pl2MatchStats)
+	if err != nil {
+		return nil, err
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+// determineMatchWinner takes the score, for which it expects to be previously validated
+// pl1 and pl2 ids and returns the id of the winner
+func determineMatchWinner(score, pl1Id, pl2Id string) string {
+	sets := strings.Split(score, ",")
 	var pl1SetsWon int
 
 	for _, set := range sets {
 		setSl := strings.Split(set, "-")
 		pl1Score, _ := strconv.Atoi(setSl[0])
 		pl2Score, _ := strconv.Atoi(setSl[1])
-
 		if pl1Score > pl2Score {
 			pl1SetsWon++
 		}
 	}
 
 	if pl1SetsWon == 2 {
-		input.WinnerId = match.PlayerOne.Id
+		return pl1Id
 	} else {
-		input.WinnerId = match.PlayerTwo.Id
+		return pl2Id
+	}
+}
+
+type MatchStats struct {
+	WonMatches int
+	Pts        int
+	SetsWon    int
+	SetsLost   int
+	GamesWon   int
+	GamesLost  int
+}
+
+func calcMatchStats(score string, isPl1 bool) MatchStats {
+	stats := MatchStats{}
+	sets := strings.Split(score, ",")
+
+	for i, set := range sets {
+		setSl := strings.Split(set, "-")
+		pl1Score, _ := strconv.Atoi(setSl[0])
+		pl2Score, _ := strconv.Atoi(setSl[1])
+
+		// check if third "set" is super tie-break
+		if i == 2 && (pl1Score >= 10 || pl2Score >= 10) {
+			if isPl1 {
+				if pl1Score > pl2Score {
+					stats.SetsWon++
+				} else {
+					stats.SetsLost++
+				}
+			} else {
+				if pl2Score > pl1Score {
+					stats.SetsWon++
+				} else {
+					stats.SetsWon++
+				}
+			}
+
+			// skip counting games for super tie-break
+			continue
+		}
+
+		if isPl1 {
+			stats.GamesWon += pl1Score
+			stats.GamesLost += pl2Score
+			if pl1Score > pl2Score {
+				stats.SetsWon++
+			} else {
+				stats.SetsLost++
+			}
+		} else {
+			stats.GamesWon += pl2Score
+			stats.GamesLost += pl1Score
+			if pl2Score > pl1Score {
+				stats.SetsWon++
+			} else {
+				stats.SetsLost++
+			}
+		}
 	}
 
-	// also add the match p1 and p2 info to the input struct
-	input.PlayerOneId = match.PlayerOne.Id
-	input.PlayerTwoId = match.PlayerTwo.Id
-
-	// call the store
-	result, err := s.store.insertMatchScore(ctx, input)
-	if err != nil {
-		return nil, err
+	if stats.SetsWon == 2 {
+		stats.WonMatches = 1
+		stats.Pts = 2
+	} else {
+		stats.WonMatches = 0
+		stats.Pts = 1
 	}
 
-	return result, nil
+	return stats
 }
