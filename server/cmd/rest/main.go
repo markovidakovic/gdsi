@@ -21,7 +21,7 @@ func main() {
 	srv.MountRouters()
 
 	go func() {
-		// Run server in a separate goroutine
+		// run server in a separate goroutine
 		log.Printf("api server started on port %s\n", srv.Cfg.ApiPort)
 		err = http.ListenAndServe(":"+srv.Cfg.ApiPort, srv.Rtr)
 		if err != nil {
@@ -29,19 +29,18 @@ func main() {
 		}
 	}()
 
-	// System interrupt signals channel
+	// system interrupt signals channel
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
-	// Block for signal
+	// block for signal
 	<-stop
 	log.Println("termination signal received, server shutting down...")
 
-	// Graceful shutdown cancellation context
+	// graceful shutdown cancellation context
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// Server gracefull shutdown
 	if err = srv.Shutdown(shutdownCtx); err != nil {
 		log.Printf("error during api server shutdown -> %v", err)
 	}
