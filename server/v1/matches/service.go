@@ -155,8 +155,8 @@ func (s *service) processUpdateMatch(ctx context.Context, input UpdateMatchReque
 	return mm, nil
 }
 
-func (s *service) processSubmitMatchScore(ctx context.Context, input SubmitMatchScoreRequestModel) (*MatchModel, error) {
-	seasonExists, leagueExists, matchExists, err := s.store.validateSubmitMatchScore(ctx, input.SeasonId, input.LeagueId, input.MatchId)
+func (s *service) processSubmitMatchScore(ctx context.Context, model SubmitMatchScoreRequestModel) (*MatchModel, error) {
+	seasonExists, leagueExists, matchExists, err := s.store.validateSubmitMatchScore(ctx, model.SeasonId, model.LeagueId, model.MatchId)
 	if err != nil {
 		return nil, err
 	}
@@ -171,7 +171,7 @@ func (s *service) processSubmitMatchScore(ctx context.Context, input SubmitMatch
 	}
 
 	// find the existing match
-	match, err := s.store.findMatch(ctx, nil, input.SeasonId, input.LeagueId, input.MatchId)
+	match, err := s.store.findMatch(ctx, nil, model.SeasonId, model.LeagueId, model.MatchId)
 	if err != nil {
 		return nil, err
 	}
@@ -182,9 +182,9 @@ func (s *service) processSubmitMatchScore(ctx context.Context, input SubmitMatch
 	}
 
 	// also add the match p1 and p2 info to the input struct
-	input.PlayerOneId = match.PlayerOne.Id
-	input.PlayerTwoId = match.PlayerTwo.Id
-	input.WinnerId = determineMatchWinner(input.Score, match.PlayerOne.Id, match.PlayerTwo.Id)
+	model.PlayerOneId = match.PlayerOne.Id
+	model.PlayerTwoId = match.PlayerTwo.Id
+	model.WinnerId = determineMatchWinner(model.Score, match.PlayerOne.Id, match.PlayerTwo.Id)
 
 	// begin tx
 	tx, err := s.store.db.BeginTx(ctx, pgx.TxOptions{})
@@ -199,24 +199,24 @@ func (s *service) processSubmitMatchScore(ctx context.Context, input SubmitMatch
 		}
 	}()
 
-	result, err := s.store.updateMatchScore(ctx, tx, input.SeasonId, input.LeagueId, input.MatchId, input.Score, input.WinnerId)
+	result, err := s.store.updateMatchScore(ctx, tx, model.SeasonId, model.LeagueId, model.MatchId, model.Score, model.WinnerId)
 	if err != nil {
 		return nil, err
 	}
 
-	err = s.store.updatePlayerStatistics(ctx, tx, input.WinnerId, input.PlayerOneId, input.PlayerTwoId)
+	err = s.store.updatePlayerStatistics(ctx, tx, model.WinnerId, model.PlayerOneId, model.PlayerTwoId)
 	if err != nil {
 		return nil, err
 	}
 
 	// calc pl1 & pl2 match stats
-	pl1MatchStats := calcMatchStats(input.Score, true)
-	pl2MatchStats := calcMatchStats(input.Score, false)
+	pl1MatchStats := calcMatchStats(model.Score, true)
+	pl2MatchStats := calcMatchStats(model.Score, false)
 
 	fmt.Printf("pl1MatchStats: %+v\n", pl1MatchStats)
 	fmt.Printf("pl2MatchStats: %+v\n", pl2MatchStats)
 
-	err = s.store.updateStandings(ctx, tx, input.SeasonId, input.LeagueId, input.PlayerOneId, input.PlayerTwoId, pl1MatchStats, pl2MatchStats)
+	err = s.store.updateStandings(ctx, tx, model.SeasonId, model.LeagueId, model.PlayerOneId, model.PlayerTwoId, pl1MatchStats, pl2MatchStats)
 	if err != nil {
 		return nil, err
 	}

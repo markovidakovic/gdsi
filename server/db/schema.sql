@@ -136,10 +136,6 @@ CREATE TABLE public.player (
     matches_won integer DEFAULT 0 NOT NULL,
     matches_scheduled integer DEFAULT 0 NOT NULL,
     seasons_played integer DEFAULT 0 NOT NULL,
-    winning_ratio double precision DEFAULT 0.0 NOT NULL,
-    activity_ratio double precision DEFAULT 0.0 NOT NULL,
-    ranking integer,
-    elo integer,
     account_id uuid NOT NULL,
     current_league_id uuid,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL

@@ -218,26 +218,26 @@ func (h *handler) updateMatch(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId}/matches/{matchId}/score [post]
 func (h *handler) submitMatchScore(w http.ResponseWriter, r *http.Request) {
-	// decode input
-	var input SubmitMatchScoreRequestModel
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+	// decode req body
+	var model SubmitMatchScoreRequestModel
+	if err := json.NewDecoder(r.Body).Decode(&model); err != nil {
 		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))
 		return
 	}
 
 	// validation
-	if valErr := input.Validate(); valErr != nil {
+	if valErr := model.Validate(); valErr != nil {
 		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
 		return
 	}
 
-	// add params to input
-	input.SeasonId = chi.URLParam(r, "seasonId")
-	input.LeagueId = chi.URLParam(r, "leagueId")
-	input.MatchId = chi.URLParam(r, "matchId")
+	// add params to model
+	model.SeasonId = chi.URLParam(r, "seasonId")
+	model.LeagueId = chi.URLParam(r, "leagueId")
+	model.MatchId = chi.URLParam(r, "matchId")
 
 	// call the service
-	result, err := h.service.processSubmitMatchScore(r.Context(), input)
+	result, err := h.service.processSubmitMatchScore(r.Context(), model)
 	if err != nil {
 		switch {
 		case errors.Is(err, response.ErrBadRequest):
