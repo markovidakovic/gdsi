@@ -31,6 +31,7 @@ func newService(cfg *config.Config, store *store) *service {
 
 func (s *service) processSignup(ctx context.Context, model SignupRequestModel) (string, string, error) {
 	var err error
+
 	// hash the password
 	model.Password, err = sec.EncryptPwd(model.Password)
 	if err != nil {
@@ -77,16 +78,10 @@ func (s *service) processSignup(ctx context.Context, model SignupRequestModel) (
 
 	account.PlayerId = playerId
 
-	// generate jwt
+	// generate jwts
 	accessTkn, refreshTkn, err := generateAuthTokens(s.cfg.JwtAuth, s.cfg.JwtAccessExpiration, s.cfg.JwtRefreshExpiration, account.Id, account.Role, account.PlayerId)
 	if err != nil {
 		return "", "", fmt.Errorf("generating auth tokens: %v", err)
-	}
-
-	// revoke previous refresh tokens
-	err = s.store.revokeAccountRefreshTokens(ctx, tx, account.Id)
-	if err != nil {
-		return "", "", err
 	}
 
 	// hash the refresh token
@@ -202,7 +197,10 @@ func (s *service) processRefreshTokens(ctx context.Context, model RefreshTokenRe
 		return "", "", fmt.Errorf("%w: refresh token has expired", response.ErrUnauthorized)
 	}
 
-	// todo: what to do here - revoke the prev rt or update it?
+	err = s.store.updateRefreshToken(ctx, tx, rt.Id)
+	if err != nil {
+		return "", "", err
+	}
 
 	// revoke the previous refresh token
 	err = s.store.revokeRefreshToken(ctx, tx, rt.Id)

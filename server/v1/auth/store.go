@@ -186,11 +186,11 @@ func (s *store) findRefreshTokenByHash(ctx context.Context, tx pgx.Tx, rt string
 	return &dest, nil
 }
 
-func (s *store) updateRefreshToken(ctx context.Context, tx pgx.Tx, rtHash string) error {
+func (s *store) updateRefreshToken(ctx context.Context, tx pgx.Tx, rtId string) error {
 	sql := `
 		update refresh_token
 		set last_used_at = $1
-		where token_hash = $2
+		where id = $2
 	`
 
 	var q db.Querier
@@ -203,7 +203,7 @@ func (s *store) updateRefreshToken(ctx context.Context, tx pgx.Tx, rtHash string
 	// last updated
 	lua := time.Now()
 
-	_, err := q.Exec(ctx, sql, lua, rtHash)
+	_, err := q.Exec(ctx, sql, lua, rtId)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return fmt.Errorf("finding refresh token for updated: %w", response.ErrNotFound)

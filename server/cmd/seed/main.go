@@ -26,18 +26,78 @@ type input struct {
 	role     string
 }
 
-func main() {
-	// parse cli args
-	input := parseInput()
+func (i *input) parse() {
+	flag.StringVar(&i.name, "name", "Marko Vidaković", "Full name")
+	flag.StringVar(&i.email, "email", "marko.vidakovic@gmail.com", "Email")
+	flag.StringVar(&i.dob, "dob", "1995-09-04", "Date of birth")
+	flag.StringVar(&i.gender, "gender", "male", "Gender (male or female)")
+	flag.StringVar(&i.phone, "phone", "0989559516", "Phone number")
+	flag.StringVar(&i.password, "password", "string", "Password")
+	i.role = "developer"
 
-	// validate input
-	err := validateInput(input)
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Seed developer account into the database\n")
+		fmt.Fprintf(os.Stderr, "Usage:\n")
+		flag.PrintDefaults()
+	}
+
+	flag.Parse()
+}
+
+func (i input) validate() error {
+	if i.name == "" {
+		return fmt.Errorf("name is required")
+	}
+	if i.email == "" {
+		return fmt.Errorf("email is required")
+	} else if !sec.IsValidEmail(i.email) {
+		return fmt.Errorf("email is invalid")
+	}
+	if i.dob == "" {
+		return fmt.Errorf("dob is required")
+	} else {
+		if _, err := time.Parse("2006-01-02", i.dob); err != nil {
+			return fmt.Errorf("dob is invalid")
+		}
+	}
+	if i.gender == "" {
+		return fmt.Errorf("gender is required")
+	} else if i.gender != "male" && i.gender != "female" {
+		return fmt.Errorf("gender is invalid, expected male or female")
+	}
+	if i.phone == "" {
+		return fmt.Errorf("phone number is required")
+	} else if !sec.IsValidPhone(i.phone) {
+		return fmt.Errorf("phone number is invalid")
+	}
+	if i.password == "" {
+		return fmt.Errorf("password is required")
+	}
+
+	return nil
+}
+
+func main() {
+	inp := input{}
+
+	// parse cli args
+	inp.parse()
+
+	err := inp.validate()
 	if err != nil {
 		log.Fatalf("invalid input: %v", err)
 	}
 
+	// confirmation prompt
+	fmt.Printf("about to seed developer account with email %s. continue? (y/n): ", inp.email)
+	var confirm string
+	fmt.Scanln(&confirm)
+	if confirm != "y" {
+		log.Fatal("operation aborted")
+	}
+
 	// encrypt pwd
-	input.password, err = sec.EncryptPwd(input.password)
+	inp.password, err = sec.EncryptPwd(inp.password)
 	if err != nil {
 		log.Fatalf("encrypting password: %v", err)
 	}
@@ -57,66 +117,10 @@ func main() {
 	ctx := context.Background()
 
 	// seed dev account
-	err = seedDeveloperAccount(ctx, db, input)
+	err = seedDeveloperAccount(ctx, db, inp)
 	if err != nil {
 		log.Fatalf("seeding developer account: %v", err)
 	}
-
-}
-
-func parseInput() input {
-	in := input{}
-	in.role = "developer"
-
-	flag.StringVar(&in.name, "name", "", "Full name")
-	flag.StringVar(&in.email, "email", "", "Email")
-	flag.StringVar(&in.dob, "dob", "", "Date of birth")
-	flag.StringVar(&in.gender, "gender", "", "Gender (male or female)")
-	flag.StringVar(&in.phone, "phone", "", "Phone number")
-	flag.StringVar(&in.password, "password", "", "Password")
-
-	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Seed developer account into the database\n")
-		fmt.Fprintf(os.Stderr, "Usage:\n")
-		flag.PrintDefaults()
-	}
-
-	flag.Parse()
-
-	return in
-}
-
-func validateInput(in input) error {
-	if in.name == "" {
-		return fmt.Errorf("name is required")
-	}
-	if in.email == "" {
-		return fmt.Errorf("email is required")
-	} else if !sec.IsValidEmail(in.email) {
-		return fmt.Errorf("email is invalid")
-	}
-	if in.dob == "" {
-		return fmt.Errorf("dob is required")
-	} else {
-		if _, err := time.Parse("2006-01-02", in.dob); err != nil {
-			return fmt.Errorf("dob is invalid")
-		}
-	}
-	if in.gender == "" {
-		return fmt.Errorf("gender is required")
-	} else if in.gender != "male" && in.gender != "female" {
-		return fmt.Errorf("gender is invalid, expected male or female")
-	}
-	if in.phone == "" {
-		return fmt.Errorf("phone number is required")
-	} else if !sec.IsValidPhone(in.phone) {
-		return fmt.Errorf("phone number is invalid")
-	}
-	if in.password == "" {
-		return fmt.Errorf("password is required")
-	}
-
-	return nil
 }
 
 func seedDeveloperAccount(ctx context.Context, db *db.Conn, in input) error {
@@ -140,7 +144,7 @@ func seedDeveloperAccount(ctx context.Context, db *db.Conn, in input) error {
 	}
 
 	defer func() {
-		if err != nil {
+		if tx != nil {
 			_ = tx.Rollback(ctx)
 		}
 		log.Println("developer account seeded")
