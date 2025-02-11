@@ -4,10 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
 
+	"github.com/go-chi/jwtauth/v5"
+	"github.com/jackc/pgx/v5"
 	"github.com/markovidakovic/gdsi/server/config"
 	"github.com/markovidakovic/gdsi/server/response"
 	"github.com/markovidakovic/gdsi/server/sec"
@@ -35,7 +38,7 @@ func (s *service) processSignup(ctx context.Context, model SignupRequestModel) (
 	}
 
 	// check if email exists
-	existingAccount, err := s.store.findAccountByEmail(ctx, model.Email)
+	existingAccount, err := s.store.findAccountByEmail(ctx, nil, model.Email)
 	if err != nil {
 		if !errors.Is(err, response.ErrNotFound) {
 			return "", "", err
@@ -45,24 +48,67 @@ func (s *service) processSignup(ctx context.Context, model SignupRequestModel) (
 		return "", "", response.ErrDuplicateRecord
 	}
 
-	// insert account
-	newAccount, err := s.store.insertAccount(ctx, model)
+	// begin tx
+	tx, err := s.store.db.Begin(ctx)
 	if err != nil {
 		return "", "", err
 	}
+
+	defer func() {
+		if tx != nil {
+			err := tx.Rollback(ctx)
+			if err != nil && err != pgx.ErrTxClosed {
+				log.Printf("rolling back tx: %v", err)
+			}
+		}
+	}()
+
+	// insert account
+	account, err := s.store.insertAccount(ctx, tx, model)
+	if err != nil {
+		return "", "", err
+	}
+
+	// insert player
+	playerId, err := s.store.insertPlayer(ctx, tx, account.Id)
+	if err != nil {
+		return "", "", err
+	}
+
+	account.PlayerId = playerId
 
 	// generate jwt
-	accessToken, refreshToken, err := s.getAuthTokens(ctx, newAccount.Id, newAccount.Role, newAccount.PlayerId)
+	accessTkn, refreshTkn, err := generateAuthTokens(s.cfg.JwtAuth, s.cfg.JwtAccessExpiration, s.cfg.JwtRefreshExpiration, account.Id, account.Role, account.PlayerId)
+	if err != nil {
+		return "", "", fmt.Errorf("generating auth tokens: %v", err)
+	}
+
+	// revoke previous refresh tokens
+	err = s.store.revokeAccountRefreshTokens(ctx, tx, account.Id)
 	if err != nil {
 		return "", "", err
 	}
 
-	return accessToken, refreshToken, nil
+	// hash the refresh token
+	hashedRfrTkn := sec.HashToken(refreshTkn.val)
+
+	// insert refresh token
+	err = s.store.insertRefreshToken(ctx, tx, account.Id, hashedRfrTkn, refreshTkn.issAt, refreshTkn.expAt)
+	if err != nil {
+		return "", "", err
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return "", "", fmt.Errorf("commiting tx: %v", err)
+	}
+
+	return accessTkn.val, refreshTkn.val, nil
 }
 
 func (s *service) processLogin(ctx context.Context, model LoginRequestModel) (string, string, error) {
 	// call the store
-	account, err := s.store.findAccountByEmail(ctx, model.Email)
+	account, err := s.store.findAccountByEmail(ctx, nil, model.Email)
 	if err != nil {
 		return "", "", err
 	}
@@ -73,71 +119,137 @@ func (s *service) processLogin(ctx context.Context, model LoginRequestModel) (st
 		return "", "", response.ErrNotFound
 	}
 
-	// generate jwt
-	accessToken, refreshToken, err := s.getAuthTokens(ctx, account.Id, account.Role, account.PlayerId)
+	// generate jwts
+	accessTkn, refreshTkn, err := generateAuthTokens(s.cfg.JwtAuth, s.cfg.JwtAccessExpiration, s.cfg.JwtRefreshExpiration, account.Id, account.Role, account.PlayerId)
 	if err != nil {
 		return "", "", err
 	}
 
-	return accessToken, refreshToken, nil
+	// begin tx
+	tx, err := s.store.db.Begin(ctx)
+	if err != nil {
+		return "", "", fmt.Errorf("beginning tx: %v", err)
+	}
+
+	defer func() {
+		if tx != nil {
+			err := tx.Rollback(ctx)
+			if err != nil && err != pgx.ErrTxClosed {
+				log.Printf("rolling back tx: %v", err)
+			}
+		}
+	}()
+
+	// revoke previous refresh tkns
+	err = s.store.revokeAccountRefreshTokens(ctx, tx, account.Id)
+	if err != nil {
+		return "", "", err
+	}
+
+	// insert refresh token
+	err = s.store.insertRefreshToken(ctx, tx, account.Id, sec.HashToken(refreshTkn.val), refreshTkn.issAt, refreshTkn.expAt)
+	if err != nil {
+		return "", "", err
+	}
+
+	// commit tx
+	err = tx.Commit(ctx)
+	if err != nil {
+		return "", "", fmt.Errorf("commiting tx: %v", err)
+	}
+
+	return accessTkn.val, refreshTkn.val, nil
 }
 
 func (s *service) processRefreshTokens(ctx context.Context, model RefreshTokenRequestModel) (string, string, error) {
 	// hash the incoming refresh token
 	rtHash := sec.HashToken(model.RefreshToken)
 
+	// begin tx
+	tx, err := s.store.db.Begin(ctx)
+	if err != nil {
+		return "", "", fmt.Errorf("begining tx: %v", err)
+	}
+
+	defer func() {
+		if tx != nil {
+			err := tx.Rollback(ctx)
+			if err != nil && err == pgx.ErrTxClosed {
+				log.Printf("rollbacking tx: %v", err)
+			}
+		}
+	}()
+
 	// get the stored refresh token
-	rt, err := s.store.findRefreshToken(ctx, rtHash)
+	rt, err := s.store.findRefreshTokenByHash(ctx, nil, rtHash)
 	if err != nil {
 		return "", "", err
 	}
 
 	if rt.IsRevoked {
 		// revoke all existing refresh tokens for the account
-		err := s.store.revokeAllAccountRefreshTokens(ctx, rt.AccountId)
+		err := s.store.revokeAccountRefreshTokens(ctx, nil, rt.AccountId)
 		if err != nil {
 			return "", "", err
 		}
 		return "", "", fmt.Errorf("%w: refresh token is revoked", response.ErrUnauthorized)
-	}
-
-	if time.Now().After(rt.ExpiresAt) {
+	} else if time.Now().After(rt.ExpiresAt) {
 		// revoke the expired refresh token
-		err := s.store.revokeRefreshToken(ctx, rt.Id)
+		err := s.store.revokeRefreshToken(ctx, nil, rt.Id)
 		if err != nil {
 			return "", "", err
 		}
-		return "", "", fmt.Errorf("%w: refresh token expired", response.ErrUnauthorized)
+		return "", "", fmt.Errorf("%w: refresh token has expired", response.ErrUnauthorized)
 	}
 
-	// generate tokens
-	access, refresh, err := s.getAuthTokens(ctx, rt.AccountId, rt.AccountRole, rt.PlayerId)
+	// todo: what to do here - revoke the prev rt or update it?
+
+	// revoke the previous refresh token
+	err = s.store.revokeRefreshToken(ctx, tx, rt.Id)
 	if err != nil {
 		return "", "", err
 	}
 
-	return access, refresh, nil
+	// generate tokens
+	accessTkn, refreshTkn, err := generateAuthTokens(s.cfg.JwtAuth, s.cfg.JwtAccessExpiration, s.cfg.JwtRefreshExpiration, rt.AccountId, rt.AccountRole, rt.PlayerId)
+	if err != nil {
+		return "", "", err
+	}
+
+	// insert refresh token
+	err = s.store.insertRefreshToken(ctx, tx, rt.AccountId, sec.HashToken(refreshTkn.val), refreshTkn.issAt, refreshTkn.expAt)
+	if err != nil {
+		return "", "", err
+	}
+
+	return accessTkn.val, refreshTkn.val, nil
 }
 
-func (s *service) getAuthTokens(ctx context.Context, accountId, role, playerId string) (access, refresh string, err error) {
+type token struct {
+	issAt time.Time
+	expAt time.Time
+	val   string
+}
+
+func generateAuthTokens(ja *jwtauth.JWTAuth, jwtAccessExp, jwtRefreshExp, accountId, role, playerId string) (accessTkn, refreshTkn token, err error) {
+	// parse config vars
+	durAccess, err := time.ParseDuration(jwtAccessExp)
+	if err != nil {
+		return
+	}
+	durRefresh, err := time.ParseDuration(jwtRefreshExp)
+	if err != nil {
+		return
+	}
+
 	var iss string = "gdsi api"
 	var aud string = "gdsi app"
-
-	// parse config vars
-	durationAccess, err := time.ParseDuration(s.cfg.JwtAccessExpiration)
-	if err != nil {
-		return
-	}
-	durationRefresh, err := time.ParseDuration(s.cfg.JwtRefreshExpiration)
-	if err != nil {
-		return
-	}
 
 	now := time.Now()
 
 	// expiration dates for tokens
-	var expAccess time.Time = now.Add(durationAccess)
-	var expRefresh time.Time = now.Add(durationRefresh)
+	var expAccess time.Time = now.Add(durAccess)
+	var expRefresh time.Time = now.Add(durRefresh)
 
 	// jwt claims
 	var claims = map[string]interface{}{
@@ -151,28 +263,30 @@ func (s *service) getAuthTokens(ctx context.Context, accountId, role, playerId s
 		"player_id": playerId,
 	}
 
-	// create access jwt
-	_, access, err = s.cfg.JwtAuth.Encode(claims)
+	// encode access jwt
+	_, accessTknEnc, err := ja.Encode(claims)
 	if err != nil {
 		return
 	}
 
-	// change the exp value
+	// change the exp value for refresh token
 	claims["exp"] = expRefresh.Unix()
 
-	// create refresh token
-	_, refresh, err = s.cfg.JwtAuth.Encode(claims)
+	// encode refresh jwt
+	_, refreshTknEnc, err := ja.Encode(claims)
 	if err != nil {
 		return
 	}
 
-	// hash the refresh token for storage
-	refreshHashed := sec.HashToken(refresh)
-
-	// call the store
-	err = s.store.insertRefreshToken(ctx, accountId, refreshHashed, now, expRefresh)
-	if err != nil {
-		return
+	accessTkn = token{
+		issAt: now,
+		expAt: expAccess,
+		val:   accessTknEnc,
+	}
+	refreshTkn = token{
+		issAt: now,
+		expAt: expRefresh,
+		val:   refreshTknEnc,
 	}
 
 	return

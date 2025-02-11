@@ -22,55 +22,54 @@ func newStore(db *db.Conn) *store {
 	return r
 }
 
-func (s *store) insertAccount(ctx context.Context, model SignupRequestModel) (AccountModel, error) {
+func (s *store) insertAccount(ctx context.Context, tx pgx.Tx, model SignupRequestModel) (AccountModel, error) {
 	sql1 := `
 		insert into account (name, email, dob, gender, phone_number, password)
 		values ($1, $2, $3, $4, $5, $6)
 		returning id, name, email, dob, gender, phone_number, password, role, created_at
 	`
 
-	sql2 := `
+	var q db.Querier
+	if tx != nil {
+		q = tx
+	} else {
+		q = s.db
+	}
+
+	var dest AccountModel
+	err := q.QueryRow(ctx, sql1, model.Name, model.Email, model.Dob, model.Gender, model.PhoneNumber, model.Password).Scan(&dest.Id, &dest.Name, &dest.Email, &dest.Dob, &dest.Gender, &dest.PhoneNumber, &dest.Password, &dest.Role, &dest.CreatedAt)
+	if err != nil {
+		return dest, response.ErrInternal
+	}
+
+	return dest, nil
+}
+
+func (s *store) insertPlayer(ctx context.Context, tx pgx.Tx, accountId string) (string, error) {
+	sql := `
 		insert into player (account_id)
 		values ($1)
 		returning id
 	`
 
-	var dest AccountModel
+	var q db.Querier
+	if tx != nil {
+		q = tx
+	} else {
+		q = s.db
+	}
+
 	var playerId string
 
-	tx, err := s.db.BeginTx(ctx, pgx.TxOptions{})
+	err := q.QueryRow(ctx, sql, accountId).Scan(&playerId)
 	if err != nil {
-		return dest, response.ErrInternal
+		return "", fmt.Errorf("inserting player: %v", err)
 	}
 
-	// tx rollback
-	defer func() {
-		if err != nil {
-			_ = tx.Rollback(ctx)
-		}
-	}()
-
-	err = tx.QueryRow(ctx, sql1, model.Name, model.Email, model.Dob, model.Gender, model.PhoneNumber, model.Password).Scan(&dest.Id, &dest.Name, &dest.Email, &dest.Dob, &dest.Gender, &dest.PhoneNumber, &dest.Password, &dest.Role, &dest.CreatedAt)
-	if err != nil {
-		return dest, response.ErrInternal
-	}
-
-	err = tx.QueryRow(ctx, sql2, dest.Id).Scan(&playerId)
-	if err != nil {
-		return dest, response.ErrInternal
-	}
-
-	err = tx.Commit(ctx)
-	if err != nil {
-		return dest, response.ErrInternal
-	}
-
-	dest.PlayerId = playerId
-
-	return dest, nil
+	return playerId, nil
 }
 
-func (s *store) findAccountByEmail(ctx context.Context, email string) (*AccountModel, error) {
+func (s *store) findAccountByEmail(ctx context.Context, tx pgx.Tx, email string) (*AccountModel, error) {
 	var dest AccountModel
 
 	sql := `
@@ -80,7 +79,14 @@ func (s *store) findAccountByEmail(ctx context.Context, email string) (*AccountM
 		where account.email = $1
 	`
 
-	err := s.db.QueryRow(ctx, sql, email).Scan(
+	var q db.Querier
+	if tx != nil {
+		q = tx
+	} else {
+		q = s.db
+	}
+
+	err := q.QueryRow(ctx, sql, email).Scan(
 		&dest.Id,
 		&dest.Name,
 		&dest.Email,
@@ -102,44 +108,21 @@ func (s *store) findAccountByEmail(ctx context.Context, email string) (*AccountM
 	return &dest, nil
 }
 
-func (s *store) insertRefreshToken(ctx context.Context, accountId string, token string, issuedAt, expiresAt time.Time) error {
-	sql1 := `
+func (s *store) insertRefreshToken(ctx context.Context, tx pgx.Tx, accountId string, token string, issuedAt, expiresAt time.Time) error {
+	sql := `
 		insert into refresh_token (account_id, token_hash, issued_at, expires_at)
 		values ($1, $2, $3, $4)
 		returning id, account_id, token_hash, device_id, ip_address, user_agent, issued_at, expires_at, last_used_at, is_revoked
 	`
 
-	sql2 := `
-		update refresh_token
-		set is_revoked = true
-		where account_id = $1 and is_revoked = false
-	`
-
-	tx, err := s.db.BeginTx(ctx, pgx.TxOptions{})
-	if err != nil {
-		return err
+	var q db.Querier
+	if tx != nil {
+		q = tx
+	} else {
+		q = s.db
 	}
 
-	// tx rollback
-	defer func() {
-		if err != nil {
-			_ = tx.Rollback(ctx)
-		}
-	}()
-
-	// revoke the previous refresh token
-	_, err = tx.Exec(ctx, sql2, accountId)
-	if err != nil {
-		return err
-	}
-
-	// insert the new refresh token
-	_, err = tx.Exec(ctx, sql1, accountId, token, issuedAt, expiresAt)
-	if err != nil {
-		return err
-	}
-
-	err = tx.Commit(ctx)
+	_, err := q.Exec(ctx, sql, accountId, token, issuedAt, expiresAt)
 	if err != nil {
 		return err
 	}
@@ -147,9 +130,30 @@ func (s *store) insertRefreshToken(ctx context.Context, accountId string, token 
 	return nil
 }
 
-func (s *store) findRefreshToken(ctx context.Context, rt string) (*RefreshTokenModel, error) {
-	// maybe do just an update query where we do returning
-	sql1 := `
+func (s *store) revokeAccountRefreshTokens(ctx context.Context, tx pgx.Tx, accountId string) error {
+	sql := `
+		update refresh_token
+		set is_revoked = true
+		where account_id = $1 and is_revoked = false
+	`
+
+	var q db.Querier
+	if tx != nil {
+		q = tx
+	} else {
+		q = s.db
+	}
+
+	_, err := q.Exec(ctx, sql, accountId)
+	if err != nil {
+		return fmt.Errorf("revoking refresh tokens: %v", err)
+	}
+
+	return nil
+}
+
+func (s *store) findRefreshTokenByHash(ctx context.Context, tx pgx.Tx, rt string) (*RefreshTokenModel, error) {
+	sql := `
 		select
 			refresh_token.id,
 			account.id as account_id,
@@ -169,26 +173,9 @@ func (s *store) findRefreshToken(ctx context.Context, rt string) (*RefreshTokenM
 		where refresh_token.token_hash = $1
 	`
 
-	sql2 := `
-		update refresh_token
-		set last_used_at = $1
-		where token_hash = $2
-	`
-
-	tx, err := s.db.BeginTx(ctx, pgx.TxOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	defer func() {
-		if err != nil {
-			_ = tx.Rollback(ctx)
-		}
-	}()
-
 	var dest RefreshTokenModel
 
-	err = tx.QueryRow(ctx, sql1, rt).Scan(&dest.Id, &dest.AccountId, &dest.AccountRole, &dest.TokenHash, &dest.DeviceId, &dest.IpAddress, &dest.UserAgent, &dest.IssuedAt, &dest.ExpiresAt, &dest.LastUsedAt, &dest.IsRevoked, &dest.PlayerId)
+	err := tx.QueryRow(ctx, sql, rt).Scan(&dest.Id, &dest.AccountId, &dest.AccountRole, &dest.TokenHash, &dest.DeviceId, &dest.IpAddress, &dest.UserAgent, &dest.IssuedAt, &dest.ExpiresAt, &dest.LastUsedAt, &dest.IsRevoked, &dest.PlayerId)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, fmt.Errorf("finding refresh token: %w", response.ErrNotFound)
@@ -196,46 +183,54 @@ func (s *store) findRefreshToken(ctx context.Context, rt string) (*RefreshTokenM
 		return nil, err
 	}
 
-	lua := time.Now()
-
-	_, err = tx.Exec(ctx, sql2, lua, rt)
-	if err != nil {
-		return nil, err
-	}
-
-	err = tx.Commit(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	return &dest, nil
 }
 
-func (s *store) revokeAllAccountRefreshTokens(ctx context.Context, accountId string) error {
-	sql1 := `
+func (s *store) updateRefreshToken(ctx context.Context, tx pgx.Tx, rtHash string) error {
+	sql := `
 		update refresh_token
-		set is_revoked = true
-		where account_id = $1 and is_revoked = false
+		set last_used_at = $1
+		where token_hash = $2
 	`
 
-	_, err := s.db.Exec(ctx, sql1, accountId)
+	var q db.Querier
+	if tx != nil {
+		q = tx
+	} else {
+		q = s.db
+	}
+
+	// last updated
+	lua := time.Now()
+
+	_, err := q.Exec(ctx, sql, lua, rtHash)
 	if err != nil {
-		return err
+		if errors.Is(err, pgx.ErrNoRows) {
+			return fmt.Errorf("finding refresh token for updated: %w", response.ErrNotFound)
+		}
+		return fmt.Errorf("updating refresh token: %v", err)
 	}
 
 	return nil
 }
 
-func (s *store) revokeRefreshToken(ctx context.Context, rtId string) error {
-	sql1 := `
+func (s *store) revokeRefreshToken(ctx context.Context, tx pgx.Tx, rtId string) error {
+	sql := `
 		update refresh_token
 		set is_revoked = true
-		where id = $1
+		where id = $1	
 	`
 
-	_, err := s.db.Exec(ctx, sql1, rtId)
+	var q db.Querier
+	if tx != nil {
+		q = tx
+	} else {
+		q = s.db
+	}
+
+	_, err := q.Exec(ctx, sql, rtId)
 	if err != nil {
-		return err
+		return fmt.Errorf("revoking refresh token: %v", err)
 	}
 
 	return nil
