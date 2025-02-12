@@ -7,15 +7,13 @@ import (
 )
 
 type CourtModel struct {
-	Id        string       `json:"id"`
-	Name      string       `json:"name"`
-	Creator   CreatorModel `json:"creator"`
-	CreatedAt time.Time    `json:"created_at"`
-}
-
-type CreatorModel struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
+	Id      string `json:"id"`
+	Name    string `json:"name"`
+	Creator struct {
+		Id   string `json:"id"`
+		Name string `json:"name"`
+	} `json:"creator"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type CreateCourtRequestModel struct {

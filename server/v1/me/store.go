@@ -101,7 +101,14 @@ func (s *store) findMe(ctx context.Context, accountId string) (*MeModel, error) 
 	return &mm, nil
 }
 
-func (s *store) updateMe(ctx context.Context, accountId string, input UpdateMeRequestModel) (*MeModel, error) {
+func (s *store) updateMe(ctx context.Context, tx pgx.Tx, accountId string, input UpdateMeRequestModel) (*MeModel, error) {
+	var q db.Querier
+	if tx != nil {
+		q = tx
+	} else {
+		q = s.db
+	}
+
 	var dest MeModel
 	dest.Player = PlayerModel{}
 	var leagueId, leagueTitle sql.NullString
@@ -142,7 +149,7 @@ func (s *store) updateMe(ctx context.Context, accountId string, input UpdateMeRe
 		left join league on player.current_league_id = league.id
 	`
 
-	err := s.db.QueryRow(ctx, sql1, input.Name, accountId).Scan(
+	err := q.QueryRow(ctx, sql1, input.Name, accountId).Scan(
 		&dest.Id,
 		&dest.Name,
 		&dest.Email,

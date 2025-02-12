@@ -20,7 +20,14 @@ func newStore(db *db.Conn) *store {
 	}
 }
 
-func (s *store) insertSeason(ctx context.Context, input CreateSeasonRequestModel) (SeasonModel, error) {
+func (s *store) insertSeason(ctx context.Context, tx pgx.Tx, model CreateSeasonRequestModel) (SeasonModel, error) {
+	var q db.Querier
+	if tx != nil {
+		q = tx
+	} else {
+		q = s.db
+	}
+
 	sql1 := `
 		with inserted_season as (
 			insert into season (title, description, start_date, end_date, creator_id)
@@ -32,7 +39,7 @@ func (s *store) insertSeason(ctx context.Context, input CreateSeasonRequestModel
 		join account on s.creator_id = account.id
 	`
 	var dest SeasonModel
-	err := s.db.QueryRow(ctx, sql1, input.Title, input.Description, input.StartDate, input.EndDate, input.CreatorId).Scan(
+	err := q.QueryRow(ctx, sql1, model.Title, model.Description, model.StartDate, model.EndDate, model.CreatorId).Scan(
 		&dest.Id,
 		&dest.Title,
 		&dest.Description,
@@ -117,7 +124,7 @@ func (s *store) findSeason(ctx context.Context, seasonId string) (*SeasonModel, 
 	return &dest, nil
 }
 
-func (s *store) updateSeason(ctx context.Context, seasonId string, input UpdateSeasonRequestModel) (*SeasonModel, error) {
+func (s *store) updateSeason(ctx context.Context, seasonId string, model UpdateSeasonRequestModel) (*SeasonModel, error) {
 	sql1 := `
 		with updated_season as (
 			update season 
@@ -139,7 +146,7 @@ func (s *store) updateSeason(ctx context.Context, seasonId string, input UpdateS
 	`
 
 	var dest SeasonModel
-	err := s.db.QueryRow(ctx, sql1, input.Title, input.Description, input.StartDate, input.EndDate, seasonId).Scan(&dest.Id, &dest.Title, &dest.Description, &dest.StartDate, &dest.EndDate, &dest.Creator.Id, &dest.Creator.Name, &dest.CreatedAt)
+	err := s.db.QueryRow(ctx, sql1, model.Title, model.Description, model.StartDate, model.EndDate, seasonId).Scan(&dest.Id, &dest.Title, &dest.Description, &dest.StartDate, &dest.EndDate, &dest.Creator.Id, &dest.Creator.Name, &dest.CreatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, response.ErrNotFound
@@ -150,12 +157,19 @@ func (s *store) updateSeason(ctx context.Context, seasonId string, input UpdateS
 	return &dest, nil
 }
 
-func (s *store) deleteSeason(ctx context.Context, seasonId string) error {
+func (s *store) deleteSeason(ctx context.Context, tx pgx.Tx, seasonId string) error {
+	var q db.Querier
+	if tx != nil {
+		q = tx
+	} else {
+		q = s.db
+	}
+
 	sql1 := `
 		delete from season where id = $1
 	`
 
-	ct, err := s.db.Exec(ctx, sql1, seasonId)
+	ct, err := q.Exec(ctx, sql1, seasonId)
 	if err != nil {
 		return err
 	}

@@ -20,9 +20,16 @@ func newStore(db *db.Conn) *store {
 	}
 }
 
-func (s *store) insertCourt(ctx context.Context, input CreateCourtRequestModel) (CourtModel, error) {
+func (s *store) insertCourt(ctx context.Context, tx pgx.Tx, name, creatorId string) (CourtModel, error) {
+	var q db.Querier
+	if tx != nil {
+		q = tx
+	} else {
+		q = s.db
+	}
+
 	// cte - common table expression
-	sql1 := `
+	sql := `
 		with inserted_court as (
 			insert into court (name, creator_id)
 			values ($1, $2)
@@ -35,7 +42,7 @@ func (s *store) insertCourt(ctx context.Context, input CreateCourtRequestModel) 
 
 	var dest CourtModel
 
-	err := s.db.QueryRow(ctx, sql1, input.Name, input.CreatorId).Scan(&dest.Id, &dest.Name, &dest.CreatedAt, &dest.Creator.Id, &dest.Creator.Name)
+	err := q.QueryRow(ctx, sql, name, creatorId).Scan(&dest.Id, &dest.Name, &dest.CreatedAt, &dest.Creator.Id, &dest.Creator.Name)
 	if err != nil {
 		return dest, fmt.Errorf("inserting court: %v", err)
 	}
@@ -44,7 +51,7 @@ func (s *store) insertCourt(ctx context.Context, input CreateCourtRequestModel) 
 }
 
 func (s *store) findCourts(ctx context.Context) ([]CourtModel, error) {
-	sql1 := `
+	sql := `
 		select 
 			court.id as court_id,
 			court.name as court_name,
@@ -56,7 +63,7 @@ func (s *store) findCourts(ctx context.Context) ([]CourtModel, error) {
 		order by court.created_at desc		
 	`
 
-	rows, err := s.db.Query(ctx, sql1)
+	rows, err := s.db.Query(ctx, sql)
 	if err != nil {
 		return nil, fmt.Errorf("querying courts: %v", err)
 	}
@@ -105,10 +112,17 @@ func (s *store) findCourt(ctx context.Context, courtId string) (*CourtModel, err
 	return &dest, nil
 }
 
-func (s *store) updateCourt(ctx context.Context, courtId string, input UpdateCourtRequestModel) (*CourtModel, error) {
+func (s *store) updateCourt(ctx context.Context, tx pgx.Tx, courtId string, name string) (*CourtModel, error) {
+	var q db.Querier
+	if tx != nil {
+		q = tx
+	} else {
+		q = s.db
+	}
+
 	var dest CourtModel
 
-	sql1 := `
+	sql := `
 		with updated_court as (
 			update court
 			set name = $1
@@ -125,10 +139,10 @@ func (s *store) updateCourt(ctx context.Context, courtId string, input UpdateCou
 		join account on court.creator_id = account.id
 	`
 
-	err := s.db.QueryRow(ctx, sql1, input.Name, courtId).Scan(&dest.Id, &dest.Name, &dest.Creator.Id, &dest.Creator.Name, &dest.CreatedAt)
+	err := q.QueryRow(ctx, sql, name, courtId).Scan(&dest.Id, &dest.Name, &dest.Creator.Id, &dest.Creator.Name, &dest.CreatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, response.ErrNotFound
+			return nil, fmt.Errorf("updating court: %w", response.ErrNotFound)
 		}
 		return nil, err
 	}
@@ -136,12 +150,19 @@ func (s *store) updateCourt(ctx context.Context, courtId string, input UpdateCou
 	return &dest, nil
 }
 
-func (s *store) deleteCourt(ctx context.Context, courtId string) error {
-	sql1 := `
+func (s *store) deleteCourt(ctx context.Context, tx pgx.Tx, courtId string) error {
+	var q db.Querier
+	if tx != nil {
+		q = tx
+	} else {
+		q = s.db
+	}
+
+	sql := `
 		delete from court where id = $1
 	`
 
-	ct, err := s.db.Exec(ctx, sql1, courtId)
+	ct, err := q.Exec(ctx, sql, courtId)
 	if err != nil {
 		return err
 	}

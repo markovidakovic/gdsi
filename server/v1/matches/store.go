@@ -21,7 +21,14 @@ func newStore(db *db.Conn) *store {
 	}
 }
 
-func (s *store) insertMatch(ctx context.Context, tx pgx.Tx, input CreateMatchRequestModel) (MatchModel, error) {
+func (s *store) insertMatch(ctx context.Context, tx pgx.Tx, model CreateMatchRequestModel) (MatchModel, error) {
+	var q db.Querier
+	if tx != nil {
+		q = tx
+	} else {
+		q = s.db
+	}
+
 	sql1 := `
 		with inserted_match as (
 			insert into match (court_id, scheduled_at, player_one_id, player_two_id, winner_id, score, season_id, league_id, creator_id)
@@ -60,7 +67,7 @@ func (s *store) insertMatch(ctx context.Context, tx pgx.Tx, input CreateMatchReq
 	var dest MatchModel
 	var winnerId, winnerName sql.NullString
 
-	err := s.db.QueryRow(ctx, sql1, input.CourtId, input.ScheduledAt, input.PlayerOneId, input.PlayerTwoId, input.WinnerId, input.Score, input.SeasonId, input.LeagueId, input.PlayerOneId).Scan(
+	err := q.QueryRow(ctx, sql1, model.CourtId, model.ScheduledAt, model.PlayerOneId, model.PlayerTwoId, model.WinnerId, model.Score, model.SeasonId, model.LeagueId, model.PlayerOneId).Scan(
 		&dest.Id,
 		&dest.Court.Id,
 		&dest.Court.Name,
@@ -94,7 +101,7 @@ func (s *store) insertMatch(ctx context.Context, tx pgx.Tx, input CreateMatchReq
 	return dest, nil
 }
 
-func (s *store) findMatches(ctx context.Context, tx pgx.Tx, seasonId, leagueId string) ([]MatchModel, error) {
+func (s *store) findMatches(ctx context.Context, seasonId, leagueId string) ([]MatchModel, error) {
 	sql1 := `
 		select
 			match.id,
@@ -162,7 +169,7 @@ func (s *store) findMatches(ctx context.Context, tx pgx.Tx, seasonId, leagueId s
 	return dest, nil
 }
 
-func (s *store) findMatch(ctx context.Context, tx pgx.Tx, seasonId, leagueId, matchId string) (*MatchModel, error) {
+func (s *store) findMatch(ctx context.Context, seasonId, leagueId, matchId string) (*MatchModel, error) {
 	sql1 := `
 		select
 			match.id,
@@ -217,7 +224,14 @@ func (s *store) findMatch(ctx context.Context, tx pgx.Tx, seasonId, leagueId, ma
 	return &dest, nil
 }
 
-func (s *store) updateMatch(ctx context.Context, tx pgx.Tx, input UpdateMatchRequestModel) (*MatchModel, error) {
+func (s *store) updateMatch(ctx context.Context, tx pgx.Tx, model UpdateMatchRequestModel) (*MatchModel, error) {
+	var q db.Querier
+	if tx != nil {
+		q = tx
+	} else {
+		q = s.db
+	}
+
 	sql1 := `
 		with updated_match as (
 			update match 
@@ -257,7 +271,7 @@ func (s *store) updateMatch(ctx context.Context, tx pgx.Tx, input UpdateMatchReq
 	var dest MatchModel
 	var winnerId, winnerName sql.NullString
 
-	err := s.db.QueryRow(ctx, sql1, input.CourtId, input.ScheduledAt, input.PlayerTwoId, input.MatchId, input.SeasonId, input.LeagueId).Scan(&dest.Id, &dest.Court.Id, &dest.Court.Name, &dest.ScheduledAt, &dest.PlayerOne.Id, &dest.PlayerOne.Name, &dest.PlayerTwo.Id, &dest.PlayerTwo.Name, &winnerId, &winnerName, &dest.Score, &dest.Season.Id, &dest.Season.Title, &dest.League.Id, &dest.League.Title, &dest.CreatedAt)
+	err := q.QueryRow(ctx, sql1, model.CourtId, model.ScheduledAt, model.PlayerTwoId, model.MatchId, model.SeasonId, model.LeagueId).Scan(&dest.Id, &dest.Court.Id, &dest.Court.Name, &dest.ScheduledAt, &dest.PlayerOne.Id, &dest.PlayerOne.Name, &dest.PlayerTwo.Id, &dest.PlayerTwo.Name, &winnerId, &winnerName, &dest.Score, &dest.Season.Id, &dest.Season.Title, &dest.League.Id, &dest.League.Title, &dest.CreatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, fmt.Errorf("finding match: %w", response.ErrNotFound)
@@ -278,6 +292,13 @@ func (s *store) updateMatch(ctx context.Context, tx pgx.Tx, input UpdateMatchReq
 }
 
 func (s *store) updatePlayerStatistics(ctx context.Context, tx pgx.Tx, winnerId, playerOneId, playerTwoId string) error {
+	var q db.Querier
+	if tx != nil {
+		q = tx
+	} else {
+		q = s.db
+	}
+
 	sql := `
 		update player
 		set
@@ -291,7 +312,7 @@ func (s *store) updatePlayerStatistics(ctx context.Context, tx pgx.Tx, winnerId,
 		where id in ($2, $3)
 	`
 
-	_, err := tx.Exec(ctx, sql, winnerId, playerOneId, playerTwoId)
+	_, err := q.Exec(ctx, sql, winnerId, playerOneId, playerTwoId)
 	if err != nil {
 		return fmt.Errorf("updating player stats: %v", err)
 	}
@@ -299,7 +320,15 @@ func (s *store) updatePlayerStatistics(ctx context.Context, tx pgx.Tx, winnerId,
 	return nil
 }
 
+// todo: refactor be an atomic operation for one user, then call from service for each player
 func (s *store) updateStandings(ctx context.Context, tx pgx.Tx, seasonId, leagueId, playerOneId, playerTwoId string, pl1Stats MatchStats, pl2Stats MatchStats) error {
+	var q db.Querier
+	if tx != nil {
+		q = tx
+	} else {
+		q = s.db
+	}
+
 	sql := `
 		insert into standing (points, matches_played, matches_won, sets_won, sets_lost, games_won, games_lost, season_id, league_id, player_id)
 		values ($1, 1, $2, $3, $4, $5, $6, $7, $8, $9)
@@ -314,12 +343,12 @@ func (s *store) updateStandings(ctx context.Context, tx pgx.Tx, seasonId, league
 			games_lost = standing.games_lost + $6
 	`
 
-	_, err := tx.Exec(ctx, sql, pl1Stats.Pts, pl1Stats.WonMatches, pl1Stats.SetsWon, pl1Stats.SetsLost, pl1Stats.GamesWon, pl1Stats.GamesLost, seasonId, leagueId, playerOneId)
+	_, err := q.Exec(ctx, sql, pl1Stats.Pts, pl1Stats.WonMatches, pl1Stats.SetsWon, pl1Stats.SetsLost, pl1Stats.GamesWon, pl1Stats.GamesLost, seasonId, leagueId, playerOneId)
 	if err != nil {
 		return fmt.Errorf("updating player one standing: %v", err)
 	}
 
-	_, err = tx.Exec(ctx, sql, pl2Stats.Pts, pl2Stats.WonMatches, pl2Stats.SetsWon, pl2Stats.SetsLost, pl2Stats.GamesWon, pl2Stats.GamesLost, seasonId, leagueId, playerTwoId)
+	_, err = q.Exec(ctx, sql, pl2Stats.Pts, pl2Stats.WonMatches, pl2Stats.SetsWon, pl2Stats.SetsLost, pl2Stats.GamesWon, pl2Stats.GamesLost, seasonId, leagueId, playerTwoId)
 	if err != nil {
 		return fmt.Errorf("updating player two standing: %v", err)
 	}
@@ -328,6 +357,13 @@ func (s *store) updateStandings(ctx context.Context, tx pgx.Tx, seasonId, league
 }
 
 func (s *store) updateMatchScore(ctx context.Context, tx pgx.Tx, seasonId, leagueId, matchId, score, winnerId string) (*MatchModel, error) {
+	var q db.Querier
+	if tx != nil {
+		q = tx
+	} else {
+		q = s.db
+	}
+
 	sql1 := `
 		with updated_match as (
 			update match 
@@ -367,7 +403,7 @@ func (s *store) updateMatchScore(ctx context.Context, tx pgx.Tx, seasonId, leagu
 	var dest MatchModel
 	var nWinnerId, nWinnerName sql.NullString
 
-	err := tx.QueryRow(ctx, sql1, score, winnerId, matchId, seasonId, leagueId).Scan(&dest.Id, &dest.Court.Id, &dest.Court.Name, &dest.ScheduledAt, &dest.PlayerOne.Id, &dest.PlayerOne.Name, &dest.PlayerTwo.Id, &dest.PlayerTwo.Name, &nWinnerId, &nWinnerName, &dest.Score, &dest.Season.Id, &dest.Season.Title, &dest.League.Id, &dest.League.Title, &dest.CreatedAt)
+	err := q.QueryRow(ctx, sql1, score, winnerId, matchId, seasonId, leagueId).Scan(&dest.Id, &dest.Court.Id, &dest.Court.Name, &dest.ScheduledAt, &dest.PlayerOne.Id, &dest.PlayerOne.Name, &dest.PlayerTwo.Id, &dest.PlayerTwo.Name, &nWinnerId, &nWinnerName, &dest.Score, &dest.Season.Id, &dest.Season.Title, &dest.League.Id, &dest.League.Title, &dest.CreatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("updating match score: %v", err)
 	}

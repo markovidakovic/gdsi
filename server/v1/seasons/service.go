@@ -19,11 +19,11 @@ func newService(cfg *config.Config, store *store) *service {
 	}
 }
 
-func (s *service) processCreateSeason(ctx context.Context, input CreateSeasonRequestModel) (SeasonModel, error) {
-	input.CreatorId = ctx.Value(middleware.AccountIdCtxKey).(string)
+func (s *service) processCreateSeason(ctx context.Context, model CreateSeasonRequestModel) (SeasonModel, error) {
+	model.CreatorId = ctx.Value(middleware.AccountIdCtxKey).(string)
 
 	// call the store
-	sm, err := s.store.insertSeason(ctx, input)
+	sm, err := s.store.insertSeason(ctx, nil, model)
 	if err != nil {
 		return sm, err
 	}

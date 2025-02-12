@@ -91,21 +91,21 @@ func (h *handler) getPlayer(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/players/{playerId} [put]
 func (h *handler) updatePlayer(w http.ResponseWriter, r *http.Request) {
-	var input UpdatePlayerRequestModel
-	err := json.NewDecoder(r.Body).Decode(&input)
+	var model UpdatePlayerRequestModel
+	err := json.NewDecoder(r.Body).Decode(&model)
 	if err != nil {
 		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))
 		return
 	}
 
-	// validate input
-	if valErr := input.Validate(); valErr != nil {
+	// validate model
+	if valErr := model.Validate(); valErr != nil {
 		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
 		return
 	}
 
 	// call store
-	result, err := h.store.updatePlayer(r.Context(), chi.URLParam(r, "playerId"), input)
+	result, err := h.store.updatePlayer(r.Context(), nil, chi.URLParam(r, "playerId"), model)
 	if err != nil {
 		switch {
 		case errors.Is(err, response.ErrNotFound):

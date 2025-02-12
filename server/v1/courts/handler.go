@@ -37,24 +37,24 @@ func newHandler(cfg *config.Config, db *db.Conn) *handler {
 // @Security BearerAuth
 // @Router /v1/courts [post]
 func (h *handler) createCourt(w http.ResponseWriter, r *http.Request) {
-	var input CreateCourtRequestModel
-	err := json.NewDecoder(r.Body).Decode(&input)
+	var model CreateCourtRequestModel
+	err := json.NewDecoder(r.Body).Decode(&model)
 	if err != nil {
 		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))
 		return
 	}
 
 	// validate
-	if valErr := input.Validate(); valErr != nil {
+	if valErr := model.Validate(); valErr != nil {
 		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
 		return
 	}
 
 	// attach account id
-	input.CreatorId = r.Context().Value(middleware.AccountIdCtxKey).(string)
+	model.CreatorId = r.Context().Value(middleware.AccountIdCtxKey).(string)
 
 	// store call
-	result, err := h.store.insertCourt(r.Context(), input)
+	result, err := h.store.insertCourt(r.Context(), nil, model.Name, model.CreatorId)
 	if err != nil {
 		switch {
 		default:
@@ -133,20 +133,20 @@ func (h *handler) getCourt(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/courts/{courtId} [put]
 func (h *handler) updateCourt(w http.ResponseWriter, r *http.Request) {
-	var input UpdateCourtRequestModel
-	err := json.NewDecoder(r.Body).Decode(&input)
+	var model UpdateCourtRequestModel
+	err := json.NewDecoder(r.Body).Decode(&model)
 	if err != nil {
 		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))
 		return
 	}
 
-	// validate input
-	if valErr := input.Validate(); valErr != nil {
+	// validate model
+	if valErr := model.Validate(); valErr != nil {
 		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
 		return
 	}
 
-	result, err := h.store.updateCourt(r.Context(), chi.URLParam(r, "courtId"), input)
+	result, err := h.store.updateCourt(r.Context(), nil, chi.URLParam(r, "courtId"), model.Name)
 	if err != nil {
 		switch {
 		case errors.Is(err, response.ErrNotFound):
@@ -175,7 +175,7 @@ func (h *handler) updateCourt(w http.ResponseWriter, r *http.Request) {
 // @Router /v1/courts/{courtId} [delete]
 func (h *handler) deleteCourt(w http.ResponseWriter, r *http.Request) {
 	// call store
-	err := h.store.deleteCourt(r.Context(), chi.URLParam(r, "courtId"))
+	err := h.store.deleteCourt(r.Context(), nil, chi.URLParam(r, "courtId"))
 	if err != nil {
 		switch {
 		case errors.Is(err, response.ErrNotFound):

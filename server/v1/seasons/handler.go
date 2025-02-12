@@ -36,21 +36,21 @@ func newHandler(cfg *config.Config, db *db.Conn) *handler {
 // @Security BearerAuth
 // @Router /v1/seasons [post]
 func (h *handler) createSeason(w http.ResponseWriter, r *http.Request) {
-	var input CreateSeasonRequestModel
-	err := json.NewDecoder(r.Body).Decode(&input)
+	var model CreateSeasonRequestModel
+	err := json.NewDecoder(r.Body).Decode(&model)
 	if err != nil {
 		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))
 		return
 	}
 
-	// validate input
-	if valErr := input.Validate(); valErr != nil {
+	// validate model
+	if valErr := model.Validate(); valErr != nil {
 		response.WriteFailure(w, response.NewBadRequestFailure("validation failed"))
 		return
 	}
 
 	// call the service
-	result, err := h.service.processCreateSeason(r.Context(), input)
+	result, err := h.service.processCreateSeason(r.Context(), model)
 	if err != nil {
 		switch {
 		default:
@@ -131,20 +131,20 @@ func (h *handler) getSeason(w http.ResponseWriter, r *http.Request) {
 // @Router /v1/seasons/{seasonId} [put]
 func (h *handler) updateSeason(w http.ResponseWriter, r *http.Request) {
 	// decode req body
-	var input UpdateSeasonRequestModel
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+	var model UpdateSeasonRequestModel
+	if err := json.NewDecoder(r.Body).Decode(&model); err != nil {
 		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))
 		return
 	}
 
-	// validate input
-	if valErr := input.Validate(); valErr != nil {
+	// validate model
+	if valErr := model.Validate(); valErr != nil {
 		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
 		return
 	}
 
 	// call the store
-	result, err := h.store.updateSeason(r.Context(), chi.URLParam(r, "seasonId"), input)
+	result, err := h.store.updateSeason(r.Context(), chi.URLParam(r, "seasonId"), model)
 	if err != nil {
 		switch {
 		case errors.Is(err, response.ErrNotFound):
@@ -173,7 +173,7 @@ func (h *handler) updateSeason(w http.ResponseWriter, r *http.Request) {
 // @Router /v1/seasons/{seasonId} [delete]
 func (h *handler) deleteSeason(w http.ResponseWriter, r *http.Request) {
 	// call the store
-	err := h.store.deleteSeason(r.Context(), chi.URLParam(r, "seasonId"))
+	err := h.store.deleteSeason(r.Context(), nil, chi.URLParam(r, "seasonId"))
 	if err != nil {
 		switch {
 		case errors.Is(err, response.ErrNotFound):

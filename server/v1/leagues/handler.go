@@ -38,24 +38,24 @@ func newHandler(cfg *config.Config, db *db.Conn) *handler {
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues [post]
 func (h *handler) createLeague(w http.ResponseWriter, r *http.Request) {
-	// decode input
-	var input CreateLeagueRequestModel
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+	// decode model
+	var model CreateLeagueRequestModel
+	if err := json.NewDecoder(r.Body).Decode(&model); err != nil {
 		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))
 		return
 	}
 
-	// validate input
-	if valErr := input.Validate(); valErr != nil {
+	// validate model
+	if valErr := model.Validate(); valErr != nil {
 		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
 		return
 	}
 
-	input.SeasonId = chi.URLParam(r, "seasonId")
-	input.CreatorId = r.Context().Value(middleware.AccountIdCtxKey).(string)
+	model.SeasonId = chi.URLParam(r, "seasonId")
+	model.CreatorId = r.Context().Value(middleware.AccountIdCtxKey).(string)
 
 	// call the service
-	result, err := h.service.processCreateLeague(r.Context(), input)
+	result, err := h.service.processCreateLeague(r.Context(), model)
 	if err != nil {
 		switch {
 		case errors.Is(err, response.ErrNotFound):
@@ -141,24 +141,24 @@ func (h *handler) getLeague(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId} [put]
 func (h *handler) updateLeague(w http.ResponseWriter, r *http.Request) {
-	// decode input
-	var input UpdateLeagueRequestModel
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+	// decode model
+	var model UpdateLeagueRequestModel
+	if err := json.NewDecoder(r.Body).Decode(&model); err != nil {
 		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))
 		return
 	}
 
-	// validate input
-	if valErr := input.Validate(); valErr != nil {
+	// validate model
+	if valErr := model.Validate(); valErr != nil {
 		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
 		return
 	}
 
-	input.SeasonId = chi.URLParam(r, "seasonId")
-	input.LeagueId = chi.URLParam(r, "leagueId")
+	model.SeasonId = chi.URLParam(r, "seasonId")
+	model.LeagueId = chi.URLParam(r, "leagueId")
 
 	// call the service
-	result, err := h.service.processUpdateLeague(r.Context(), input)
+	result, err := h.service.processUpdateLeague(r.Context(), model)
 	if err != nil {
 		switch {
 		case errors.Is(err, response.ErrNotFound):

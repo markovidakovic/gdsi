@@ -32,23 +32,23 @@ func newHandler(cfg *config.Config, db *db.Conn) *handler {
 // @Failure 500 {object} response.Failure "Internal server error"
 // @Router /v1/auth/signup [post]
 func (h *handler) signup(w http.ResponseWriter, r *http.Request) {
-	var input SignupRequestModel
+	var model SignupRequestModel
 
 	// decode request body
-	err := json.NewDecoder(r.Body).Decode(&input)
+	err := json.NewDecoder(r.Body).Decode(&model)
 	if err != nil {
 		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))
 		return
 	}
 
 	// validation
-	if valErr := input.Validate(); valErr != nil {
+	if valErr := model.Validate(); valErr != nil {
 		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
 		return
 	}
 
 	// call the service
-	accessToken, refreshToken, err := h.service.processSignup(r.Context(), input)
+	accessToken, refreshToken, err := h.service.processSignup(r.Context(), model)
 	if err != nil {
 		switch {
 		case errors.Is(err, response.ErrDuplicateRecord):
@@ -78,17 +78,17 @@ func (h *handler) signup(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} response.Failure "Internal server error"
 // @Router /v1/auth/tokens/access [post]
 func (h *handler) login(w http.ResponseWriter, r *http.Request) {
-	var input LoginRequestModel
+	var model LoginRequestModel
 
 	// decode request body
-	err := json.NewDecoder(r.Body).Decode(&input)
+	err := json.NewDecoder(r.Body).Decode(&model)
 	if err != nil {
 		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))
 		return
 	}
 
-	// validate input
-	if valErr := input.Validate(); valErr != nil {
+	// validate model
+	if valErr := model.Validate(); valErr != nil {
 		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
 		return
 	}
@@ -105,7 +105,7 @@ func (h *handler) login(w http.ResponseWriter, r *http.Request) {
 	// fmt.Printf("r.UserAgent(): %v\n", r.UserAgent())
 
 	// Call the service
-	accessToken, refreshToken, err := h.service.processLogin(r.Context(), input)
+	accessToken, refreshToken, err := h.service.processLogin(r.Context(), model)
 	if err != nil {
 		switch {
 		case errors.Is(err, response.ErrNotFound):
@@ -134,22 +134,22 @@ func (h *handler) login(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} response.Failure "Internal server error"
 // @Router /v1/auth/tokens/refresh [post]
 func (h *handler) refreshToken(w http.ResponseWriter, r *http.Request) {
-	var input RefreshTokenRequestModel
+	var model RefreshTokenRequestModel
 
 	// decode request body
-	err := json.NewDecoder(r.Body).Decode(&input)
+	err := json.NewDecoder(r.Body).Decode(&model)
 	if err != nil {
 		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))
 		return
 	}
 
-	// validate input
-	if valErr := input.Validate(); valErr != nil {
+	// validate model
+	if valErr := model.Validate(); valErr != nil {
 		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
 		return
 	}
 
-	access, refresh, err := h.service.processRefreshTokens(r.Context(), input)
+	access, refresh, err := h.service.processRefreshTokens(r.Context(), model)
 	if err != nil {
 		switch {
 		case errors.Is(err, response.ErrNotFound):

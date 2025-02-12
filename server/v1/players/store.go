@@ -127,7 +127,14 @@ func (s *store) findPlayer(ctx context.Context, playerId string) (*PlayerModel, 
 	return &dest, nil
 }
 
-func (s *store) updatePlayer(ctx context.Context, playerId string, input UpdatePlayerRequestModel) (*PlayerModel, error) {
+func (s *store) updatePlayer(ctx context.Context, tx pgx.Tx, playerId string, model UpdatePlayerRequestModel) (*PlayerModel, error) {
+	var q db.Querier
+	if tx != nil {
+		q = tx
+	} else {
+		q = s.db
+	}
+
 	sql1 := `
 		with updated_player as (
 			update player 
@@ -159,7 +166,7 @@ func (s *store) updatePlayer(ctx context.Context, playerId string, input UpdateP
 	var dest PlayerModel
 	var leagueId, leagueTitle sql.NullString
 
-	err := s.db.QueryRow(ctx, sql1, input.Height, input.Weight, input.Handedness, input.Racket, playerId).Scan(&dest.Id, &dest.Height, &dest.Weight, &dest.Handedness, &dest.Racket, &dest.MatchesExpected, &dest.MatchesPlayed, &dest.MatchesWon, &dest.MatchesScheduled, &dest.SeasonsPlayed, &dest.Account.Id, &dest.Account.Name, &leagueId, &leagueTitle, &dest.CreatedAt)
+	err := q.QueryRow(ctx, sql1, model.Height, model.Weight, model.Handedness, model.Racket, playerId).Scan(&dest.Id, &dest.Height, &dest.Weight, &dest.Handedness, &dest.Racket, &dest.MatchesExpected, &dest.MatchesPlayed, &dest.MatchesWon, &dest.MatchesScheduled, &dest.SeasonsPlayed, &dest.Account.Id, &dest.Account.Name, &leagueId, &leagueTitle, &dest.CreatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, response.ErrNotFound

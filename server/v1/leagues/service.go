@@ -20,9 +20,9 @@ func newService(cfg *config.Config, store *store) *service {
 	}
 }
 
-func (s *service) processCreateLeague(ctx context.Context, input CreateLeagueRequestModel) (*LeagueModel, error) {
+func (s *service) processCreateLeague(ctx context.Context, model CreateLeagueRequestModel) (*LeagueModel, error) {
 	// check if season exists
-	seasonExists, err := s.store.checkSeasonExistance(ctx, input.SeasonId)
+	seasonExists, err := s.store.checkSeasonExistance(ctx, model.SeasonId)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func (s *service) processCreateLeague(ctx context.Context, input CreateLeagueReq
 	}
 
 	// create league
-	lm, err := s.store.insertLeague(ctx, input)
+	lm, err := s.store.insertLeague(ctx, nil, model.Title, model.Description, model.CreatorId, model.SeasonId)
 	if err != nil {
 		return nil, err
 	}
@@ -80,9 +80,9 @@ func (s *service) processFindLeague(ctx context.Context, seasonId, leagueId stri
 	return lm, nil
 }
 
-func (s *service) processUpdateLeague(ctx context.Context, input UpdateLeagueRequestModel) (*LeagueModel, error) {
+func (s *service) processUpdateLeague(ctx context.Context, model UpdateLeagueRequestModel) (*LeagueModel, error) {
 	// check if season exists
-	seasonExists, err := s.store.checkSeasonExistance(ctx, input.SeasonId)
+	seasonExists, err := s.store.checkSeasonExistance(ctx, model.SeasonId)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func (s *service) processUpdateLeague(ctx context.Context, input UpdateLeagueReq
 	}
 
 	// update league
-	lm, err := s.store.updateLeague(ctx, input)
+	lm, err := s.store.updateLeague(ctx, nil, model.Title, model.Description, model.SeasonId, model.LeagueId)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +112,7 @@ func (s *service) processDeleteLeague(ctx context.Context, seasonId, leagueId st
 	}
 
 	// delete league
-	err = s.store.deleteLeague(ctx, seasonId, leagueId)
+	err = s.store.deleteLeague(ctx, nil, seasonId, leagueId)
 	if err != nil {
 		return err
 	}

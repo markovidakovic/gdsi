@@ -20,7 +20,14 @@ func newStore(db *db.Conn) *store {
 	}
 }
 
-func (s *store) insertLeague(ctx context.Context, input CreateLeagueRequestModel) (LeagueModel, error) {
+func (s *store) insertLeague(ctx context.Context, tx pgx.Tx, title string, description *string, creatorId string, seasonId string) (LeagueModel, error) {
+	var q db.Querier
+	if tx != nil {
+		q = tx
+	} else {
+		q = s.db
+	}
+
 	sql1 := `
 		with inserted_league as (
 			insert into league (title, description, season_id, creator_id)
@@ -42,7 +49,7 @@ func (s *store) insertLeague(ctx context.Context, input CreateLeagueRequestModel
 	`
 
 	var dest LeagueModel
-	err := s.db.QueryRow(ctx, sql1, input.Title, input.Description, input.SeasonId, input.CreatorId).Scan(&dest.Id, &dest.Title, &dest.Description, &dest.Season.Id, &dest.Season.Title, &dest.Creator.Id, &dest.Creator.Name, &dest.CreatedAt)
+	err := q.QueryRow(ctx, sql1, title, description, seasonId, creatorId).Scan(&dest.Id, &dest.Title, &dest.Description, &dest.Season.Id, &dest.Season.Title, &dest.Creator.Id, &dest.Creator.Name, &dest.CreatedAt)
 	if err != nil {
 		return dest, fmt.Errorf("inserting league: %v", err)
 	}
@@ -122,7 +129,14 @@ func (s *store) findLeague(ctx context.Context, seasonId, leagueId string) (*Lea
 	return &dest, nil
 }
 
-func (s *store) updateLeague(ctx context.Context, input UpdateLeagueRequestModel) (LeagueModel, error) {
+func (s *store) updateLeague(ctx context.Context, tx pgx.Tx, title string, description *string, seasonId, leagueId string) (LeagueModel, error) {
+	var q db.Querier
+	if tx != nil {
+		q = tx
+	} else {
+		q = s.db
+	}
+
 	sql1 := `
 		with updated_league as (
 			update league
@@ -145,25 +159,35 @@ func (s *store) updateLeague(ctx context.Context, input UpdateLeagueRequestModel
 	`
 
 	var dest LeagueModel
-	err := s.db.QueryRow(ctx, sql1, input.Title, input.Description, input.LeagueId, input.SeasonId).Scan(&dest.Id, &dest.Title, &dest.Description, &dest.Season.Id, &dest.Season.Title, &dest.Creator.Id, &dest.Creator.Name, &dest.CreatedAt)
+	err := q.QueryRow(ctx, sql1, title, description, leagueId, seasonId).Scan(&dest.Id, &dest.Title, &dest.Description, &dest.Season.Id, &dest.Season.Title, &dest.Creator.Id, &dest.Creator.Name, &dest.CreatedAt)
 	if err != nil {
-		return dest, fmt.Errorf("inserting league: %v", err)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return dest, fmt.Errorf("updating league: %w", response.ErrNotFound)
+		}
+		return dest, fmt.Errorf("updating league: %v", err)
 	}
 
 	return dest, nil
 }
 
-func (s *store) deleteLeague(ctx context.Context, seasonId, leagueId string) error {
-	sql1 := `
+func (s *store) deleteLeague(ctx context.Context, tx pgx.Tx, seasonId, leagueId string) error {
+	var q db.Querier
+	if tx != nil {
+		q = tx
+	} else {
+		q = s.db
+	}
+
+	sql := `
 		delete from league where id = $1 and season_id = $2
 	`
 
-	ct, err := s.db.Exec(ctx, sql1, leagueId, seasonId)
+	ct, err := q.Exec(ctx, sql, leagueId, seasonId)
 	if err != nil {
 		return err
 	}
 	if ct.RowsAffected() == 0 {
-		return fmt.Errorf("finding league: %w", response.ErrNotFound)
+		return fmt.Errorf("deleting league: %w", response.ErrNotFound)
 	}
 
 	return nil

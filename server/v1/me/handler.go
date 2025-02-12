@@ -63,15 +63,15 @@ func (h *handler) getMe(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/me [put]
 func (h *handler) updateMe(w http.ResponseWriter, r *http.Request) {
-	var input UpdateMeRequestModel
-	err := json.NewDecoder(r.Body).Decode(&input)
+	var model UpdateMeRequestModel
+	err := json.NewDecoder(r.Body).Decode(&model)
 	if err != nil {
 		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))
 		return
 	}
 
 	// validation
-	if valErr := input.Validate(); valErr != nil {
+	if valErr := model.Validate(); valErr != nil {
 		response.WriteFailure(w, response.NewBadRequestFailure("validation failed"))
 		return
 	}
@@ -79,7 +79,7 @@ func (h *handler) updateMe(w http.ResponseWriter, r *http.Request) {
 	// get account id
 	accountId := r.Context().Value(middleware.AccountIdCtxKey).(string)
 
-	result, err := h.store.updateMe(r.Context(), accountId, input)
+	result, err := h.store.updateMe(r.Context(), nil, accountId, model)
 	if err != nil {
 		switch {
 		case errors.Is(err, response.ErrNotFound):

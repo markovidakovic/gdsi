@@ -39,28 +39,28 @@ func newHandler(cfg *config.Config, db *db.Conn) *handler {
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId}/matches [post]
 func (h *handler) createMatch(w http.ResponseWriter, r *http.Request) {
-	// decode input
-	var input CreateMatchRequestModel
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+	// decode model
+	var model CreateMatchRequestModel
+	if err := json.NewDecoder(r.Body).Decode(&model); err != nil {
 		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))
 		return
 	}
 
-	// validate input
-	if valErr := input.Validate(); valErr != nil {
+	// validate model
+	if valErr := model.Validate(); valErr != nil {
 		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
 		return
 	}
 
 	ctx := r.Context()
 
-	// set additional values in input
-	input.SeasonId = chi.URLParam(r, "seasonId")
-	input.LeagueId = chi.URLParam(r, "leagueId")
-	input.PlayerOneId = ctx.Value(middleware.PlayerIdCtxKey).(string)
+	// set additional values in model
+	model.SeasonId = chi.URLParam(r, "seasonId")
+	model.LeagueId = chi.URLParam(r, "leagueId")
+	model.PlayerOneId = ctx.Value(middleware.PlayerIdCtxKey).(string)
 
 	// call the service
-	result, err := h.service.processCreateMatch(ctx, input)
+	result, err := h.service.processCreateMatch(ctx, model)
 	if err != nil {
 		switch {
 		case errors.Is(err, response.ErrBadRequest):
@@ -162,27 +162,27 @@ func (h *handler) getMatch(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId}/matches/{matchId} [put]
 func (h *handler) updateMatch(w http.ResponseWriter, r *http.Request) {
-	// decode input
-	var input UpdateMatchRequestModel
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+	// decode model
+	var model UpdateMatchRequestModel
+	if err := json.NewDecoder(r.Body).Decode(&model); err != nil {
 		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))
 		return
 	}
 
-	if valErr := input.Validate(); valErr != nil {
+	if valErr := model.Validate(); valErr != nil {
 		response.WriteFailure(w, response.NewBadRequestFailure("validation failed"))
 		return
 	}
 
 	ctx := r.Context()
 
-	input.SeasonId = chi.URLParam(r, "seasonId")
-	input.LeagueId = chi.URLParam(r, "leagueId")
-	input.MatchId = chi.URLParam(r, "matchId")
-	input.PlayerOneId = ctx.Value(middleware.PlayerIdCtxKey).(string)
+	model.SeasonId = chi.URLParam(r, "seasonId")
+	model.LeagueId = chi.URLParam(r, "leagueId")
+	model.MatchId = chi.URLParam(r, "matchId")
+	model.PlayerOneId = ctx.Value(middleware.PlayerIdCtxKey).(string)
 
 	// call the service
-	result, err := h.service.processUpdateMatch(ctx, input)
+	result, err := h.service.processUpdateMatch(ctx, model)
 	if err != nil {
 		switch {
 		case errors.Is(err, response.ErrBadRequest):

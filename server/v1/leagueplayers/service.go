@@ -97,7 +97,7 @@ func (s *service) processAssignLeaguePlayer(ctx context.Context, seasonId, leagu
 	}
 
 	// update player current league
-	lp, err := s.store.updatePlayerCurrentLeague(ctx, &leagueId, playerId)
+	lp, err := s.store.updatePlayerCurrentLeague(ctx, nil, &leagueId, playerId)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +126,7 @@ func (s *service) processRemoveLeaguePlayer(ctx context.Context, seasonId, leagu
 	}
 
 	// update player current league
-	lp, err := s.store.updatePlayerCurrentLeague(ctx, nil, playerId)
+	lp, err := s.store.updatePlayerCurrentLeague(ctx, nil, nil, playerId)
 	if err != nil {
 		return nil, err
 	}
