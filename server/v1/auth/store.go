@@ -23,10 +23,10 @@ func newStore(db *db.Conn) *store {
 }
 
 func (s *store) insertAccount(ctx context.Context, tx pgx.Tx, model SignupRequestModel) (AccountModel, error) {
-	sql1 := `
+	sql := `
 		insert into account (name, email, dob, gender, phone_number, password)
 		values ($1, $2, $3, $4, $5, $6)
-		returning id, name, email, dob, gender, phone_number, password, role, created_at
+		returning id, name, email, dob, gender, phone_number, password, role, NULL as player_id, created_at
 	`
 
 	var q db.Querier
@@ -37,9 +37,10 @@ func (s *store) insertAccount(ctx context.Context, tx pgx.Tx, model SignupReques
 	}
 
 	var dest AccountModel
-	err := q.QueryRow(ctx, sql1, model.Name, model.Email, model.Dob, model.Gender, model.PhoneNumber, model.Password).Scan(&dest.Id, &dest.Name, &dest.Email, &dest.Dob, &dest.Gender, &dest.PhoneNumber, &dest.Password, &dest.Role, &dest.CreatedAt)
+	row := q.QueryRow(ctx, sql, model.Name, model.Email, model.Dob, model.Gender, model.PhoneNumber, model.Password)
+	err := dest.ScanRow(row)
 	if err != nil {
-		return dest, response.ErrInternal
+		return dest, fmt.Errorf("inserting account: %w", err)
 	}
 
 	return dest, nil
@@ -73,9 +74,19 @@ func (s *store) findAccountByEmail(ctx context.Context, tx pgx.Tx, email string)
 	var dest AccountModel
 
 	sql := `
-		select account.id, account.name, account.email, account.dob, account.gender, account.phone_number, account.password, account.role, player.id as player_id, account.created_at
+		select 
+			account.id as account_id, 
+			account.name as account_name, 
+			account.email as account_email, 
+			account.dob as account_dob, 
+			account.gender as account_gender, 
+			account.phone_number as account_phone_number, 
+			account.password as account_password, 
+			account.role as account_role, 
+			player.id as player_id, 
+			account.created_at as account_created_at
 		from account
-		join player on player.account_id = account.id
+		left join player on player.account_id = account.id
 		where account.email = $1
 	`
 
@@ -86,23 +97,10 @@ func (s *store) findAccountByEmail(ctx context.Context, tx pgx.Tx, email string)
 		q = s.db
 	}
 
-	err := q.QueryRow(ctx, sql, email).Scan(
-		&dest.Id,
-		&dest.Name,
-		&dest.Email,
-		&dest.Dob,
-		&dest.Gender,
-		&dest.PhoneNumber,
-		&dest.Password,
-		&dest.Role,
-		&dest.PlayerId,
-		&dest.CreatedAt,
-	)
+	row := q.QueryRow(ctx, sql, email)
+	err := dest.ScanRow(row)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("finding account: %w", response.ErrNotFound)
-		}
-		return nil, err
+		return nil, fmt.Errorf("finding account by email: %w", err)
 	}
 
 	return &dest, nil
@@ -153,6 +151,13 @@ func (s *store) revokeAccountRefreshTokens(ctx context.Context, tx pgx.Tx, accou
 }
 
 func (s *store) findRefreshTokenByHash(ctx context.Context, tx pgx.Tx, rt string) (*RefreshTokenModel, error) {
+	var q db.Querier
+	if tx != nil {
+		q = tx
+	} else {
+		q = s.db
+	}
+
 	sql := `
 		select
 			refresh_token.id,
@@ -175,12 +180,10 @@ func (s *store) findRefreshTokenByHash(ctx context.Context, tx pgx.Tx, rt string
 
 	var dest RefreshTokenModel
 
-	err := tx.QueryRow(ctx, sql, rt).Scan(&dest.Id, &dest.AccountId, &dest.AccountRole, &dest.TokenHash, &dest.DeviceId, &dest.IpAddress, &dest.UserAgent, &dest.IssuedAt, &dest.ExpiresAt, &dest.LastUsedAt, &dest.IsRevoked, &dest.PlayerId)
+	row := q.QueryRow(ctx, sql, rt)
+	err := dest.ScanRow(row)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("finding refresh token: %w", response.ErrNotFound)
-		}
-		return nil, err
+		return &dest, fmt.Errorf("finding refresh token: %w", err)
 	}
 
 	return &dest, nil

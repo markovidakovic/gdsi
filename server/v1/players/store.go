@@ -2,13 +2,10 @@ package players
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/markovidakovic/gdsi/server/db"
-	"github.com/markovidakovic/gdsi/server/response"
 )
 
 type store struct {
@@ -22,7 +19,7 @@ func newStore(db *db.Conn) *store {
 }
 
 func (s *store) findPlayers(ctx context.Context) ([]PlayerModel, error) {
-	sql1 := `
+	sql := `
 		select
 			player.id,
 			player.height,
@@ -47,7 +44,7 @@ func (s *store) findPlayers(ctx context.Context) ([]PlayerModel, error) {
 
 	var dest = []PlayerModel{}
 
-	rows, err := s.db.Query(ctx, sql1)
+	rows, err := s.db.Query(ctx, sql)
 	if err != nil {
 		return nil, fmt.Errorf("quering players: %v", err)
 	}
@@ -55,19 +52,9 @@ func (s *store) findPlayers(ctx context.Context) ([]PlayerModel, error) {
 
 	for rows.Next() {
 		var pm PlayerModel
-		var leagueId, leagueTitle sql.NullString
-		err := rows.Scan(&pm.Id, &pm.Height, &pm.Weight, &pm.Handedness, &pm.Racket, &pm.MatchesExpected, &pm.MatchesPlayed, &pm.MatchesWon, &pm.MatchesScheduled, &pm.SeasonsPlayed, &pm.Account.Id, &pm.Account.Name, &leagueId, &leagueTitle, &pm.CreatedAt)
+		err := pm.ScanRows(rows)
 		if err != nil {
-			return nil, fmt.Errorf("scanning player row: %v", err)
-		}
-
-		if !leagueId.Valid {
-			pm.CurrentLeague = nil
-		} else {
-			pm.CurrentLeague = &CurrentLeagueModel{
-				Id:    leagueId.String,
-				Title: leagueTitle.String,
-			}
+			return nil, err
 		}
 
 		dest = append(dest, pm)
@@ -81,7 +68,7 @@ func (s *store) findPlayers(ctx context.Context) ([]PlayerModel, error) {
 }
 
 func (s *store) findPlayer(ctx context.Context, playerId string) (*PlayerModel, error) {
-	sql1 := `
+	sql := `
 		select
 			player.id,
 			player.height,
@@ -105,23 +92,11 @@ func (s *store) findPlayer(ctx context.Context, playerId string) (*PlayerModel, 
 	`
 
 	var dest PlayerModel
-	var leagueId, leagueTitle sql.NullString
 
-	err := s.db.QueryRow(ctx, sql1, playerId).Scan(&dest.Id, &dest.Height, &dest.Weight, &dest.Handedness, &dest.Racket, &dest.MatchesExpected, &dest.MatchesPlayed, &dest.MatchesWon, &dest.MatchesScheduled, &dest.SeasonsPlayed, &dest.Account.Id, &dest.Account.Name, &leagueId, &leagueTitle, &dest.CreatedAt)
+	row := s.db.QueryRow(ctx, sql, playerId)
+	err := dest.ScanRow(row)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, response.ErrNotFound
-		}
-		return nil, err
-	}
-
-	if !leagueId.Valid {
-		dest.CurrentLeague = nil
-	} else {
-		dest.CurrentLeague = &CurrentLeagueModel{
-			Id:    leagueId.String,
-			Title: leagueTitle.String,
-		}
+		return nil, fmt.Errorf("finding player: %w", err)
 	}
 
 	return &dest, nil
@@ -135,7 +110,7 @@ func (s *store) updatePlayer(ctx context.Context, tx pgx.Tx, playerId string, mo
 		q = s.db
 	}
 
-	sql1 := `
+	sql := `
 		with updated_player as (
 			update player 
 			set height = $1, weight = $2, handedness = $3, racket = $4
@@ -164,23 +139,11 @@ func (s *store) updatePlayer(ctx context.Context, tx pgx.Tx, playerId string, mo
 	`
 
 	var dest PlayerModel
-	var leagueId, leagueTitle sql.NullString
 
-	err := q.QueryRow(ctx, sql1, model.Height, model.Weight, model.Handedness, model.Racket, playerId).Scan(&dest.Id, &dest.Height, &dest.Weight, &dest.Handedness, &dest.Racket, &dest.MatchesExpected, &dest.MatchesPlayed, &dest.MatchesWon, &dest.MatchesScheduled, &dest.SeasonsPlayed, &dest.Account.Id, &dest.Account.Name, &leagueId, &leagueTitle, &dest.CreatedAt)
+	row := q.QueryRow(ctx, sql, model.Height, model.Weight, model.Handedness, model.Racket, playerId)
+	err := dest.ScanRow(row)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, response.ErrNotFound
-		}
-		return nil, err
-	}
-
-	if !leagueId.Valid {
-		dest.CurrentLeague = nil
-	} else {
-		dest.CurrentLeague = &CurrentLeagueModel{
-			Id:    leagueId.String,
-			Title: leagueTitle.String,
-		}
+		return nil, fmt.Errorf("updating player: %w", err)
 	}
 
 	return &dest, nil

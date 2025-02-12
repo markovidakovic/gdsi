@@ -65,7 +65,12 @@ definitions:
       created_at:
         type: string
       creator:
-        $ref: '#/definitions/courts.CreatorModel'
+        properties:
+          id:
+            type: string
+          name:
+            type: string
+        type: object
       id:
         type: string
       name:
@@ -73,13 +78,6 @@ definitions:
     type: object
   courts.CreateCourtRequestModel:
     properties:
-      name:
-        type: string
-    type: object
-  courts.CreatorModel:
-    properties:
-      id:
-        type: string
       name:
         type: string
     type: object
@@ -209,8 +207,6 @@ definitions:
     type: object
   me.CurrentLeagueModel:
     properties:
-      created_at:
-        type: string
       id:
         type: string
       title:
@@ -239,14 +235,10 @@ definitions:
     type: object
   me.PlayerModel:
     properties:
-      activity_ratio:
-        type: number
       created_at:
         type: string
       current_league:
         $ref: '#/definitions/me.CurrentLeagueModel'
-      elo:
-        type: integer
       handedness:
         type: string
       height:
@@ -263,13 +255,9 @@ definitions:
         type: integer
       racket:
         type: string
-      ranking:
-        type: integer
       seasons_played:
         type: integer
       weight:
-        type: number
-      winning_ratio:
         type: number
     type: object
   me.UpdateMeRequestModel:
@@ -309,14 +297,10 @@ definitions:
     properties:
       account:
         $ref: '#/definitions/players.AccountModel'
-      activity_ratio:
-        type: number
       created_at:
         type: string
       current_league:
         $ref: '#/definitions/players.CurrentLeagueModel'
-      elo:
-        type: integer
       handedness:
         type: string
       height:
@@ -333,13 +317,9 @@ definitions:
         type: integer
       racket:
         type: string
-      ranking:
-        type: integer
       seasons_played:
         type: integer
       weight:
-        type: number
-      winning_ratio:
         type: number
     type: object
   players.UpdatePlayerRequestModel:
@@ -393,19 +373,17 @@ definitions:
       title:
         type: string
     type: object
-  seasons.CreatorModel:
-    properties:
-      id:
-        type: string
-      name:
-        type: string
-    type: object
   seasons.SeasonModel:
     properties:
       created_at:
         type: string
       creator:
-        $ref: '#/definitions/seasons.CreatorModel'
+        properties:
+          id:
+            type: string
+          name:
+            type: string
+        type: object
       description:
         type: string
       end_date:
@@ -428,27 +406,6 @@ definitions:
       title:
         type: string
     type: object
-  standings.LeagueModel:
-    properties:
-      id:
-        type: string
-      title:
-        type: string
-    type: object
-  standings.PlayerModel:
-    properties:
-      id:
-        type: string
-      name:
-        type: string
-    type: object
-  standings.SeasonModel:
-    properties:
-      id:
-        type: string
-      title:
-        type: string
-    type: object
   standings.StandingModel:
     properties:
       created_at:
@@ -460,17 +417,32 @@ definitions:
       id:
         type: string
       league:
-        $ref: '#/definitions/standings.LeagueModel'
+        properties:
+          id:
+            type: string
+          name:
+            type: string
+        type: object
       matches_played:
         type: integer
       matches_won:
         type: integer
       player:
-        $ref: '#/definitions/standings.PlayerModel'
+        properties:
+          id:
+            type: string
+          name:
+            type: string
+        type: object
       points:
         type: integer
       season:
-        $ref: '#/definitions/standings.SeasonModel'
+        properties:
+          id:
+            type: string
+          name:
+            type: string
+        type: object
       sets_lost:
         type: integer
       sets_won:

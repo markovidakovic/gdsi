@@ -144,7 +144,7 @@ func (h *handler) updateSeason(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// call the store
-	result, err := h.store.updateSeason(r.Context(), chi.URLParam(r, "seasonId"), model)
+	result, err := h.store.updateSeason(r.Context(), nil, chi.URLParam(r, "seasonId"), model)
 	if err != nil {
 		switch {
 		case errors.Is(err, response.ErrNotFound):

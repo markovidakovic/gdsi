@@ -2299,7 +2299,15 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "creator": {
-                    "$ref": "#/definitions/courts.CreatorModel"
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string"
+                        },
+                        "name": {
+                            "type": "string"
+                        }
+                    }
                 },
                 "id": {
                     "type": "string"
@@ -2312,17 +2320,6 @@ const docTemplate = `{
         "courts.CreateCourtRequestModel": {
             "type": "object",
             "properties": {
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "courts.CreatorModel": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
                 "name": {
                     "type": "string"
                 }
@@ -2524,9 +2521,6 @@ const docTemplate = `{
         "me.CurrentLeagueModel": {
             "type": "object",
             "properties": {
-                "created_at": {
-                    "type": "string"
-                },
                 "id": {
                     "type": "string"
                 },
@@ -2570,17 +2564,11 @@ const docTemplate = `{
         "me.PlayerModel": {
             "type": "object",
             "properties": {
-                "activity_ratio": {
-                    "type": "number"
-                },
                 "created_at": {
                     "type": "string"
                 },
                 "current_league": {
                     "$ref": "#/definitions/me.CurrentLeagueModel"
-                },
-                "elo": {
-                    "type": "integer"
                 },
                 "handedness": {
                     "type": "string"
@@ -2606,16 +2594,10 @@ const docTemplate = `{
                 "racket": {
                     "type": "string"
                 },
-                "ranking": {
-                    "type": "integer"
-                },
                 "seasons_played": {
                     "type": "integer"
                 },
                 "weight": {
-                    "type": "number"
-                },
-                "winning_ratio": {
                     "type": "number"
                 }
             }
@@ -2678,17 +2660,11 @@ const docTemplate = `{
                 "account": {
                     "$ref": "#/definitions/players.AccountModel"
                 },
-                "activity_ratio": {
-                    "type": "number"
-                },
                 "created_at": {
                     "type": "string"
                 },
                 "current_league": {
                     "$ref": "#/definitions/players.CurrentLeagueModel"
-                },
-                "elo": {
-                    "type": "integer"
                 },
                 "handedness": {
                     "type": "string"
@@ -2714,16 +2690,10 @@ const docTemplate = `{
                 "racket": {
                     "type": "string"
                 },
-                "ranking": {
-                    "type": "integer"
-                },
                 "seasons_played": {
                     "type": "integer"
                 },
                 "weight": {
-                    "type": "number"
-                },
-                "winning_ratio": {
                     "type": "number"
                 }
             }
@@ -2805,17 +2775,6 @@ const docTemplate = `{
                 }
             }
         },
-        "seasons.CreatorModel": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
         "seasons.SeasonModel": {
             "type": "object",
             "properties": {
@@ -2823,7 +2782,15 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "creator": {
-                    "$ref": "#/definitions/seasons.CreatorModel"
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string"
+                        },
+                        "name": {
+                            "type": "string"
+                        }
+                    }
                 },
                 "description": {
                     "type": "string"
@@ -2859,39 +2826,6 @@ const docTemplate = `{
                 }
             }
         },
-        "standings.LeagueModel": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                }
-            }
-        },
-        "standings.PlayerModel": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "standings.SeasonModel": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                }
-            }
-        },
         "standings.StandingModel": {
             "type": "object",
             "properties": {
@@ -2908,7 +2842,15 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "league": {
-                    "$ref": "#/definitions/standings.LeagueModel"
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string"
+                        },
+                        "name": {
+                            "type": "string"
+                        }
+                    }
                 },
                 "matches_played": {
                     "type": "integer"
@@ -2917,13 +2859,29 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "player": {
-                    "$ref": "#/definitions/standings.PlayerModel"
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string"
+                        },
+                        "name": {
+                            "type": "string"
+                        }
+                    }
                 },
                 "points": {
                     "type": "integer"
                 },
                 "season": {
-                    "$ref": "#/definitions/standings.SeasonModel"
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string"
+                        },
+                        "name": {
+                            "type": "string"
+                        }
+                    }
                 },
                 "sets_lost": {
                     "type": "integer"

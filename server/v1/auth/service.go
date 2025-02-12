@@ -76,10 +76,10 @@ func (s *service) processSignup(ctx context.Context, model SignupRequestModel) (
 		return "", "", err
 	}
 
-	account.PlayerId = playerId
+	account.PlayerId = &playerId
 
 	// generate jwts
-	accessTkn, refreshTkn, err := generateAuthTokens(s.cfg.JwtAuth, s.cfg.JwtAccessExpiration, s.cfg.JwtRefreshExpiration, account.Id, account.Role, account.PlayerId)
+	accessTkn, refreshTkn, err := generateAuthTokens(s.cfg.JwtAuth, s.cfg.JwtAccessExpiration, s.cfg.JwtRefreshExpiration, account.Id, account.Role, *account.PlayerId)
 	if err != nil {
 		return "", "", fmt.Errorf("generating auth tokens: %v", err)
 	}
@@ -115,7 +115,7 @@ func (s *service) processLogin(ctx context.Context, model LoginRequestModel) (st
 	}
 
 	// generate jwts
-	accessTkn, refreshTkn, err := generateAuthTokens(s.cfg.JwtAuth, s.cfg.JwtAccessExpiration, s.cfg.JwtRefreshExpiration, account.Id, account.Role, account.PlayerId)
+	accessTkn, refreshTkn, err := generateAuthTokens(s.cfg.JwtAuth, s.cfg.JwtAccessExpiration, s.cfg.JwtRefreshExpiration, account.Id, account.Role, *account.PlayerId)
 	if err != nil {
 		return "", "", err
 	}
@@ -216,6 +216,12 @@ func (s *service) processRefreshTokens(ctx context.Context, model RefreshTokenRe
 
 	// insert refresh token
 	err = s.store.insertRefreshToken(ctx, tx, rt.AccountId, sec.HashToken(refreshTkn.val), refreshTkn.issAt, refreshTkn.expAt)
+	if err != nil {
+		return "", "", err
+	}
+
+	// commit tx
+	err = tx.Commit(ctx)
 	if err != nil {
 		return "", "", err
 	}

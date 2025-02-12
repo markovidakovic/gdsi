@@ -18,13 +18,38 @@ type MeModel struct {
 	Gender      string      `json:"gender"`
 	PhoneNumber string      `json:"phone_number"`
 	Role        string      `json:"role"`
-	CreatedAt   time.Time   `json:"created_at"`
 	Player      PlayerModel `json:"player"`
+	CreatedAt   time.Time   `json:"created_at"`
 }
 
 func (mm *MeModel) ScanRow(row pgx.Row) error {
 	var leagueId, leagueTitle sql.NullString
-	err := row.Scan(&mm.Id, &mm.Name, &mm.Email, &mm.Dob, &mm.Gender, &mm.PhoneNumber, &mm.Role, &mm.CreatedAt, &mm.Player.Id, &mm.Player.Height, &mm.Player.Weight, &mm.Player.Handedness, &mm.Player.Racket, &mm.Player.MatchesExpected, &mm.Player.MatchesPlayed, &mm.Player.MatchesWon, &mm.Player.MatchesScheduled, &mm.Player.SeasonsPlayed, &leagueId, &leagueTitle, &mm.CreatedAt)
+	mm.Player = PlayerModel{}
+
+	err := row.Scan(
+		&mm.Id,
+		&mm.Name,
+		&mm.Email,
+		&mm.Dob,
+		&mm.Gender,
+		&mm.PhoneNumber,
+		&mm.Role,
+		&mm.Player.Id,
+		&mm.Player.Height,
+		&mm.Player.Weight,
+		&mm.Player.Handedness,
+		&mm.Player.Racket,
+		&mm.Player.MatchesExpected,
+		&mm.Player.MatchesPlayed,
+		&mm.Player.MatchesWon,
+		&mm.Player.MatchesScheduled,
+		&mm.Player.SeasonsPlayed,
+		&leagueId,
+		&leagueTitle,
+		&mm.Player.CreatedAt,
+		&mm.CreatedAt,
+	)
+
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return fmt.Errorf("scanning me row: %w", response.ErrNotFound)

@@ -58,12 +58,12 @@ func (s *service) processCreateMatch(ctx context.Context, model CreateMatchReque
 	}
 
 	// insert match
-	cm, err := s.store.insertMatch(ctx, nil, model)
+	result, err := s.store.insertMatch(ctx, nil, model)
 	if err != nil {
 		return nil, err
 	}
 
-	return &cm, nil
+	return &result, nil
 }
 
 func (s *service) processGetMatches(ctx context.Context, seasonId, leagueId string) ([]MatchModel, error) {

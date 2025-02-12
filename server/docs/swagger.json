@@ -2293,7 +2293,15 @@
                     "type": "string"
                 },
                 "creator": {
-                    "$ref": "#/definitions/courts.CreatorModel"
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string"
+                        },
+                        "name": {
+                            "type": "string"
+                        }
+                    }
                 },
                 "id": {
                     "type": "string"
@@ -2306,17 +2314,6 @@
         "courts.CreateCourtRequestModel": {
             "type": "object",
             "properties": {
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "courts.CreatorModel": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
                 "name": {
                     "type": "string"
                 }
@@ -2518,9 +2515,6 @@
         "me.CurrentLeagueModel": {
             "type": "object",
             "properties": {
-                "created_at": {
-                    "type": "string"
-                },
                 "id": {
                     "type": "string"
                 },
@@ -2564,17 +2558,11 @@
         "me.PlayerModel": {
             "type": "object",
             "properties": {
-                "activity_ratio": {
-                    "type": "number"
-                },
                 "created_at": {
                     "type": "string"
                 },
                 "current_league": {
                     "$ref": "#/definitions/me.CurrentLeagueModel"
-                },
-                "elo": {
-                    "type": "integer"
                 },
                 "handedness": {
                     "type": "string"
@@ -2600,16 +2588,10 @@
                 "racket": {
                     "type": "string"
                 },
-                "ranking": {
-                    "type": "integer"
-                },
                 "seasons_played": {
                     "type": "integer"
                 },
                 "weight": {
-                    "type": "number"
-                },
-                "winning_ratio": {
                     "type": "number"
                 }
             }
@@ -2672,17 +2654,11 @@
                 "account": {
                     "$ref": "#/definitions/players.AccountModel"
                 },
-                "activity_ratio": {
-                    "type": "number"
-                },
                 "created_at": {
                     "type": "string"
                 },
                 "current_league": {
                     "$ref": "#/definitions/players.CurrentLeagueModel"
-                },
-                "elo": {
-                    "type": "integer"
                 },
                 "handedness": {
                     "type": "string"
@@ -2708,16 +2684,10 @@
                 "racket": {
                     "type": "string"
                 },
-                "ranking": {
-                    "type": "integer"
-                },
                 "seasons_played": {
                     "type": "integer"
                 },
                 "weight": {
-                    "type": "number"
-                },
-                "winning_ratio": {
                     "type": "number"
                 }
             }
@@ -2799,17 +2769,6 @@
                 }
             }
         },
-        "seasons.CreatorModel": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
         "seasons.SeasonModel": {
             "type": "object",
             "properties": {
@@ -2817,7 +2776,15 @@
                     "type": "string"
                 },
                 "creator": {
-                    "$ref": "#/definitions/seasons.CreatorModel"
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string"
+                        },
+                        "name": {
+                            "type": "string"
+                        }
+                    }
                 },
                 "description": {
                     "type": "string"
@@ -2853,39 +2820,6 @@
                 }
             }
         },
-        "standings.LeagueModel": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                }
-            }
-        },
-        "standings.PlayerModel": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "standings.SeasonModel": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                }
-            }
-        },
         "standings.StandingModel": {
             "type": "object",
             "properties": {
@@ -2902,7 +2836,15 @@
                     "type": "string"
                 },
                 "league": {
-                    "$ref": "#/definitions/standings.LeagueModel"
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string"
+                        },
+                        "name": {
+                            "type": "string"
+                        }
+                    }
                 },
                 "matches_played": {
                     "type": "integer"
@@ -2911,13 +2853,29 @@
                     "type": "integer"
                 },
                 "player": {
-                    "$ref": "#/definitions/standings.PlayerModel"
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string"
+                        },
+                        "name": {
+                            "type": "string"
+                        }
+                    }
                 },
                 "points": {
                     "type": "integer"
                 },
                 "season": {
-                    "$ref": "#/definitions/standings.SeasonModel"
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string"
+                        },
+                        "name": {
+                            "type": "string"
+                        }
+                    }
                 },
                 "sets_lost": {
                     "type": "integer"

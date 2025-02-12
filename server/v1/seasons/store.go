@@ -2,7 +2,6 @@ package seasons
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
@@ -28,7 +27,7 @@ func (s *store) insertSeason(ctx context.Context, tx pgx.Tx, model CreateSeasonR
 		q = s.db
 	}
 
-	sql1 := `
+	sql := `
 		with inserted_season as (
 			insert into season (title, description, start_date, end_date, creator_id)
 			values ($1, $2, $3, $4, $5)
@@ -38,26 +37,20 @@ func (s *store) insertSeason(ctx context.Context, tx pgx.Tx, model CreateSeasonR
 		from inserted_season s
 		join account on s.creator_id = account.id
 	`
+
 	var dest SeasonModel
-	err := q.QueryRow(ctx, sql1, model.Title, model.Description, model.StartDate, model.EndDate, model.CreatorId).Scan(
-		&dest.Id,
-		&dest.Title,
-		&dest.Description,
-		&dest.StartDate,
-		&dest.EndDate,
-		&dest.Creator.Id,
-		&dest.Creator.Name,
-		&dest.CreatedAt,
-	)
+
+	row := q.QueryRow(ctx, sql, model.Title, model.Description, model.StartDate, model.EndDate, model.CreatorId)
+	err := dest.ScanRow(row)
 	if err != nil {
-		return dest, fmt.Errorf("inserting season: %v", err)
+		return dest, fmt.Errorf("inserting season: %w", err)
 	}
 
 	return dest, nil
 }
 
 func (s *store) findSeasons(ctx context.Context) ([]SeasonModel, error) {
-	sql1 := `
+	sql := `
 		select
 			season.id,
 			season.title,
@@ -72,7 +65,7 @@ func (s *store) findSeasons(ctx context.Context) ([]SeasonModel, error) {
 		order by season.created_at desc
 	`
 
-	rows, err := s.db.Query(ctx, sql1)
+	rows, err := s.db.Query(ctx, sql)
 	if err != nil {
 		return nil, fmt.Errorf("quering seasons: %v", err)
 	}
@@ -81,9 +74,10 @@ func (s *store) findSeasons(ctx context.Context) ([]SeasonModel, error) {
 	dest := []SeasonModel{}
 	for rows.Next() {
 		var sm SeasonModel
-		err := rows.Scan(&sm.Id, &sm.Title, &sm.Description, &sm.StartDate, &sm.EndDate, &sm.Creator.Id, &sm.Creator.Name, &sm.CreatedAt)
+
+		err := sm.ScanRows(rows)
 		if err != nil {
-			return nil, fmt.Errorf("scanning season row: %v", err)
+			return nil, err
 		}
 
 		dest = append(dest, sm)
@@ -97,7 +91,7 @@ func (s *store) findSeasons(ctx context.Context) ([]SeasonModel, error) {
 }
 
 func (s *store) findSeason(ctx context.Context, seasonId string) (*SeasonModel, error) {
-	sql1 := `
+	sql := `
 		select
 			season.id,
 			season.title,
@@ -113,19 +107,25 @@ func (s *store) findSeason(ctx context.Context, seasonId string) (*SeasonModel, 
 	`
 
 	var dest SeasonModel
-	err := s.db.QueryRow(ctx, sql1, seasonId).Scan(&dest.Id, &dest.Title, &dest.Description, &dest.StartDate, &dest.EndDate, &dest.Creator.Id, &dest.Creator.Name, &dest.CreatedAt)
+
+	row := s.db.QueryRow(ctx, sql, seasonId)
+	err := dest.ScanRow(row)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, response.ErrNotFound
-		}
-		return nil, err
+		return nil, fmt.Errorf("finding season: %w", err)
 	}
 
 	return &dest, nil
 }
 
-func (s *store) updateSeason(ctx context.Context, seasonId string, model UpdateSeasonRequestModel) (*SeasonModel, error) {
-	sql1 := `
+func (s *store) updateSeason(ctx context.Context, tx pgx.Tx, seasonId string, model UpdateSeasonRequestModel) (*SeasonModel, error) {
+	var q db.Querier
+	if tx != nil {
+		q = tx
+	} else {
+		q = s.db
+	}
+
+	sql := `
 		with updated_season as (
 			update season 
 			set title = $1, description = $2, start_date = $3, end_date = $4
@@ -146,12 +146,11 @@ func (s *store) updateSeason(ctx context.Context, seasonId string, model UpdateS
 	`
 
 	var dest SeasonModel
-	err := s.db.QueryRow(ctx, sql1, model.Title, model.Description, model.StartDate, model.EndDate, seasonId).Scan(&dest.Id, &dest.Title, &dest.Description, &dest.StartDate, &dest.EndDate, &dest.Creator.Id, &dest.Creator.Name, &dest.CreatedAt)
+
+	row := q.QueryRow(ctx, sql, model.Title, model.Description, model.StartDate, model.EndDate, seasonId)
+	err := dest.ScanRow(row)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, response.ErrNotFound
-		}
-		return nil, err
+		return nil, fmt.Errorf("updating season: %w", err)
 	}
 
 	return &dest, nil
@@ -165,11 +164,11 @@ func (s *store) deleteSeason(ctx context.Context, tx pgx.Tx, seasonId string) er
 		q = s.db
 	}
 
-	sql1 := `
+	sql := `
 		delete from season where id = $1
 	`
 
-	ct, err := q.Exec(ctx, sql1, seasonId)
+	ct, err := q.Exec(ctx, sql, seasonId)
 	if err != nil {
 		return err
 	}

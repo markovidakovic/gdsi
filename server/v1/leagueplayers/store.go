@@ -2,13 +2,10 @@ package leagueplayers
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/markovidakovic/gdsi/server/db"
-	"github.com/markovidakovic/gdsi/server/response"
 	"github.com/markovidakovic/gdsi/server/v1/players"
 )
 
@@ -23,7 +20,7 @@ func newStore(db *db.Conn) *store {
 }
 
 func (s *store) findLeaguePlayers(ctx context.Context, leagueId string) ([]players.PlayerModel, error) {
-	sql1 := `
+	sql := `
 		select
 			player.id,
 			player.height,
@@ -49,26 +46,16 @@ func (s *store) findLeaguePlayers(ctx context.Context, leagueId string) ([]playe
 
 	dest := []players.PlayerModel{}
 
-	rows, err := s.db.Query(ctx, sql1, leagueId)
+	rows, err := s.db.Query(ctx, sql, leagueId)
 	if err != nil {
 		return nil, fmt.Errorf("quering league players: %v", err)
 	}
 
 	for rows.Next() {
 		var pm players.PlayerModel
-		var currLeagueId, currLeagueTitle sql.NullString
-		err := rows.Scan(&pm.Id, &pm.Height, &pm.Weight, &pm.Handedness, &pm.Racket, &pm.MatchesExpected, &pm.MatchesPlayed, &pm.MatchesWon, &pm.MatchesScheduled, &pm.SeasonsPlayed, &pm.Account.Id, &pm.Account.Name, &currLeagueId, &currLeagueTitle, &pm.CreatedAt)
+		err := pm.ScanRows(rows)
 		if err != nil {
-			return nil, fmt.Errorf("scanning league player row: %v", err)
-		}
-
-		if !currLeagueId.Valid {
-			pm.CurrentLeague = nil
-		} else {
-			pm.CurrentLeague = &players.CurrentLeagueModel{
-				Id:    currLeagueId.String,
-				Title: currLeagueTitle.String,
-			}
+			return nil, err
 		}
 
 		dest = append(dest, pm)
@@ -83,9 +70,8 @@ func (s *store) findLeaguePlayers(ctx context.Context, leagueId string) ([]playe
 
 func (s *store) findLeaguePlayer(ctx context.Context, leagueId, playerId string) (players.PlayerModel, error) {
 	var dest players.PlayerModel
-	var currLeagueId, currLeagueTitle sql.NullString
 
-	sql1 := `
+	sql := `
 		select 
 			player.id,
 			player.height,
@@ -108,21 +94,10 @@ func (s *store) findLeaguePlayer(ctx context.Context, leagueId, playerId string)
 		where player.id = $1 and player.current_league_id = $2
 	`
 
-	err := s.db.QueryRow(ctx, sql1, playerId, leagueId).Scan(&dest.Id, &dest.Height, &dest.Weight, &dest.Handedness, &dest.Racket, &dest.MatchesExpected, &dest.MatchesPlayed, &dest.MatchesWon, &dest.MatchesScheduled, &dest.SeasonsPlayed, &dest.Account.Id, &dest.Account.Name, &currLeagueId, &currLeagueTitle, &dest.CreatedAt)
+	row := s.db.QueryRow(ctx, sql, playerId, leagueId)
+	err := dest.ScanRow(row)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return dest, fmt.Errorf("finding league player: %w", response.ErrNotFound)
-		}
 		return dest, err
-	}
-
-	if !currLeagueId.Valid {
-		dest.CurrentLeague = nil
-	} else {
-		dest.CurrentLeague = &players.CurrentLeagueModel{
-			Id:    currLeagueId.String,
-			Title: currLeagueTitle.String,
-		}
 	}
 
 	return dest, nil
@@ -136,7 +111,7 @@ func (s *store) updatePlayerCurrentLeague(ctx context.Context, tx pgx.Tx, league
 		q = s.db
 	}
 
-	sql1 := `
+	sql := `
 		with updated_player as (
 			update player
 			set current_league_id = $1
@@ -165,23 +140,12 @@ func (s *store) updatePlayerCurrentLeague(ctx context.Context, tx pgx.Tx, league
 	`
 
 	var dest players.PlayerModel
-	var currLeagueId, currLeagueTitle sql.NullString
 
-	err := q.QueryRow(ctx, sql1, leagueId, playerId).Scan(&dest.Id, &dest.Height, &dest.Weight, &dest.Handedness, &dest.Racket, &dest.MatchesExpected, &dest.MatchesPlayed, &dest.MatchesWon, &dest.MatchesScheduled, &dest.SeasonsPlayed, &dest.Account.Id, &dest.Account.Name, &currLeagueId, &currLeagueTitle, &dest.CreatedAt)
+	row := q.QueryRow(ctx, sql, leagueId, playerId)
+	err := dest.ScanRow(row)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return dest, fmt.Errorf("finding league player: %w", response.ErrNotFound)
-		}
+		// todo: better err msg
 		return dest, err
-	}
-
-	if !currLeagueId.Valid {
-		dest.CurrentLeague = nil
-	} else {
-		dest.CurrentLeague = &players.CurrentLeagueModel{
-			Id:    currLeagueId.String,
-			Title: currLeagueTitle.String,
-		}
 	}
 
 	return dest, nil

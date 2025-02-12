@@ -1,8 +1,11 @@
 package auth
 
 import (
+	"errors"
+	"fmt"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/markovidakovic/gdsi/server/response"
 	"github.com/markovidakovic/gdsi/server/sec"
 )
@@ -16,8 +19,20 @@ type AccountModel struct {
 	PhoneNumber string    `json:"phone_number"`
 	Password    string    `json:"-"`
 	Role        string    `json:"role"`
-	PlayerId    string    `json:"player_id"`
+	PlayerId    *string   `json:"player_id"`
 	CreatedAt   time.Time `json:"created_at"`
+}
+
+func (am *AccountModel) ScanRow(row pgx.Row) error {
+	err := row.Scan(&am.Id, &am.Name, &am.Email, &am.Dob, &am.Gender, &am.PhoneNumber, &am.Password, &am.Role, &am.PlayerId, &am.CreatedAt)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return fmt.Errorf("scanning account row: %w", response.ErrNotFound)
+		}
+		return fmt.Errorf("scanning account row: %v", err)
+	}
+
+	return nil
 }
 
 type RefreshTokenModel struct {
@@ -33,6 +48,17 @@ type RefreshTokenModel struct {
 	LastUsedAt  *time.Time `json:"last_used_at"`
 	IsRevoked   bool       `json:"is_revoked"`
 	PlayerId    string     `json:"player_id"`
+}
+
+func (rtm *RefreshTokenModel) ScanRow(row pgx.Row) error {
+	err := row.Scan(&rtm.Id, &rtm.AccountId, &rtm.AccountRole, &rtm.TokenHash, &rtm.DeviceId, &rtm.IpAddress, &rtm.UserAgent, &rtm.IssuedAt, &rtm.ExpiresAt, &rtm.LastUsedAt, &rtm.IsRevoked, &rtm.PlayerId)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return fmt.Errorf("scanning refresh token row: %w", response.ErrNotFound)
+		}
+		return fmt.Errorf("scanning refresh token row: %v", err)
+	}
+	return nil
 }
 
 // signup request body model

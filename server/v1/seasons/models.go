@@ -1,25 +1,47 @@
 package seasons
 
 import (
+	"errors"
+	"fmt"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/markovidakovic/gdsi/server/response"
 	"github.com/markovidakovic/gdsi/server/types"
 )
 
-type CreatorModel struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
+type SeasonModel struct {
+	Id          string    `json:"id"`
+	Title       string    `json:"title"`
+	Description *string   `json:"description"`
+	StartDate   time.Time `json:"start_date"`
+	EndDate     time.Time `json:"end_date"`
+	Creator     struct {
+		Id   string `json:"id"`
+		Name string `json:"name"`
+	} `json:"creator"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
-type SeasonModel struct {
-	Id          string       `json:"id"`
-	Title       string       `json:"title"`
-	Description *string      `json:"description"`
-	StartDate   time.Time    `json:"start_date"`
-	EndDate     time.Time    `json:"end_date"`
-	Creator     CreatorModel `json:"creator"`
-	CreatedAt   time.Time    `json:"created_at"`
+func (sm *SeasonModel) ScanRow(row pgx.Row) error {
+	err := row.Scan(&sm.Id, &sm.Title, &sm.Description, &sm.StartDate, &sm.EndDate, &sm.Creator.Id, &sm.Creator.Name, &sm.CreatedAt)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return fmt.Errorf("scanning season row: %w", response.ErrNotFound)
+		}
+		return fmt.Errorf("scanning season row: %v", err)
+	}
+
+	return nil
+}
+
+func (sm *SeasonModel) ScanRows(rows pgx.Rows) error {
+	err := rows.Scan(&sm.Id, &sm.Title, &sm.Description, &sm.StartDate, &sm.EndDate, &sm.Creator.Id, &sm.Creator.Name, &sm.CreatedAt)
+	if err != nil {
+		return fmt.Errorf("scanning season rows: %v", err)
+	}
+
+	return nil
 }
 
 type CreateSeasonRequestModel struct {

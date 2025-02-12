@@ -40,7 +40,7 @@ func (s *store) insertCourt(ctx context.Context, tx pgx.Tx, name, creatorId stri
 	`
 
 	var dest CourtModel
-	row := q.QueryRow(ctx, sql, creatorId)
+	row := q.QueryRow(ctx, sql, name, creatorId)
 	err := dest.ScanRow(row)
 	if err != nil {
 		return dest, fmt.Errorf("inserting court: %v", err)
@@ -104,8 +104,7 @@ func (s *store) findCourt(ctx context.Context, courtId string) (*CourtModel, err
 	row := s.db.QueryRow(ctx, sql, courtId)
 	err := dest.ScanRow(row)
 	if err != nil {
-		// todo: maybe wrap this err with an additional msg?
-		return nil, err
+		return nil, fmt.Errorf("finding court: %w", err)
 	}
 
 	return &dest, nil

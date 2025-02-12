@@ -29,7 +29,7 @@ func (s *store) insertMatch(ctx context.Context, tx pgx.Tx, model CreateMatchReq
 		q = s.db
 	}
 
-	sql1 := `
+	sql := `
 		with inserted_match as (
 			insert into match (court_id, scheduled_at, player_one_id, player_two_id, winner_id, score, season_id, league_id, creator_id)
 			values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
@@ -65,44 +65,18 @@ func (s *store) insertMatch(ctx context.Context, tx pgx.Tx, model CreateMatchReq
 	`
 
 	var dest MatchModel
-	var winnerId, winnerName sql.NullString
 
-	err := q.QueryRow(ctx, sql1, model.CourtId, model.ScheduledAt, model.PlayerOneId, model.PlayerTwoId, model.WinnerId, model.Score, model.SeasonId, model.LeagueId, model.PlayerOneId).Scan(
-		&dest.Id,
-		&dest.Court.Id,
-		&dest.Court.Name,
-		&dest.ScheduledAt,
-		&dest.PlayerOne.Id,
-		&dest.PlayerOne.Name,
-		&dest.PlayerTwo.Id,
-		&dest.PlayerTwo.Name,
-		&winnerId,
-		&winnerName,
-		&dest.Score,
-		&dest.Season.Id,
-		&dest.Season.Title,
-		&dest.League.Id,
-		&dest.League.Title,
-		&dest.CreatedAt,
-	)
+	row := q.QueryRow(ctx, sql, model.CourtId, model.ScheduledAt, model.PlayerOneId, model.PlayerTwoId, model.WinnerId, model.Score, model.SeasonId, model.LeagueId, model.PlayerOneId)
+	err := dest.ScanRow(row)
 	if err != nil {
 		return dest, err
-	}
-
-	if !winnerId.Valid {
-		dest.Winner = nil
-	} else {
-		dest.Winner = &PlayerModel{
-			Id:   winnerId.String,
-			Name: winnerName.String,
-		}
 	}
 
 	return dest, nil
 }
 
 func (s *store) findMatches(ctx context.Context, seasonId, leagueId string) ([]MatchModel, error) {
-	sql1 := `
+	sql := `
 		select
 			match.id,
 			court.id as court_id,
@@ -136,7 +110,7 @@ func (s *store) findMatches(ctx context.Context, seasonId, leagueId string) ([]M
 
 	dest := []MatchModel{}
 
-	rows, err := s.db.Query(ctx, sql1, seasonId, leagueId)
+	rows, err := s.db.Query(ctx, sql, seasonId, leagueId)
 	if err != nil {
 		return nil, fmt.Errorf("quering match rows: %v", err)
 	}
@@ -144,19 +118,9 @@ func (s *store) findMatches(ctx context.Context, seasonId, leagueId string) ([]M
 
 	for rows.Next() {
 		var mm MatchModel
-		var winnerId, winnerName sql.NullString
-		err := rows.Scan(&mm.Id, &mm.Court.Id, &mm.Court.Name, &mm.ScheduledAt, &mm.PlayerOne.Id, &mm.PlayerOne.Name, &mm.PlayerTwo.Id, &mm.PlayerTwo.Name, &winnerId, &winnerName, &mm.Score, &mm.Season.Id, &mm.Season.Title, &mm.League.Id, &mm.League.Title, &mm.CreatedAt)
+		err := mm.ScanRows(rows)
 		if err != nil {
-			return nil, fmt.Errorf("scanning match row: %v", err)
-		}
-
-		if !winnerId.Valid {
-			mm.Winner = nil
-		} else {
-			mm.Winner = &PlayerModel{
-				Id:   winnerId.String,
-				Name: winnerName.String,
-			}
+			return nil, err
 		}
 
 		dest = append(dest, mm)
@@ -170,7 +134,7 @@ func (s *store) findMatches(ctx context.Context, seasonId, leagueId string) ([]M
 }
 
 func (s *store) findMatch(ctx context.Context, seasonId, leagueId, matchId string) (*MatchModel, error) {
-	sql1 := `
+	sql := `
 		select
 			match.id,
 			court.id as court_id,
@@ -202,23 +166,11 @@ func (s *store) findMatch(ctx context.Context, seasonId, leagueId, matchId strin
 	`
 
 	var dest MatchModel
-	var winnerId, winnerName sql.NullString
 
-	err := s.db.QueryRow(ctx, sql1, matchId, seasonId, leagueId).Scan(&dest.Id, &dest.Court.Id, &dest.Court.Name, &dest.ScheduledAt, &dest.PlayerOne.Id, &dest.PlayerOne.Name, &dest.PlayerTwo.Id, &dest.PlayerTwo.Name, &winnerId, &winnerName, &dest.Score, &dest.Season.Id, &dest.Season.Title, &dest.League.Id, &dest.League.Title, &dest.CreatedAt)
+	row := s.db.QueryRow(ctx, sql, matchId, seasonId, leagueId)
+	err := dest.ScanRow(row)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("finding match: %w", response.ErrNotFound)
-		}
 		return nil, err
-	}
-
-	if !winnerId.Valid {
-		dest.Winner = nil
-	} else {
-		dest.Winner = &PlayerModel{
-			Id:   winnerId.String,
-			Name: winnerName.String,
-		}
 	}
 
 	return &dest, nil
@@ -232,7 +184,7 @@ func (s *store) updateMatch(ctx context.Context, tx pgx.Tx, model UpdateMatchReq
 		q = s.db
 	}
 
-	sql1 := `
+	sql := `
 		with updated_match as (
 			update match 
 			set court_id = $1, scheduled_at = $2, player_two_id = $3
@@ -269,23 +221,11 @@ func (s *store) updateMatch(ctx context.Context, tx pgx.Tx, model UpdateMatchReq
 	`
 
 	var dest MatchModel
-	var winnerId, winnerName sql.NullString
 
-	err := q.QueryRow(ctx, sql1, model.CourtId, model.ScheduledAt, model.PlayerTwoId, model.MatchId, model.SeasonId, model.LeagueId).Scan(&dest.Id, &dest.Court.Id, &dest.Court.Name, &dest.ScheduledAt, &dest.PlayerOne.Id, &dest.PlayerOne.Name, &dest.PlayerTwo.Id, &dest.PlayerTwo.Name, &winnerId, &winnerName, &dest.Score, &dest.Season.Id, &dest.Season.Title, &dest.League.Id, &dest.League.Title, &dest.CreatedAt)
+	row := q.QueryRow(ctx, sql, model.CourtId, model.ScheduledAt, model.PlayerTwoId, model.MatchId, model.SeasonId, model.LeagueId)
+	err := dest.ScanRow(row)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("finding match: %w", response.ErrNotFound)
-		}
-		return nil, err
-	}
-
-	if !winnerId.Valid {
-		dest.Winner = nil
-	} else {
-		dest.Winner = &PlayerModel{
-			Id:   winnerId.String,
-			Name: winnerName.String,
-		}
+		return nil, fmt.Errorf("updating match: %w", err)
 	}
 
 	return &dest, nil
@@ -364,7 +304,7 @@ func (s *store) updateMatchScore(ctx context.Context, tx pgx.Tx, seasonId, leagu
 		q = s.db
 	}
 
-	sql1 := `
+	sql := `
 		with updated_match as (
 			update match 
 			set score = $1, winner_id = $2
@@ -401,20 +341,11 @@ func (s *store) updateMatchScore(ctx context.Context, tx pgx.Tx, seasonId, leagu
 	`
 
 	var dest MatchModel
-	var nWinnerId, nWinnerName sql.NullString
 
-	err := q.QueryRow(ctx, sql1, score, winnerId, matchId, seasonId, leagueId).Scan(&dest.Id, &dest.Court.Id, &dest.Court.Name, &dest.ScheduledAt, &dest.PlayerOne.Id, &dest.PlayerOne.Name, &dest.PlayerTwo.Id, &dest.PlayerTwo.Name, &nWinnerId, &nWinnerName, &dest.Score, &dest.Season.Id, &dest.Season.Title, &dest.League.Id, &dest.League.Title, &dest.CreatedAt)
+	row := q.QueryRow(ctx, sql, score, winnerId, matchId, seasonId, leagueId)
+	err := dest.ScanRow(row)
 	if err != nil {
-		return nil, fmt.Errorf("updating match score: %v", err)
-	}
-
-	if !nWinnerId.Valid {
-		dest.Winner = nil
-	} else {
-		dest.Winner = &PlayerModel{
-			Id:   nWinnerId.String,
-			Name: nWinnerName.String,
-		}
+		return nil, fmt.Errorf("updating match score: %w", err)
 	}
 
 	return &dest, nil
@@ -510,8 +441,6 @@ func (s *store) checkMatchParticipation(ctx context.Context, matchId, playerId s
 	if err != nil {
 		return false, err
 	}
-
-	fmt.Printf("exists: %v\n", exists)
 
 	return exists, nil
 }
