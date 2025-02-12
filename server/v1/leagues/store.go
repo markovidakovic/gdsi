@@ -2,7 +2,6 @@ package leagues
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
@@ -28,7 +27,7 @@ func (s *store) insertLeague(ctx context.Context, tx pgx.Tx, title string, descr
 		q = s.db
 	}
 
-	sql1 := `
+	sql := `
 		with inserted_league as (
 			insert into league (title, description, season_id, creator_id)
 			values ($1, $2, $3, $4)
@@ -49,16 +48,17 @@ func (s *store) insertLeague(ctx context.Context, tx pgx.Tx, title string, descr
 	`
 
 	var dest LeagueModel
-	err := q.QueryRow(ctx, sql1, title, description, seasonId, creatorId).Scan(&dest.Id, &dest.Title, &dest.Description, &dest.Season.Id, &dest.Season.Title, &dest.Creator.Id, &dest.Creator.Name, &dest.CreatedAt)
+	row := q.QueryRow(ctx, sql, title, description, seasonId, creatorId)
+	err := dest.ScanRow(row)
 	if err != nil {
-		return dest, fmt.Errorf("inserting league: %v", err)
+		return dest, fmt.Errorf("inserting league: %w", err)
 	}
 
 	return dest, nil
 }
 
 func (s *store) findLeagues(ctx context.Context, seasonId string) ([]LeagueModel, error) {
-	sql1 := `
+	sql := `
 		select 
 			league.id,
 			league.title,
@@ -77,7 +77,7 @@ func (s *store) findLeagues(ctx context.Context, seasonId string) ([]LeagueModel
 
 	dest := []LeagueModel{}
 
-	rows, err := s.db.Query(ctx, sql1, seasonId)
+	rows, err := s.db.Query(ctx, sql, seasonId)
 	if err != nil {
 		return nil, fmt.Errorf("quering leagues: %v", err)
 	}
@@ -85,9 +85,9 @@ func (s *store) findLeagues(ctx context.Context, seasonId string) ([]LeagueModel
 
 	for rows.Next() {
 		var lm LeagueModel
-		err := rows.Scan(&lm.Id, &lm.Title, &lm.Description, &lm.Season.Id, &lm.Season.Title, &lm.Creator.Id, &lm.Creator.Name, &lm.CreatedAt)
+		err := lm.ScanRows(rows)
 		if err != nil {
-			return nil, fmt.Errorf("scanning league row: %v", err)
+			return nil, err
 		}
 
 		dest = append(dest, lm)
@@ -101,7 +101,7 @@ func (s *store) findLeagues(ctx context.Context, seasonId string) ([]LeagueModel
 }
 
 func (s *store) findLeague(ctx context.Context, seasonId, leagueId string) (*LeagueModel, error) {
-	sql1 := `
+	sql := `
 		select 
 			league.id,
 			league.title,
@@ -118,11 +118,9 @@ func (s *store) findLeague(ctx context.Context, seasonId, leagueId string) (*Lea
 	`
 
 	var dest LeagueModel
-	err := s.db.QueryRow(ctx, sql1, seasonId, leagueId).Scan(&dest.Id, &dest.Title, &dest.Description, &dest.Season.Id, &dest.Season.Title, &dest.Creator.Id, &dest.Creator.Name, &dest.CreatedAt)
+	row := s.db.QueryRow(ctx, sql, seasonId, leagueId)
+	err := dest.ScanRow(row)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("finding league: %w", response.ErrNotFound)
-		}
 		return nil, err
 	}
 
@@ -137,7 +135,7 @@ func (s *store) updateLeague(ctx context.Context, tx pgx.Tx, title string, descr
 		q = s.db
 	}
 
-	sql1 := `
+	sql := `
 		with updated_league as (
 			update league
 			set title = $1, description = $2
@@ -159,12 +157,10 @@ func (s *store) updateLeague(ctx context.Context, tx pgx.Tx, title string, descr
 	`
 
 	var dest LeagueModel
-	err := q.QueryRow(ctx, sql1, title, description, leagueId, seasonId).Scan(&dest.Id, &dest.Title, &dest.Description, &dest.Season.Id, &dest.Season.Title, &dest.Creator.Id, &dest.Creator.Name, &dest.CreatedAt)
+	row := q.QueryRow(ctx, sql, title, description, leagueId, seasonId)
+	err := dest.ScanRow(row)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return dest, fmt.Errorf("updating league: %w", response.ErrNotFound)
-		}
-		return dest, fmt.Errorf("updating league: %v", err)
+		return dest, fmt.Errorf("updating league: %w", err)
 	}
 
 	return dest, nil
@@ -194,14 +190,14 @@ func (s *store) deleteLeague(ctx context.Context, tx pgx.Tx, seasonId, leagueId 
 }
 
 func (s *store) checkSeasonExistance(ctx context.Context, seasonId string) (bool, error) {
-	sql1 := `
-	select exists (
-		select 1 from season where id = $1
-	)
-`
+	sql := `
+		select exists (
+			select 1 from season where id = $1
+		)
+	`
 
 	var exists bool
-	err := s.db.QueryRow(ctx, sql1, seasonId).Scan(&exists)
+	err := s.db.QueryRow(ctx, sql, seasonId).Scan(&exists)
 	if err != nil {
 		return false, err
 	}

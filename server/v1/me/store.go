@@ -92,9 +92,8 @@ func (s *store) findMe(ctx context.Context, accountId string) (*MeModel, error) 
 		mm.Player.CurrentLeague = nil
 	} else {
 		mm.Player.CurrentLeague = &CurrentLeagueModel{
-			Id:        leagueId.String,
-			Title:     leagueTitle.String,
-			CreatedAt: leagueCreatedAt.Time,
+			Id:    leagueId.String,
+			Title: leagueTitle.String,
 		}
 	}
 
@@ -184,9 +183,9 @@ func (s *store) updateMe(ctx context.Context, tx pgx.Tx, accountId string, input
 		dest.Player.CurrentLeague = nil
 	} else {
 		dest.Player.CurrentLeague = &CurrentLeagueModel{
-			Id:        leagueId.String,
-			Title:     leagueTitle.String,
-			CreatedAt: leagueCreatedAt.Time,
+			Id:    leagueId.String,
+			Title: leagueTitle.String,
+			// CreatedAt: leagueCreatedAt.Time,
 		}
 	}
 

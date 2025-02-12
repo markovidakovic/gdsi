@@ -2,7 +2,6 @@ package courts
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
@@ -41,8 +40,8 @@ func (s *store) insertCourt(ctx context.Context, tx pgx.Tx, name, creatorId stri
 	`
 
 	var dest CourtModel
-
-	err := q.QueryRow(ctx, sql, name, creatorId).Scan(&dest.Id, &dest.Name, &dest.CreatedAt, &dest.Creator.Id, &dest.Creator.Name)
+	row := q.QueryRow(ctx, sql, creatorId)
+	err := dest.ScanRow(row)
 	if err != nil {
 		return dest, fmt.Errorf("inserting court: %v", err)
 	}
@@ -72,14 +71,15 @@ func (s *store) findCourts(ctx context.Context) ([]CourtModel, error) {
 	var dest = []CourtModel{}
 	for rows.Next() {
 		var cm CourtModel
-		err := rows.Scan(&cm.Id, &cm.Name, &cm.CreatedAt, &cm.Creator.Id, &cm.Creator.Name)
+		err := cm.ScanRows(rows)
 		if err != nil {
-			return nil, fmt.Errorf("scanning court row: %v", err)
+			return nil, err
 		}
 		dest = append(dest, cm)
 	}
 
 	if err = rows.Err(); err != nil {
+		// todo: what is the appropriate error msg here?
 		return nil, fmt.Errorf("scanning court rows: %v", err)
 	}
 
@@ -89,7 +89,7 @@ func (s *store) findCourts(ctx context.Context) ([]CourtModel, error) {
 func (s *store) findCourt(ctx context.Context, courtId string) (*CourtModel, error) {
 	var dest CourtModel
 
-	sql1 := `
+	sql := `
 		select 
 			court.id as court_id,
 			court.name as court_name,
@@ -101,11 +101,10 @@ func (s *store) findCourt(ctx context.Context, courtId string) (*CourtModel, err
 		where court.id = $1
 	`
 
-	err := s.db.QueryRow(ctx, sql1, courtId).Scan(&dest.Id, &dest.Name, &dest.CreatedAt, &dest.Creator.Id, &dest.Creator.Name)
+	row := s.db.QueryRow(ctx, sql, courtId)
+	err := dest.ScanRow(row)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, response.ErrNotFound
-		}
+		// todo: maybe wrap this err with an additional msg?
 		return nil, err
 	}
 
@@ -139,12 +138,10 @@ func (s *store) updateCourt(ctx context.Context, tx pgx.Tx, courtId string, name
 		join account on court.creator_id = account.id
 	`
 
-	err := q.QueryRow(ctx, sql, name, courtId).Scan(&dest.Id, &dest.Name, &dest.Creator.Id, &dest.Creator.Name, &dest.CreatedAt)
+	row := q.QueryRow(ctx, sql, name, courtId)
+	err := dest.ScanRow(row)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("updating court: %w", response.ErrNotFound)
-		}
-		return nil, err
+		return nil, fmt.Errorf("updating court: %w", err)
 	}
 
 	return &dest, nil

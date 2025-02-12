@@ -1,8 +1,11 @@
 package leagues
 
 import (
+	"errors"
+	"fmt"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/markovidakovic/gdsi/server/response"
 )
 
@@ -13,6 +16,25 @@ type LeagueModel struct {
 	Season      SeasonModel  `json:"season"`
 	Creator     CreatorModel `json:"creator"`
 	CreatedAt   time.Time    `json:"created_at"`
+}
+
+func (lm *LeagueModel) ScanRow(row pgx.Row) error {
+	err := row.Scan(&lm.Id, &lm.Title, &lm.Description, &lm.Season.Id, &lm.Season.Title, &lm.Creator.Id, &lm.Creator.Name, &lm.CreatedAt)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return fmt.Errorf("scanning league row: %w", response.ErrNotFound)
+		}
+		return fmt.Errorf("scanning league row: %v", err)
+	}
+	return nil
+}
+
+func (lm *LeagueModel) ScanRows(rows pgx.Rows) error {
+	err := rows.Scan(&lm.Id, &lm.Title, &lm.Description, &lm.Season.Id, &lm.Season.Title, &lm.Creator.Id, &lm.Creator.Name, &lm.CreatedAt)
+	if err != nil {
+		return fmt.Errorf("scanning league rows: %v", err)
+	}
+	return nil
 }
 
 type CreatorModel struct {

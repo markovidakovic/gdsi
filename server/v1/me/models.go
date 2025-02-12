@@ -1,8 +1,12 @@
 package me
 
 import (
+	"database/sql"
+	"errors"
+	"fmt"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/markovidakovic/gdsi/server/response"
 )
 
@@ -16,6 +20,28 @@ type MeModel struct {
 	Role        string      `json:"role"`
 	CreatedAt   time.Time   `json:"created_at"`
 	Player      PlayerModel `json:"player"`
+}
+
+func (mm *MeModel) ScanRow(row pgx.Row) error {
+	var leagueId, leagueTitle sql.NullString
+	err := row.Scan(&mm.Id, &mm.Name, &mm.Email, &mm.Dob, &mm.Gender, &mm.PhoneNumber, &mm.Role, &mm.CreatedAt, &mm.Player.Id, &mm.Player.Height, &mm.Player.Weight, &mm.Player.Handedness, &mm.Player.Racket, &mm.Player.MatchesExpected, &mm.Player.MatchesPlayed, &mm.Player.MatchesWon, &mm.Player.MatchesScheduled, &mm.Player.SeasonsPlayed, &leagueId, &leagueTitle, &mm.CreatedAt)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return fmt.Errorf("scanning me row: %w", response.ErrNotFound)
+		}
+		return fmt.Errorf("scanning me row: %v", err)
+	}
+
+	if !leagueId.Valid {
+		mm.Player.CurrentLeague = nil
+	} else {
+		mm.Player.CurrentLeague = &CurrentLeagueModel{
+			Id:    leagueId.String,
+			Title: leagueTitle.String,
+		}
+	}
+
+	return nil
 }
 
 type PlayerModel struct {
@@ -34,9 +60,8 @@ type PlayerModel struct {
 }
 
 type CurrentLeagueModel struct {
-	Id        string    `json:"id"`
-	Title     string    `json:"title"`
-	CreatedAt time.Time `json:"created_at"`
+	Id    string `json:"id"`
+	Title string `json:"title"`
 }
 
 type UpdateMeRequestModel struct {

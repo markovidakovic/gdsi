@@ -1,10 +1,14 @@
 package matches
 
 import (
+	"database/sql"
+	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/markovidakovic/gdsi/server/response"
 )
 
@@ -19,6 +23,46 @@ type MatchModel struct {
 	Season      SeasonModel  `json:"season"`
 	League      LeagueModel  `json:"league"`
 	CreatedAt   time.Time    `json:"created_at"`
+}
+
+func (mm *MatchModel) ScanRow(row pgx.Row) error {
+	var winnerId, winnerName sql.NullString
+	err := row.Scan(&mm.Id, &mm.Court.Id, &mm.Court.Name, &mm.ScheduledAt, &mm.PlayerOne.Id, &mm.PlayerOne.Name, &mm.PlayerTwo.Id, &mm.PlayerTwo.Name, &winnerId, &winnerName, &mm.Score, &mm.Season.Id, &mm.Season.Title, &mm.League.Id, &mm.League.Title, &mm.CreatedAt)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return fmt.Errorf("scanning match row: %w", response.ErrNotFound)
+		}
+		return fmt.Errorf("scanning match row: %v", err)
+	}
+
+	if !winnerId.Valid {
+		mm.Winner = nil
+	} else {
+		mm.Winner = &PlayerModel{
+			Id:   winnerId.String,
+			Name: winnerName.String,
+		}
+	}
+
+	return nil
+}
+
+func (mm *MatchModel) ScanRows(rows pgx.Rows) error {
+	var winnerId, winnerName sql.NullString
+	err := rows.Scan(&mm.Id, &mm.Court.Id, &mm.Court.Name, &mm.ScheduledAt, &mm.PlayerOne.Id, &mm.PlayerOne.Name, &mm.PlayerTwo.Id, &mm.PlayerTwo.Name, &winnerId, &winnerName, &mm.Score, &mm.Season.Id, &mm.Season.Title, &mm.League.Id, &mm.League.Title, &mm.CreatedAt)
+	if err != nil {
+		return fmt.Errorf("scanning match rows: %v", err)
+	}
+
+	if !winnerId.Valid {
+		mm.Winner = nil
+	} else {
+		mm.Winner = &PlayerModel{
+			Id:   winnerId.String,
+			Name: winnerName.String,
+		}
+	}
+	return nil
 }
 
 type CourtModel struct {
