@@ -22,7 +22,7 @@ func (lm *LeagueModel) ScanRow(row pgx.Row) error {
 	err := row.Scan(&lm.Id, &lm.Title, &lm.Description, &lm.Season.Id, &lm.Season.Title, &lm.Creator.Id, &lm.Creator.Name, &lm.CreatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return fmt.Errorf("scanning league row: %w", response.ErrNotFound)
+			return response.ErrNotFound
 		}
 		return fmt.Errorf("scanning league row: %v", err)
 	}

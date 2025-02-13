@@ -34,9 +34,14 @@ func (s *store) insertCourt(ctx context.Context, tx pgx.Tx, name, creatorId stri
 			values ($1, $2)
 			returning id, name, creator_id, created_at			
 		)
-		select court.id, court.name, court.created_at, account.id as creator_id, account.name as creator_name
-		from inserted_court court
-		join account on court.creator_id = account.id
+		select 
+			ic.id as court_id, 
+			ic.name as court_name, 
+			account.id as creator_id, 
+			account.name as creator_name, 
+			ic.created_at as court_created_at
+		from inserted_court ic
+		join account on ic.creator_id = account.id
 	`
 
 	var dest CourtModel
@@ -54,9 +59,9 @@ func (s *store) findCourts(ctx context.Context) ([]CourtModel, error) {
 		select 
 			court.id as court_id,
 			court.name as court_name,
-			court.created_at as court_created_at,
 			account.id as creator_id,
-			account.name as creator_name
+			account.name as creator_name,
+			court.created_at as court_created_at
 		from court
 		join account on court.creator_id = account.id
 		order by court.created_at desc		
@@ -93,9 +98,9 @@ func (s *store) findCourt(ctx context.Context, courtId string) (*CourtModel, err
 		select 
 			court.id as court_id,
 			court.name as court_name,
-			court.created_at as court_created_at,
 			account.id as creator_id,
-			account.name as creator_name
+			account.name as creator_name,
+			court.created_at as court_created_at
 		from court
 		join account on court.creator_id = account.id
 		where court.id = $1
@@ -128,13 +133,13 @@ func (s *store) updateCourt(ctx context.Context, tx pgx.Tx, courtId string, name
 			returning id, name, creator_id, created_at
 		)
 		select
-			court.id as court_id,
-			court.name as court_name,
+			uc.id as court_id,
+			uc.name as court_name,
 			account.id as creator_id,
 			account.name as creator_name,
-			court.created_at as court_created_at
-		from updated_court court
-		join account on court.creator_id = account.id
+			uc.created_at as court_created_at
+		from updated_court uc
+		join account on uc.creator_id = account.id
 	`
 
 	row := q.QueryRow(ctx, sql, name, courtId)

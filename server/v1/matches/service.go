@@ -185,6 +185,8 @@ func (s *service) processSubmitMatchScore(ctx context.Context, model SubmitMatch
 	model.PlayerTwoId = match.PlayerTwo.Id
 	model.WinnerId = determineMatchWinner(model.Score, match.PlayerOne.Id, match.PlayerTwo.Id)
 
+	fmt.Printf("model: %+v\n", model)
+
 	// begin tx
 	tx, err := s.store.db.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {

@@ -1,31 +1,5 @@
 basePath: /
 definitions:
-  auth.ChangeForgottenPasswordRequestModel:
-    properties:
-      code:
-        type: string
-      confirm_password:
-        type: string
-      email:
-        type: string
-      new_password:
-        type: string
-    type: object
-  auth.ChangeForgottenPasswordResponseModel:
-    properties:
-      message:
-        type: string
-    type: object
-  auth.ForgottenPasswordRequestModel:
-    properties:
-      email:
-        type: string
-    type: object
-  auth.ForgottenPasswordResponseModel:
-    properties:
-      message:
-        type: string
-    type: object
   auth.LoginRequestModel:
     properties:
       email:
@@ -265,20 +239,6 @@ definitions:
       name:
         type: string
     type: object
-  me.UpdatePasswordRequestModel:
-    properties:
-      new_password:
-        type: string
-      old_password:
-        type: string
-      repeated_new_password:
-        type: string
-    type: object
-  me.UpdatePasswordResponseModel:
-    properties:
-      message:
-        type: string
-    type: object
   players.AccountModel:
     properties:
       id:
@@ -455,65 +415,6 @@ info:
   title: Gdsi API
   version: 1.0.0
 paths:
-  /v1/auth/passwords/forgotten:
-    post:
-      consumes:
-      - application/json
-      description: Get an email with a password reset link
-      parameters:
-      - description: Request body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/auth.ForgottenPasswordRequestModel'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/auth.ForgottenPasswordResponseModel'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/response.ValidationFailure'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/response.Failure'
-      summary: Forgotten password
-      tags:
-      - auth
-    put:
-      consumes:
-      - application/json
-      description: Reset forgotten password
-      parameters:
-      - description: Request body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/auth.ChangeForgottenPasswordRequestModel'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/auth.ChangeForgottenPasswordResponseModel'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/response.ValidationFailure'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/response.Failure'
-      summary: Forgotten password
-      tags:
-      - auth
   /v1/auth/signup:
     post:
       consumes:
@@ -780,30 +681,6 @@ paths:
       tags:
       - courts
   /v1/me:
-    delete:
-      description: Delete my account and player profile data
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: No content
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.Failure'
-        "404":
-          description: Not found
-          schema:
-            $ref: '#/definitions/response.Failure'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/response.Failure'
-      security:
-      - BearerAuth: []
-      summary: Delete
-      tags:
-      - me
     get:
       description: Get my account and player profile data
       produces:
@@ -863,46 +740,6 @@ paths:
       security:
       - BearerAuth: []
       summary: Update
-      tags:
-      - me
-  /v1/me/password:
-    put:
-      consumes:
-      - application/json
-      description: Change password of the authenticated account
-      parameters:
-      - description: Request body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/me.UpdatePasswordRequestModel'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/me.UpdatePasswordResponseModel'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/response.ValidationFailure'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.Failure'
-        "404":
-          description: Not found
-          schema:
-            $ref: '#/definitions/response.Failure'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/response.Failure'
-      security:
-      - BearerAuth: []
-      summary: Update password
       tags:
       - me
   /v1/players:

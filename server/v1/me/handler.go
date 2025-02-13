@@ -92,34 +92,3 @@ func (h *handler) updateMe(w http.ResponseWriter, r *http.Request) {
 
 	response.WriteSuccess(w, http.StatusOK, result)
 }
-
-// @Summary Delete
-// @Description Delete my account and player profile data
-// @Tags me
-// @Produce json
-// @Success 204 "No content"
-// @Failure 401 {object} response.Failure "Unauthorized"
-// @Failure 404 {object} response.Failure "Not found"
-// @Failure 500 {object} response.Failure "Internal server error"
-// @Security BearerAuth
-// @Router /v1/me [delete]
-func (h *handler) deleteMe(w http.ResponseWriter, r *http.Request) {
-	response.WriteSuccess(w, http.StatusNoContent, nil)
-}
-
-// @Summary Update password
-// @Description Change password of the authenticated account
-// @Tags me
-// @Accept json
-// @Produce json
-// @Param body body me.UpdatePasswordRequestModel true "Request body"
-// @Success 200 {object} me.UpdatePasswordResponseModel
-// @Failure 400 {object} response.ValidationFailure "Bad request"
-// @Failure 401 {object} response.Failure "Unauthorized"
-// @Failure 404 {object} response.Failure "Not found"
-// @Failure 500 {object} response.Failure "Internal server error"
-// @Security BearerAuth
-// @Router /v1/me/password [put]
-func (h *handler) updatePassword(w http.ResponseWriter, r *http.Request) {
-	response.WriteSuccess(w, http.StatusOK, "password changed")
-}

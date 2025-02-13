@@ -23,6 +23,4 @@ func (a *api) Mount(r chi.Router) {
 	r.Post("/signup", a.hdl.signup)
 	r.Post("/tokens/access", a.hdl.login)
 	r.Post("/tokens/refresh", a.hdl.refreshToken)
-	r.Post("/passwords/forgotten", a.hdl.forgottenPasswordLink)
-	r.Put("/passwords/forgotten", a.hdl.forgottenPassword)
 }

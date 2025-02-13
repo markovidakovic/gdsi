@@ -24,6 +24,6 @@ func (a *api) Mount(r chi.Router) {
 	r.Post("/", a.hdl.createMatch)
 	r.Get("/", a.hdl.getMatches)
 	r.Get("/{matchId}", a.hdl.getMatch)
-	r.With(middleware.RequireOwnership(a.hdl.store.checkMatchOwnership, "playerId", "matchId")).Put("/{matchId}", a.hdl.updateMatch)
+	r.With(middleware.RequireOwnership(a.hdl.store.checkMatchOwnership, "player", "matchId")).Put("/{matchId}", a.hdl.updateMatch)
 	r.With(middleware.RequireOwnership(a.hdl.store.checkMatchParticipation, "player", "matchId")).Post("/{matchId}/score", a.hdl.submitMatchScore)
 }

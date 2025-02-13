@@ -30,7 +30,7 @@ func (mm *MatchModel) ScanRow(row pgx.Row) error {
 	err := row.Scan(&mm.Id, &mm.Court.Id, &mm.Court.Name, &mm.ScheduledAt, &mm.PlayerOne.Id, &mm.PlayerOne.Name, &mm.PlayerTwo.Id, &mm.PlayerTwo.Name, &winnerId, &winnerName, &mm.Score, &mm.Season.Id, &mm.Season.Title, &mm.League.Id, &mm.League.Title, &mm.CreatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return fmt.Errorf("scanning match row: %w", response.ErrNotFound)
+			return response.ErrNotFound
 		}
 		return fmt.Errorf("scanning match row: %v", err)
 	}

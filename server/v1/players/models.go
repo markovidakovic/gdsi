@@ -31,7 +31,7 @@ func (pm *PlayerModel) ScanRow(row pgx.Row) error {
 	err := row.Scan(&pm.Id, &pm.Height, &pm.Weight, &pm.Handedness, &pm.Racket, &pm.MatchesExpected, &pm.MatchesPlayed, &pm.MatchesWon, &pm.MatchesScheduled, &pm.SeasonsPlayed, &pm.Account.Id, &pm.Account.Name, &leagueId, &leagueTitle, &pm.CreatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return fmt.Errorf("scanning player row: %w", response.ErrNotFound)
+			return response.ErrNotFound
 		}
 		return fmt.Errorf("scanning player row: %v", err)
 	}

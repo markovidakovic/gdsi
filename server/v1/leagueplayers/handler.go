@@ -100,9 +100,9 @@ func (h *handler) getLeaguePlayer(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} response.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId}/players/{playerId}/assign [post]
-func (h *handler) assignLeaguePlayer(w http.ResponseWriter, r *http.Request) {
+func (h *handler) assignPlayerToLeague(w http.ResponseWriter, r *http.Request) {
 	// call the service
-	result, err := h.service.processAssignLeaguePlayer(r.Context(), chi.URLParam(r, "seasonId"), chi.URLParam(r, "leagueId"), chi.URLParam(r, "playerId"))
+	result, err := h.service.processAssignPlayerToLeague(r.Context(), chi.URLParam(r, "seasonId"), chi.URLParam(r, "leagueId"), chi.URLParam(r, "playerId"))
 	if err != nil {
 		switch {
 		case errors.Is(err, response.ErrBadRequest):
@@ -134,9 +134,9 @@ func (h *handler) assignLeaguePlayer(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} response.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId}/players/{playerId}/assign [delete]
-func (h *handler) removeLeaguePlayer(w http.ResponseWriter, r *http.Request) {
+func (h *handler) unassignPlayerFromLeague(w http.ResponseWriter, r *http.Request) {
 	// call the service
-	result, err := h.service.processRemoveLeaguePlayer(r.Context(), chi.URLParam(r, "seasonId"), chi.URLParam(r, "leagueId"), chi.URLParam(r, "playerId"))
+	result, err := h.service.processUnassignPlayerFromLeague(r.Context(), chi.URLParam(r, "seasonId"), chi.URLParam(r, "leagueId"), chi.URLParam(r, "playerId"))
 	if err != nil {
 		switch {
 		case errors.Is(err, response.ErrBadRequest):

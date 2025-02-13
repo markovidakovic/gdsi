@@ -23,7 +23,7 @@ func newService(cfg *config.Config, store *store) *service {
 
 func (s *service) processGetLeaguePlayers(ctx context.Context, seasonId, leagueId string) ([]players.PlayerModel, error) {
 	// validate params
-	seasonExists, leagueExists, leagueInSeason, err := s.store.validateFindLeaguePlayers(ctx, seasonId, leagueId)
+	seasonExists, leagueExists, err := s.store.validateFindLeaguePlayers(ctx, seasonId, leagueId)
 	if err != nil {
 		return nil, err
 	}
@@ -33,9 +33,6 @@ func (s *service) processGetLeaguePlayers(ctx context.Context, seasonId, leagueI
 	}
 	if !leagueExists {
 		return nil, fmt.Errorf("finding league: %w", response.ErrNotFound)
-	}
-	if !leagueInSeason {
-		return nil, fmt.Errorf("%w: league not in season", response.ErrBadRequest)
 	}
 
 	// find league players
@@ -49,7 +46,7 @@ func (s *service) processGetLeaguePlayers(ctx context.Context, seasonId, leagueI
 
 func (s *service) processGetLeaguePlayer(ctx context.Context, seasonId, leagueId, playerId string) (*players.PlayerModel, error) {
 	// validate params
-	seasonExists, leagueExists, leagueInSeason, playerExists, err := s.store.validateFindLeaguePlayer(ctx, seasonId, leagueId, playerId)
+	seasonExists, leagueExists, playerExists, err := s.store.validateFindLeaguePlayer(ctx, seasonId, leagueId, playerId)
 	if err != nil {
 		return nil, err
 	}
@@ -59,9 +56,6 @@ func (s *service) processGetLeaguePlayer(ctx context.Context, seasonId, leagueId
 	}
 	if !leagueExists {
 		return nil, fmt.Errorf("finding league: %w", response.ErrNotFound)
-	}
-	if !leagueInSeason {
-		return nil, fmt.Errorf("%w: league not in season", response.ErrBadRequest)
 	}
 	if !playerExists {
 		return nil, fmt.Errorf("finding player: %w", response.ErrNotFound)
@@ -76,9 +70,9 @@ func (s *service) processGetLeaguePlayer(ctx context.Context, seasonId, leagueId
 	return &lp, nil
 }
 
-func (s *service) processAssignLeaguePlayer(ctx context.Context, seasonId, leagueId, playerId string) (*players.PlayerModel, error) {
+func (s *service) processAssignPlayerToLeague(ctx context.Context, seasonId, leagueId, playerId string) (*players.PlayerModel, error) {
 	// validate params
-	seasonExists, leagueExists, leagueInSeason, playerExists, err := s.store.validateUpdatePlayerCurrentLeague(ctx, seasonId, leagueId, playerId)
+	seasonExists, leagueExists, playerExists, err := s.store.validateUpdatePlayerCurrentLeague(ctx, seasonId, leagueId, playerId)
 	if err != nil {
 		return nil, err
 	}
@@ -88,9 +82,6 @@ func (s *service) processAssignLeaguePlayer(ctx context.Context, seasonId, leagu
 	}
 	if !leagueExists {
 		return nil, fmt.Errorf("finding league: %w", response.ErrNotFound)
-	}
-	if !leagueInSeason {
-		return nil, fmt.Errorf("%w: league not in season", response.ErrBadRequest)
 	}
 	if !playerExists {
 		return nil, fmt.Errorf("finding player: %w", response.ErrNotFound)
@@ -105,9 +96,9 @@ func (s *service) processAssignLeaguePlayer(ctx context.Context, seasonId, leagu
 	return &lp, nil
 }
 
-func (s *service) processRemoveLeaguePlayer(ctx context.Context, seasonId, leagueId, playerId string) (*players.PlayerModel, error) {
+func (s *service) processUnassignPlayerFromLeague(ctx context.Context, seasonId, leagueId, playerId string) (*players.PlayerModel, error) {
 	// validate params
-	seasonExists, leagueExists, leagueInSeason, playerExists, err := s.store.validateUpdatePlayerCurrentLeague(ctx, seasonId, leagueId, playerId)
+	seasonExists, leagueExists, playerExists, err := s.store.validateUpdatePlayerCurrentLeague(ctx, seasonId, leagueId, playerId)
 	if err != nil {
 		return nil, err
 	}
@@ -117,9 +108,6 @@ func (s *service) processRemoveLeaguePlayer(ctx context.Context, seasonId, leagu
 	}
 	if !leagueExists {
 		return nil, fmt.Errorf("finding league: %w", response.ErrNotFound)
-	}
-	if !leagueInSeason {
-		return nil, fmt.Errorf("%w: league not in season", response.ErrBadRequest)
 	}
 	if !playerExists {
 		return nil, fmt.Errorf("finding player: %w", response.ErrNotFound)

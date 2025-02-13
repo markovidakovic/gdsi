@@ -144,29 +144,25 @@ func (s *store) updatePlayerCurrentLeague(ctx context.Context, tx pgx.Tx, league
 	row := q.QueryRow(ctx, sql, leagueId, playerId)
 	err := dest.ScanRow(row)
 	if err != nil {
-		// todo: better err msg
-		return dest, err
+		return dest, fmt.Errorf("updating player current league: %w", err)
 	}
 
 	return dest, nil
 }
 
 // helper
-func (s *store) validateFindLeaguePlayers(ctx context.Context, seasonId, leagueId string) (seasonExists bool, leagueExists bool, leagueInSeason bool, err error) {
+func (s *store) validateFindLeaguePlayers(ctx context.Context, seasonId, leagueId string) (seasonExists bool, leagueExists bool, err error) {
 	sql1 := `
 		select
 			exists (
 				select 1 from season where id = $1
 			) as season_exists,
 			exists (
-				select 1 from league where id = $2
-			) as league_exists,
-			exists (
 				select 1 from league where id = $2 and season_id = $1
-			) as league_in_season
+			) as league_exists
 	`
 
-	err = s.db.QueryRow(ctx, sql1, seasonId, leagueId).Scan(&seasonExists, &leagueExists, &leagueInSeason)
+	err = s.db.QueryRow(ctx, sql1, seasonId, leagueId).Scan(&seasonExists, &leagueExists)
 	if err != nil {
 		return
 	}
@@ -175,24 +171,21 @@ func (s *store) validateFindLeaguePlayers(ctx context.Context, seasonId, leagueI
 }
 
 // helper
-func (s *store) validateFindLeaguePlayer(ctx context.Context, seasonId, leagueId, playerId string) (seasonExists bool, leagueExists bool, leagueInSeason bool, playerExists bool, err error) {
+func (s *store) validateFindLeaguePlayer(ctx context.Context, seasonId, leagueId, playerId string) (seasonExists bool, leagueExists bool, playerExists bool, err error) {
 	sql1 := `
 		select
 			exists (
 				select 1 from season where id = $1
 			) as season_exists,
 			exists (
-				select 1 from league where id = $2
-			) as league_exists,
-			exists (
 				select 1 from league where id = $2 and season_id = $1
-			) as league_in_season,
+			) as league_exists,
 			exists (
 				select 1 from player where id = $3
 			) as player_exists
 	`
 
-	err = s.db.QueryRow(ctx, sql1, seasonId, leagueId, playerId).Scan(&seasonExists, &leagueExists, &leagueInSeason, &playerExists)
+	err = s.db.QueryRow(ctx, sql1, seasonId, leagueId, playerId).Scan(&seasonExists, &leagueExists, &playerExists)
 	if err != nil {
 		return
 	}
@@ -201,24 +194,21 @@ func (s *store) validateFindLeaguePlayer(ctx context.Context, seasonId, leagueId
 }
 
 // helper
-func (s *store) validateUpdatePlayerCurrentLeague(ctx context.Context, seasonId, leagueId, playerId string) (seasonExists bool, leagueExists bool, leagueInSeason bool, playerExists bool, err error) {
+func (s *store) validateUpdatePlayerCurrentLeague(ctx context.Context, seasonId, leagueId, playerId string) (seasonExists bool, leagueExists bool, playerExists bool, err error) {
 	sql1 := `
 	select
 		exists (
 			select 1 from season where id = $1
 		) as season_exists,
 		exists (
-			select 1 from league where id = $2
-		) as league_exists,
-		exists (
 			select 1 from league where id = $2 and season_id = $1
-		) as league_in_season,
+		) as league_exists,
 		exists (
 			select 1 from player where id = $3
 		) as player_exists
 `
 
-	err = s.db.QueryRow(ctx, sql1, seasonId, leagueId, playerId).Scan(&seasonExists, &leagueExists, &leagueInSeason, &playerExists)
+	err = s.db.QueryRow(ctx, sql1, seasonId, leagueId, playerId).Scan(&seasonExists, &leagueExists, &playerExists)
 	if err != nil {
 		return
 	}

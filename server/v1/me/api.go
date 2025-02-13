@@ -22,6 +22,4 @@ func New(cfg *config.Config, db *db.Conn) *api {
 func (a *api) Mount(r chi.Router) {
 	r.Get("/", a.hdl.getMe)
 	r.Put("/", a.hdl.updateMe)
-	r.Delete("/", a.hdl.deleteMe)
-	r.Put("/password", a.hdl.updatePassword)
 }

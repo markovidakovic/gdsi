@@ -239,17 +239,20 @@ func (s *store) updatePlayerStatistics(ctx context.Context, tx pgx.Tx, winnerId,
 		q = s.db
 	}
 
+	// sql := `
+	// 	update player
+	// 	set
+	// 		matches_played = matches_played + 1,
+	// 		matches_won = matches_won + case when id = $1 then 1 else 0 end,
+	// 		winning_ratio = case
+	// 			when (matches_played + 1) > 0
+	// 			then (matches_won + case when id = $1 then 1 else 0 end)::float / (matches_played + 1)
+	// 			else 0
+	// 		end
+	// 	where id in ($2, $3)
+	// `
+
 	sql := `
-		update player
-		set
-			matches_played = matches_played + 1,
-			matches_won = matches_won + case when id = $1 then 1 else 0 end,
-			winning_ratio = case
-				when (matches_played + 1) > 0
-				then (matches_won + case when id = $1 then 1 else 0 end)::float / (matches_played + 1)
-				else 0
-			end
-		where id in ($2, $3)
 	`
 
 	_, err := q.Exec(ctx, sql, winnerId, playerOneId, playerTwoId)

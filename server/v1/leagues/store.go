@@ -121,7 +121,7 @@ func (s *store) findLeague(ctx context.Context, seasonId, leagueId string) (*Lea
 	row := s.db.QueryRow(ctx, sql, seasonId, leagueId)
 	err := dest.ScanRow(row)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("finding league: %w", err)
 	}
 
 	return &dest, nil
