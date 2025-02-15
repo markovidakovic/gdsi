@@ -1,6 +1,6 @@
 .env
 coverage.out
-rest
-rest.exe
-seed
-seed.exe
+/rest
+/rest.exe
+/seed
+/seed.exe
