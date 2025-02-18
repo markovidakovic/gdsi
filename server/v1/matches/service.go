@@ -50,20 +50,58 @@ func (s *service) processCreateMatch(ctx context.Context, model CreateMatchReque
 		return nil, fmt.Errorf("players not in league: %w", response.ErrBadRequest)
 	}
 
-	if model.Score != nil {
-		winnerId := determineMatchWinner(*model.Score, model.PlayerOneId, model.PlayerTwoId)
-		model.WinnerId = &winnerId
-	} else {
-		model.WinnerId = nil
+	// begin tx
+	tx, err := s.store.db.Begin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("beginning tx: %v", err)
 	}
 
+	defer func() {
+		if err != nil && err != pgx.ErrTxClosed {
+			log.Printf("failed to rollback the insert match tx: %v", err)
+		}
+	}()
+
 	// insert match
-	result, err := s.store.insertMatch(ctx, nil, model)
+	match, err := s.store.insertMatch(ctx, tx, model)
 	if err != nil {
 		return nil, err
 	}
 
-	return &result, nil
+	// for cases where the score is submitted upon match creation
+	if model.Score != nil {
+		winnerId := determineMatchWinner(*model.Score, model.PlayerOneId, model.PlayerTwoId)
+		model.WinnerId = &winnerId
+
+		// calc player statistics
+		pl1Stats := calcMatchStats(*model.Score, true)
+		pl2Stats := calcMatchStats(*model.Score, true)
+
+		// update player stats
+		err = s.store.updatePlayerStatistics(ctx, tx, *model.WinnerId, model.PlayerOneId, model.PlayerTwoId)
+		if err != nil {
+			return nil, err
+		}
+
+		// update standings for pl1
+		err = s.store.updateStanding(ctx, tx, model.SeasonId, model.LeagueId, model.PlayerOneId, pl1Stats)
+		if err != nil {
+			return nil, err
+		}
+
+		// update standings for pl2
+		err = s.store.updateStanding(ctx, tx, model.SeasonId, model.LeagueId, model.PlayerTwoId, pl2Stats)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("commiting tx: %v", err)
+	}
+
+	return &match, nil
 }
 
 func (s *service) processGetMatches(ctx context.Context, seasonId, leagueId string) ([]MatchModel, error) {

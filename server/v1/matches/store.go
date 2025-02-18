@@ -240,11 +240,11 @@ func (s *store) updatePlayerStatistics(ctx context.Context, tx pgx.Tx, winnerId,
 	}
 
 	sql := `
-	update player
-	set 
-		matches_played = matches_played + 1,
-		matches_won = matches_won + case when id = $1 then 1 else 0 end
-	where id in ($2, $3)
+		update player
+		set 
+			matches_played = matches_played + 1,
+			matches_won = matches_won + case when id = $1 then 1 else 0 end
+		where id in ($2, $3)
 	`
 
 	_, err := q.Exec(ctx, sql, winnerId, playerOneId, playerTwoId)
@@ -255,7 +255,6 @@ func (s *store) updatePlayerStatistics(ctx context.Context, tx pgx.Tx, winnerId,
 	return nil
 }
 
-// todo: refactor be an atomic operation for one user, then call from service for each player
 func (s *store) updateStanding(ctx context.Context, tx pgx.Tx, seasonId, leagueId, playerId string, plStats MatchStats) error {
 	var q db.Querier
 	if tx != nil {
