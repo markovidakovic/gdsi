@@ -38,7 +38,6 @@ func (a *api) Mount(r chi.Router) {
 	r.Group(func(r chi.Router) {
 		r.Route("/auth", auth.New(a.cfg, a.db).Mount)
 	})
-
 	r.Group(func(r chi.Router) {
 		// seek, verify and validate jwt
 		r.Use(jwtauth.Verifier(a.cfg.JwtAuth))

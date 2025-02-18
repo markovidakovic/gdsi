@@ -185,8 +185,6 @@ func (s *service) processSubmitMatchScore(ctx context.Context, model SubmitMatch
 	model.PlayerTwoId = match.PlayerTwo.Id
 	model.WinnerId = determineMatchWinner(model.Score, match.PlayerOne.Id, match.PlayerTwo.Id)
 
-	fmt.Printf("model: %+v\n", model)
-
 	// begin tx
 	tx, err := s.store.db.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
@@ -214,10 +212,14 @@ func (s *service) processSubmitMatchScore(ctx context.Context, model SubmitMatch
 	pl1MatchStats := calcMatchStats(model.Score, true)
 	pl2MatchStats := calcMatchStats(model.Score, false)
 
-	fmt.Printf("pl1MatchStats: %+v\n", pl1MatchStats)
-	fmt.Printf("pl2MatchStats: %+v\n", pl2MatchStats)
+	// update standing for pl1
+	err = s.store.updateStanding(ctx, tx, model.SeasonId, model.LeagueId, model.PlayerOneId, pl1MatchStats)
+	if err != nil {
+		return nil, err
+	}
 
-	err = s.store.updateStandings(ctx, tx, model.SeasonId, model.LeagueId, model.PlayerOneId, model.PlayerTwoId, pl1MatchStats, pl2MatchStats)
+	// update standing for pl2
+	err = s.store.updateStanding(ctx, tx, model.SeasonId, model.LeagueId, model.PlayerTwoId, pl2MatchStats)
 	if err != nil {
 		return nil, err
 	}

@@ -239,20 +239,12 @@ func (s *store) updatePlayerStatistics(ctx context.Context, tx pgx.Tx, winnerId,
 		q = s.db
 	}
 
-	// sql := `
-	// 	update player
-	// 	set
-	// 		matches_played = matches_played + 1,
-	// 		matches_won = matches_won + case when id = $1 then 1 else 0 end,
-	// 		winning_ratio = case
-	// 			when (matches_played + 1) > 0
-	// 			then (matches_won + case when id = $1 then 1 else 0 end)::float / (matches_played + 1)
-	// 			else 0
-	// 		end
-	// 	where id in ($2, $3)
-	// `
-
 	sql := `
+	update player
+	set 
+		matches_played = matches_played + 1,
+		matches_won = matches_won + case when id = $1 then 1 else 0 end
+	where id in ($2, $3)
 	`
 
 	_, err := q.Exec(ctx, sql, winnerId, playerOneId, playerTwoId)
@@ -264,7 +256,7 @@ func (s *store) updatePlayerStatistics(ctx context.Context, tx pgx.Tx, winnerId,
 }
 
 // todo: refactor be an atomic operation for one user, then call from service for each player
-func (s *store) updateStandings(ctx context.Context, tx pgx.Tx, seasonId, leagueId, playerOneId, playerTwoId string, pl1Stats MatchStats, pl2Stats MatchStats) error {
+func (s *store) updateStanding(ctx context.Context, tx pgx.Tx, seasonId, leagueId, playerId string, plStats MatchStats) error {
 	var q db.Querier
 	if tx != nil {
 		q = tx
@@ -286,14 +278,9 @@ func (s *store) updateStandings(ctx context.Context, tx pgx.Tx, seasonId, league
 			games_lost = standing.games_lost + $6
 	`
 
-	_, err := q.Exec(ctx, sql, pl1Stats.Pts, pl1Stats.WonMatches, pl1Stats.SetsWon, pl1Stats.SetsLost, pl1Stats.GamesWon, pl1Stats.GamesLost, seasonId, leagueId, playerOneId)
+	_, err := q.Exec(ctx, sql, plStats.Pts, plStats.WonMatches, plStats.SetsWon, plStats.SetsLost, plStats.GamesWon, plStats.GamesLost, seasonId, leagueId, playerId)
 	if err != nil {
 		return fmt.Errorf("updating player one standing: %v", err)
-	}
-
-	_, err = q.Exec(ctx, sql, pl2Stats.Pts, pl2Stats.WonMatches, pl2Stats.SetsWon, pl2Stats.SetsLost, pl2Stats.GamesWon, pl2Stats.GamesLost, seasonId, leagueId, playerTwoId)
-	if err != nil {
-		return fmt.Errorf("updating player two standing: %v", err)
 	}
 
 	return nil

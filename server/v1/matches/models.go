@@ -195,7 +195,6 @@ type SubmitMatchScoreRequestModel struct {
 	PlayerTwoId string `json:"-"`
 }
 
-// todo
 func (m SubmitMatchScoreRequestModel) Validate() []response.InvalidField {
 	var inv []response.InvalidField
 
