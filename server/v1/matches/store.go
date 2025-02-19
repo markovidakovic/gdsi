@@ -21,7 +21,7 @@ func newStore(db *db.Conn) *store {
 	}
 }
 
-func (s *store) insertMatch(ctx context.Context, tx pgx.Tx, model CreateMatchRequestModel) (MatchModel, error) {
+func (s *store) insertMatch(ctx context.Context, tx pgx.Tx, courtId, scheduledAt, playerOneId, playerTwoId string, winnerId, score *string, seasonId, leagueId string) (MatchModel, error) {
 	var q db.Querier
 	if tx != nil {
 		q = tx
@@ -66,7 +66,7 @@ func (s *store) insertMatch(ctx context.Context, tx pgx.Tx, model CreateMatchReq
 
 	var dest MatchModel
 
-	row := q.QueryRow(ctx, sql, model.CourtId, model.ScheduledAt, model.PlayerOneId, model.PlayerTwoId, model.WinnerId, model.Score, model.SeasonId, model.LeagueId, model.PlayerOneId)
+	row := q.QueryRow(ctx, sql, courtId, scheduledAt, playerOneId, playerTwoId, winnerId, score, seasonId, leagueId, playerOneId)
 	err := dest.ScanRow(row)
 	if err != nil {
 		return dest, err
@@ -176,7 +176,7 @@ func (s *store) findMatch(ctx context.Context, seasonId, leagueId, matchId strin
 	return &dest, nil
 }
 
-func (s *store) updateMatch(ctx context.Context, tx pgx.Tx, model UpdateMatchRequestModel) (*MatchModel, error) {
+func (s *store) updateMatch(ctx context.Context, tx pgx.Tx, courtId, scheduledAt, playerTwoId, seasonId, leagueId, matchId string) (*MatchModel, error) {
 	var q db.Querier
 	if tx != nil {
 		q = tx
@@ -222,7 +222,7 @@ func (s *store) updateMatch(ctx context.Context, tx pgx.Tx, model UpdateMatchReq
 
 	var dest MatchModel
 
-	row := q.QueryRow(ctx, sql, model.CourtId, model.ScheduledAt, model.PlayerTwoId, model.MatchId, model.SeasonId, model.LeagueId)
+	row := q.QueryRow(ctx, sql, courtId, scheduledAt, playerTwoId, matchId, seasonId, leagueId)
 	err := dest.ScanRow(row)
 	if err != nil {
 		return nil, fmt.Errorf("updating match: %w", err)
@@ -250,6 +250,29 @@ func (s *store) updatePlayerStatistics(ctx context.Context, tx pgx.Tx, winnerId,
 	_, err := q.Exec(ctx, sql, winnerId, playerOneId, playerTwoId)
 	if err != nil {
 		return fmt.Errorf("updating player stats: %v", err)
+	}
+
+	return nil
+}
+
+func (s *store) incrementPlayerMatchesScheduled(ctx context.Context, tx pgx.Tx, playerId string) error {
+	var q db.Querier
+	if tx != nil {
+		q = tx
+	} else {
+		q = s.db
+	}
+
+	sql := `
+		update player
+		set
+			matches_scheduled = matches_scheduled + 1
+		where id = $1	
+	`
+
+	_, err := q.Exec(ctx, sql, playerId)
+	if err != nil {
+		return fmt.Errorf("incrementing player matches scheduled: %v", err)
 	}
 
 	return nil
@@ -372,25 +395,6 @@ func (s *store) validateInsertUpdateMatch(ctx context.Context, courtId, seasonId
 		return
 	}
 
-	return
-}
-
-// helper
-func (s *store) validateFindMatches(ctx context.Context, seasonId, leagueId string) (seasonExists bool, leagueExists bool, err error) {
-	sql1 := `
-		select
-			exists (
-				select 1 from season where id = $1
-			) as season_exists,
-			exists (
-				select 1 from league where id = $2 and season_id = $1
-			) as league_exists
-	`
-
-	err = s.db.QueryRow(ctx, sql1, seasonId, leagueId).Scan(&seasonExists, &leagueExists)
-	if err != nil {
-		return
-	}
 	return
 }
 

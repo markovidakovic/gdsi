@@ -18,19 +18,22 @@ import (
 	"github.com/markovidakovic/gdsi/server/v1/players"
 	"github.com/markovidakovic/gdsi/server/v1/seasons"
 	"github.com/markovidakovic/gdsi/server/v1/standings"
+	"github.com/markovidakovic/gdsi/server/validation"
 )
 
 type api struct {
-	cfg *config.Config
-	db  *db.Conn
+	cfg       *config.Config
+	db        *db.Conn
+	validator *validation.Validator
 }
 
 var _ router.Mounter = (*api)(nil)
 
 func New(cfg *config.Config, db *db.Conn) *api {
 	return &api{
-		cfg,
-		db,
+		cfg:       cfg,
+		db:        db,
+		validator: validation.NewValidator(db),
 	}
 }
 
@@ -50,7 +53,7 @@ func (a *api) Mount(r chi.Router) {
 		r.Route("/seasons", seasons.New(a.cfg, a.db).Mount)
 		r.Route("/seasons/{seasonId}/leagues", leagues.New(a.cfg, a.db).Mount)
 		r.Route("/seasons/{seasonId}/leagues/{leagueId}/players", leagueplayers.New(a.cfg, a.db).Mount)
-		r.Route("/seasons/{seasonId}/leagues/{leagueId}/matches", matches.New(a.cfg, a.db).Mount)
+		r.Route("/seasons/{seasonId}/leagues/{leagueId}/matches", matches.New(a.cfg, a.db, a.validator).Mount)
 		r.Route("/seasons/{seasonId}/leagues/{leagueId}/standings", standings.New(a.cfg, a.db).Mount)
 	})
 	log.Println("v1 endpoints mounted")

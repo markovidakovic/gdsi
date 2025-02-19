@@ -10,6 +10,7 @@ import (
 	"github.com/markovidakovic/gdsi/server/db"
 	"github.com/markovidakovic/gdsi/server/middleware"
 	"github.com/markovidakovic/gdsi/server/response"
+	"github.com/markovidakovic/gdsi/server/validation"
 )
 
 type handler struct {
@@ -17,10 +18,10 @@ type handler struct {
 	store   *store
 }
 
-func newHandler(cfg *config.Config, db *db.Conn) *handler {
+func newHandler(cfg *config.Config, db *db.Conn, validator *validation.Validator) *handler {
 	h := &handler{}
 	h.store = newStore(db)
-	h.service = newService(cfg, h.store)
+	h.service = newService(cfg, h.store, validator)
 	return h
 }
 

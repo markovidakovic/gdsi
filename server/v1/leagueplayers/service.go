@@ -3,7 +3,9 @@ package leagueplayers
 import (
 	"context"
 	"fmt"
+	"log"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/markovidakovic/gdsi/server/config"
 	"github.com/markovidakovic/gdsi/server/response"
 	"github.com/markovidakovic/gdsi/server/v1/players"
@@ -87,13 +89,37 @@ func (s *service) processAssignPlayerToLeague(ctx context.Context, seasonId, lea
 		return nil, fmt.Errorf("finding player: %w", response.ErrNotFound)
 	}
 
+	// begin tx
+	tx, err := s.store.db.Begin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("beginning tx: %v", err)
+	}
+
+	defer func() {
+		err := tx.Rollback(ctx)
+		if err != nil && err != pgx.ErrTxClosed {
+			log.Printf("failed to rollback the insert match tx: %v", err)
+		}
+	}()
+
 	// update player current league
-	lp, err := s.store.updatePlayerCurrentLeague(ctx, nil, &leagueId, playerId)
+	player, err := s.store.updatePlayerCurrentLeague(ctx, tx, &leagueId, playerId)
 	if err != nil {
 		return nil, err
 	}
 
-	return &lp, nil
+	// increment player seasons played
+	player, err = s.store.incrementPlayerSeasonsPlayed(ctx, tx, leagueId, playerId)
+	if err != nil {
+		return nil, err
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("committing tx: %v", err)
+	}
+
+	return &player, nil
 }
 
 func (s *service) processUnassignPlayerFromLeague(ctx context.Context, seasonId, leagueId, playerId string) (*players.PlayerModel, error) {

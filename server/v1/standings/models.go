@@ -19,12 +19,12 @@ type StandingModel struct {
 	GamesWon      int    `json:"games_won"`
 	GamesLost     int    `json:"games_lost"`
 	Season        struct {
-		Id   string `json:"id"`
-		Name string `json:"name"`
+		Id    string `json:"id"`
+		Title string `json:"name"`
 	} `json:"season"`
 	League struct {
-		Id   string `json:"id"`
-		Name string `json:"name"`
+		Id    string `json:"id"`
+		Title string `json:"name"`
 	} `json:"league"`
 	Player struct {
 		Id   string `json:"id"`
@@ -34,21 +34,21 @@ type StandingModel struct {
 }
 
 func (sm *StandingModel) ScanRow(row pgx.Row) error {
-	err := row.Scan(&sm.Id, &sm.Points, &sm.MatchesPlayed, &sm.MatchesWon, &sm.SetsWon, &sm.SetsLost, &sm.GamesWon, &sm.GamesLost, &sm.Season.Id, &sm.Season.Name, &sm.League.Id, &sm.League.Name, &sm.Player.Id, &sm.Player.Name, &sm.CreatedAt)
+	err := row.Scan(&sm.Id, &sm.Points, &sm.MatchesPlayed, &sm.MatchesWon, &sm.SetsWon, &sm.SetsLost, &sm.GamesWon, &sm.GamesLost, &sm.Season.Id, &sm.Season.Title, &sm.League.Id, &sm.League.Title, &sm.Player.Id, &sm.Player.Name, &sm.CreatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return fmt.Errorf("scanning row: %w", response.ErrNotFound)
+			return response.ErrNotFound
 		}
-		return fmt.Errorf("scanning row: %v", err)
+		return fmt.Errorf("scanning standing row: %v", err)
 	}
 
 	return nil
 }
 
 func (sm *StandingModel) ScanRows(rows pgx.Rows) error {
-	err := rows.Scan(&sm.Id, &sm.Points, &sm.MatchesPlayed, &sm.MatchesWon, &sm.SetsWon, &sm.SetsLost, &sm.GamesWon, &sm.GamesLost, &sm.Season.Id, &sm.Season.Name, &sm.League.Id, &sm.League.Name, &sm.Player.Id, &sm.Player.Name, &sm.CreatedAt)
+	err := rows.Scan(&sm.Id, &sm.Points, &sm.MatchesPlayed, &sm.MatchesWon, &sm.SetsWon, &sm.SetsLost, &sm.GamesWon, &sm.GamesLost, &sm.Season.Id, &sm.Season.Title, &sm.League.Id, &sm.League.Title, &sm.Player.Id, &sm.Player.Name, &sm.CreatedAt)
 	if err != nil {
-		return fmt.Errorf("scanning rows: %v", err)
+		return fmt.Errorf("scanning standing rows: %v", err)
 	}
 
 	return nil

@@ -1,8 +1,10 @@
 package standings
 
 import (
+	"errors"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/markovidakovic/gdsi/server/config"
 	"github.com/markovidakovic/gdsi/server/db"
 	"github.com/markovidakovic/gdsi/server/response"
@@ -32,5 +34,17 @@ func newHandler(cfg *config.Config, db *db.Conn) *handler {
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId}/standings [get]
 func (h *handler) getStandings(w http.ResponseWriter, r *http.Request) {
-	response.WriteSuccess(w, http.StatusOK, "get standings")
+	result, err := h.service.processGetStandings(r.Context(), chi.URLParam(r, "seasonId"), chi.URLParam(r, "leagueId"))
+	if err != nil {
+		switch {
+		case errors.Is(err, response.ErrNotFound):
+			response.WriteFailure(w, response.NewNotFoundFailure(err.Error()))
+			return
+		default:
+			response.WriteFailure(w, response.NewInternalFailure(err))
+			return
+		}
+	}
+
+	response.WriteSuccess(w, http.StatusOK, result)
 }

@@ -124,8 +124,8 @@ func NewConflictFailure(message string) Failure {
 	}
 }
 
-func NewInternalFailure(err error) Failure {
-	return Failure{
+func NewInternalFailure(err error) *Failure {
+	return &Failure{
 		Status:  http.StatusInternalServerError,
 		Message: "internal server error",
 		Err:     err,
