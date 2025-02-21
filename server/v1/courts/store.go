@@ -2,11 +2,12 @@ package courts
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/markovidakovic/gdsi/server/db"
-	"github.com/markovidakovic/gdsi/server/response"
+	"github.com/markovidakovic/gdsi/server/failure"
 )
 
 type store struct {
@@ -48,7 +49,7 @@ func (s *store) insertCourt(ctx context.Context, tx pgx.Tx, name, creatorId stri
 	row := q.QueryRow(ctx, sql, name, creatorId)
 	err := dest.ScanRow(row)
 	if err != nil {
-		return dest, fmt.Errorf("inserting court: %v", err)
+		return dest, failure.New("failed to insert court", err)
 	}
 
 	return dest, nil
@@ -69,7 +70,7 @@ func (s *store) findCourts(ctx context.Context) ([]CourtModel, error) {
 
 	rows, err := s.db.Query(ctx, sql)
 	if err != nil {
-		return nil, fmt.Errorf("querying courts: %v", err)
+		return nil, failure.New("unable to find courts", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 	defer rows.Close()
 
@@ -78,14 +79,13 @@ func (s *store) findCourts(ctx context.Context) ([]CourtModel, error) {
 		var cm CourtModel
 		err := cm.ScanRows(rows)
 		if err != nil {
-			return nil, err
+			return nil, failure.New("unable to find courts", err)
 		}
 		dest = append(dest, cm)
 	}
 
 	if err = rows.Err(); err != nil {
-		// todo: what is the appropriate error msg here?
-		return nil, fmt.Errorf("scanning court rows: %v", err)
+		return nil, failure.New("unable to find courts", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 
 	return dest, nil
@@ -109,7 +109,10 @@ func (s *store) findCourt(ctx context.Context, courtId string) (*CourtModel, err
 	row := s.db.QueryRow(ctx, sql, courtId)
 	err := dest.ScanRow(row)
 	if err != nil {
-		return nil, fmt.Errorf("finding court: %w", err)
+		if errors.Is(err, failure.ErrNotFound) {
+			return nil, failure.New("court not found", err)
+		}
+		return nil, failure.New("unable to find court", err)
 	}
 
 	return &dest, nil
@@ -145,7 +148,10 @@ func (s *store) updateCourt(ctx context.Context, tx pgx.Tx, courtId string, name
 	row := q.QueryRow(ctx, sql, name, courtId)
 	err := dest.ScanRow(row)
 	if err != nil {
-		return nil, fmt.Errorf("updating court: %w", err)
+		if errors.Is(err, failure.ErrNotFound) {
+			return nil, failure.New("court not found", err)
+		}
+		return nil, failure.New("unable to update court", err)
 	}
 
 	return &dest, nil
@@ -165,10 +171,10 @@ func (s *store) deleteCourt(ctx context.Context, tx pgx.Tx, courtId string) erro
 
 	ct, err := q.Exec(ctx, sql, courtId)
 	if err != nil {
-		return err
+		return failure.New("unable to delete court", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 	if ct.RowsAffected() == 0 {
-		return response.ErrNotFound
+		return failure.New("court not found", failure.ErrNotFound)
 	}
 
 	return nil

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/markovidakovic/gdsi/server/response"
+	"github.com/markovidakovic/gdsi/server/failure"
 )
 
 type PlayerModel struct {
@@ -31,9 +31,9 @@ func (pm *PlayerModel) ScanRow(row pgx.Row) error {
 	err := row.Scan(&pm.Id, &pm.Height, &pm.Weight, &pm.Handedness, &pm.Racket, &pm.MatchesExpected, &pm.MatchesPlayed, &pm.MatchesWon, &pm.MatchesScheduled, &pm.SeasonsPlayed, &pm.Account.Id, &pm.Account.Name, &leagueId, &leagueTitle, &pm.CreatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return response.ErrNotFound
+			return failure.New("scanning player row", fmt.Errorf("%w -> %v", failure.ErrNotFound, err))
 		}
-		return fmt.Errorf("scanning player row: %v", err)
+		return failure.New("database error scanning player row", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 
 	if !leagueId.Valid {
@@ -52,7 +52,7 @@ func (pm *PlayerModel) ScanRows(rows pgx.Rows) error {
 	var leagueId, leagueTitle sql.NullString
 	err := rows.Scan(&pm.Id, &pm.Height, &pm.Weight, &pm.Handedness, &pm.Racket, &pm.MatchesExpected, &pm.MatchesPlayed, &pm.MatchesWon, &pm.MatchesScheduled, &pm.SeasonsPlayed, &pm.Account.Id, &pm.Account.Name, &leagueId, &leagueTitle, &pm.CreatedAt)
 	if err != nil {
-		return fmt.Errorf("scanning player rows: %v", err)
+		return failure.New("database error scanning player rows", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 
 	if !leagueId.Valid {
@@ -84,8 +84,8 @@ type UpdatePlayerRequestModel struct {
 }
 
 // todo:
-func (m UpdatePlayerRequestModel) Validate() []response.InvalidField {
-	var inv []response.InvalidField
+func (m UpdatePlayerRequestModel) Validate() []failure.InvalidField {
+	var inv []failure.InvalidField
 
 	if len(inv) > 0 {
 		return inv

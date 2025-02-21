@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/jwtauth/v5"
+	"github.com/markovidakovic/gdsi/server/failure"
 	"github.com/markovidakovic/gdsi/server/permission"
 	"github.com/markovidakovic/gdsi/server/response"
 )
@@ -27,16 +28,17 @@ func AccountInfo(next http.Handler) http.Handler {
 
 		accountId, ok := claims["sub"].(string)
 		if !ok {
-			response.WriteFailure(w, response.NewUnauthorizedFailure("account unauthorized"))
+			response.WriteFailure(w, failure.New("account unauthorized", failure.ErrUnauthorized))
 			return
 		}
 		role, ok := claims["role"].(string)
 		if !ok {
-			response.WriteFailure(w, response.NewUnauthorizedFailure("account unauthorized"))
+			response.WriteFailure(w, failure.New("account unauthorized", failure.ErrUnauthorized))
+			return
 		}
 		playerId, ok := claims["player_id"].(string)
 		if !ok {
-			response.WriteFailure(w, response.NewUnauthorizedFailure("account unauthorized"))
+			response.WriteFailure(w, failure.New("account unauthorized", failure.ErrUnauthorized))
 		}
 
 		ctx := r.Context()
@@ -56,7 +58,7 @@ func RequirePermission(perm permission.Permission) func(next http.Handler) http.
 
 			// check permission
 			if !permission.Has(role, perm) {
-				response.WriteFailure(w, response.NewForbiddenFailure("insufficient permissions"))
+				response.WriteFailure(w, failure.New("insufficient permission", failure.ErrForbidden))
 				return
 			}
 
@@ -66,14 +68,14 @@ func RequirePermission(perm permission.Permission) func(next http.Handler) http.
 }
 
 // RequireOwnerrship checks if the current authenticated account is the resource owner
-func RequireOwnership(oc OwnershipChecker, owner, resourceUrlPattern string) func(next http.Handler) http.Handler {
+func RequireOwnership(oc OwnershipChecker, ownerType, resourceUrlPattern string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			var ownerId string
 
-			if owner == "account" {
+			if ownerType == "account" {
 				ownerId = r.Context().Value(AccountIdCtxKey).(string)
-			} else if owner == "player" {
+			} else if ownerType == "player" {
 				ownerId = r.Context().Value(PlayerIdCtxKey).(string)
 			}
 
@@ -81,12 +83,14 @@ func RequireOwnership(oc OwnershipChecker, owner, resourceUrlPattern string) fun
 
 			isOwner, err := oc(r.Context(), resourceId, ownerId)
 			if err != nil {
-				response.WriteFailure(w, response.NewInternalFailure(err))
+				// maybe create a new error msg here??
+				// the error here is the one returned from the store methods
+				response.WriteFailure(w, err.(*failure.Failure))
 				return
 			}
 
 			if !isOwner {
-				response.WriteFailure(w, response.NewForbiddenFailure("not resource owner"))
+				response.WriteFailure(w, failure.New("not resource owner", failure.ErrForbidden))
 				return
 			}
 
@@ -97,14 +101,14 @@ func RequireOwnership(oc OwnershipChecker, owner, resourceUrlPattern string) fun
 
 // RequirePermissionOrOwnership checks if the current authenticated account is the resource owner or if
 // it has rbac permission to access the resource
-func RequirePermissionOrOwnership(perm permission.Permission, oc OwnershipChecker, owner, resourceUrlPattern string) func(next http.Handler) http.Handler {
+func RequirePermissionOrOwnership(perm permission.Permission, oc OwnershipChecker, ownerType, resourceUrlPattern string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			var ownerId string
 
-			if owner == "account" {
+			if ownerType == "account" {
 				ownerId = r.Context().Value(AccountIdCtxKey).(string)
-			} else if owner == "player" {
+			} else if ownerType == "player" {
 				ownerId = r.Context().Value(PlayerIdCtxKey).(string)
 			}
 
@@ -122,11 +126,14 @@ func RequirePermissionOrOwnership(perm permission.Permission, oc OwnershipChecke
 			// call the ownership checker func
 			isOwner, err := oc(r.Context(), resourceId, ownerId)
 			if err != nil {
-				response.WriteFailure(w, response.NewInternalFailure(err))
+				// maybe create a new error msg here??
+				// the error here is the one returned from the store methods
+				response.WriteFailure(w, err.(*failure.Failure))
 				return
 			}
+
 			if !isOwner {
-				response.WriteFailure(w, response.NewForbiddenFailure("not resource owner"))
+				response.WriteFailure(w, failure.New("not resource owner", failure.ErrForbidden))
 				return
 			}
 

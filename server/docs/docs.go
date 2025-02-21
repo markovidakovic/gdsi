@@ -49,13 +49,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationFailure"
+                            "$ref": "#/definitions/failure.ValidationFailure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     }
                 }
@@ -95,13 +95,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationFailure"
+                            "$ref": "#/definitions/failure.ValidationFailure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     }
                 }
@@ -141,7 +141,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     }
                 }
@@ -175,19 +175,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationFailure"
+                            "$ref": "#/definitions/failure.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     }
                 }
@@ -230,19 +230,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationFailure"
+                            "$ref": "#/definitions/failure.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     }
                 }
@@ -282,25 +282,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationFailure"
+                            "$ref": "#/definitions/failure.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "404": {
                         "description": "Not found",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     }
                 }
@@ -350,25 +350,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationFailure"
+                            "$ref": "#/definitions/failure.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "404": {
                         "description": "Not found",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     }
                 }
@@ -403,25 +403,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationFailure"
+                            "$ref": "#/definitions/failure.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "404": {
                         "description": "Not found",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     }
                 }
@@ -452,13 +452,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     }
                 }
@@ -501,25 +501,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationFailure"
+                            "$ref": "#/definitions/failure.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "404": {
                         "description": "Not found",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     }
                 }
@@ -553,19 +553,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationFailure"
+                            "$ref": "#/definitions/failure.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     }
                 }
@@ -605,25 +605,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationFailure"
+                            "$ref": "#/definitions/failure.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "404": {
                         "description": "Not found",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     }
                 }
@@ -673,25 +673,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationFailure"
+                            "$ref": "#/definitions/failure.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "404": {
                         "description": "Not found",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     }
                 }
@@ -725,19 +725,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationFailure"
+                            "$ref": "#/definitions/failure.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     }
                 }
@@ -780,19 +780,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationFailure"
+                            "$ref": "#/definitions/failure.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     }
                 }
@@ -832,25 +832,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationFailure"
+                            "$ref": "#/definitions/failure.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "404": {
                         "description": "Not found",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     }
                 }
@@ -900,25 +900,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationFailure"
+                            "$ref": "#/definitions/failure.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "404": {
                         "description": "Not found",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     }
                 }
@@ -953,25 +953,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationFailure"
+                            "$ref": "#/definitions/failure.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "404": {
                         "description": "Not found",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     }
                 }
@@ -1014,19 +1014,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationFailure"
+                            "$ref": "#/definitions/failure.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     }
                 }
@@ -1076,19 +1076,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationFailure"
+                            "$ref": "#/definitions/failure.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     }
                 }
@@ -1135,25 +1135,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationFailure"
+                            "$ref": "#/definitions/failure.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "404": {
                         "description": "Not found",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     }
                 }
@@ -1210,25 +1210,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationFailure"
+                            "$ref": "#/definitions/failure.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "404": {
                         "description": "Not found",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     }
                 }
@@ -1270,25 +1270,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationFailure"
+                            "$ref": "#/definitions/failure.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "404": {
                         "description": "Not found",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     }
                 }
@@ -1338,19 +1338,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationFailure"
+                            "$ref": "#/definitions/failure.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     }
                 }
@@ -1407,19 +1407,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationFailure"
+                            "$ref": "#/definitions/failure.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     }
                 }
@@ -1473,25 +1473,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationFailure"
+                            "$ref": "#/definitions/failure.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "404": {
                         "description": "Not found",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     }
                 }
@@ -1555,31 +1555,31 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationFailure"
+                            "$ref": "#/definitions/failure.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "404": {
                         "description": "Not found",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     }
                 }
@@ -1645,31 +1645,31 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationFailure"
+                            "$ref": "#/definitions/failure.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "404": {
                         "description": "Not found",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     }
                 }
@@ -1719,19 +1719,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationFailure"
+                            "$ref": "#/definitions/failure.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     }
                 }
@@ -1785,19 +1785,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationFailure"
+                            "$ref": "#/definitions/failure.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     }
                 }
@@ -1850,25 +1850,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationFailure"
+                            "$ref": "#/definitions/failure.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "404": {
                         "description": "Not found",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     }
                 }
@@ -1919,25 +1919,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationFailure"
+                            "$ref": "#/definitions/failure.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "404": {
                         "description": "Not found",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     }
                 }
@@ -1987,19 +1987,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/response.ValidationFailure"
+                            "$ref": "#/definitions/failure.ValidationFailure"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.Failure"
+                            "$ref": "#/definitions/failure.Failure"
                         }
                     }
                 }
@@ -2097,6 +2097,43 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "failure.Failure": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "failure.InvalidField": {
+            "type": "object",
+            "properties": {
+                "field": {
+                    "type": "string"
+                },
+                "location": {
+                    "description": "location specifies where the field is conmming from (path, query, body)",
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "failure.ValidationFailure": {
+            "type": "object",
+            "properties": {
+                "invalid_fields": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/failure.InvalidField"
+                    }
+                },
+                "message": {
                     "type": "string"
                 }
             }
@@ -2458,49 +2495,6 @@ const docTemplate = `{
                 },
                 "weight": {
                     "type": "number"
-                }
-            }
-        },
-        "response.Failure": {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "integer"
-                }
-            }
-        },
-        "response.InvalidField": {
-            "type": "object",
-            "properties": {
-                "field": {
-                    "type": "string"
-                },
-                "location": {
-                    "description": "location specifies where the field is comming from (path, query, body)",
-                    "type": "string"
-                },
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "response.ValidationFailure": {
-            "type": "object",
-            "properties": {
-                "invalid_fields": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/response.InvalidField"
-                    }
-                },
-                "message": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "integer"
                 }
             }
         },

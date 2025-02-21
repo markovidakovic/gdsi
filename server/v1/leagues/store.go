@@ -2,11 +2,12 @@ package leagues
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/markovidakovic/gdsi/server/db"
-	"github.com/markovidakovic/gdsi/server/response"
+	"github.com/markovidakovic/gdsi/server/failure"
 )
 
 type store struct {
@@ -51,7 +52,7 @@ func (s *store) insertLeague(ctx context.Context, tx pgx.Tx, title string, descr
 	row := q.QueryRow(ctx, sql, title, description, seasonId, creatorId)
 	err := dest.ScanRow(row)
 	if err != nil {
-		return dest, fmt.Errorf("inserting league: %w", err)
+		return dest, failure.New("failed to insert league", err)
 	}
 
 	return dest, nil
@@ -79,7 +80,7 @@ func (s *store) findLeagues(ctx context.Context, seasonId string) ([]LeagueModel
 
 	rows, err := s.db.Query(ctx, sql, seasonId)
 	if err != nil {
-		return nil, fmt.Errorf("quering leagues: %v", err)
+		return nil, failure.New("unable to find leagues", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 	defer rows.Close()
 
@@ -87,14 +88,14 @@ func (s *store) findLeagues(ctx context.Context, seasonId string) ([]LeagueModel
 		var lm LeagueModel
 		err := lm.ScanRows(rows)
 		if err != nil {
-			return nil, err
+			return nil, failure.New("unable to find leagues", err)
 		}
 
 		dest = append(dest, lm)
 	}
 
 	if err = rows.Err(); err != nil {
-		return nil, fmt.Errorf("scanning league rows: %v", err)
+		return nil, failure.New("unable to find leagues", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 
 	return dest, nil
@@ -121,7 +122,10 @@ func (s *store) findLeague(ctx context.Context, seasonId, leagueId string) (*Lea
 	row := s.db.QueryRow(ctx, sql, seasonId, leagueId)
 	err := dest.ScanRow(row)
 	if err != nil {
-		return nil, fmt.Errorf("finding league: %w", err)
+		if errors.Is(err, failure.ErrNotFound) {
+			return nil, failure.New("league not found", err)
+		}
+		return nil, failure.New("unable to find league", err)
 	}
 
 	return &dest, nil
@@ -160,7 +164,10 @@ func (s *store) updateLeague(ctx context.Context, tx pgx.Tx, title string, descr
 	row := q.QueryRow(ctx, sql, title, description, leagueId, seasonId)
 	err := dest.ScanRow(row)
 	if err != nil {
-		return dest, fmt.Errorf("updating league: %w", err)
+		if errors.Is(err, failure.ErrNotFound) {
+			return dest, failure.New("league not found", err)
+		}
+		return dest, failure.New("unable to update league", err)
 	}
 
 	return dest, nil
@@ -180,27 +187,27 @@ func (s *store) deleteLeague(ctx context.Context, tx pgx.Tx, seasonId, leagueId 
 
 	ct, err := q.Exec(ctx, sql, leagueId, seasonId)
 	if err != nil {
-		return err
+		return failure.New("unable to delete league", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 	if ct.RowsAffected() == 0 {
-		return fmt.Errorf("deleting league: %w", response.ErrNotFound)
+		return failure.New("league not found", failure.ErrNotFound)
 	}
 
 	return nil
 }
 
-func (s *store) checkSeasonExistance(ctx context.Context, seasonId string) (bool, error) {
-	sql := `
-		select exists (
-			select 1 from season where id = $1
-		)
-	`
+// func (s *store) checkSeasonExistance(ctx context.Context, seasonId string) (bool, error) {
+// 	sql := `
+// 		select exists (
+// 			select 1 from season where id = $1
+// 		)
+// 	`
 
-	var exists bool
-	err := s.db.QueryRow(ctx, sql, seasonId).Scan(&exists)
-	if err != nil {
-		return false, err
-	}
+// 	var exists bool
+// 	err := s.db.QueryRow(ctx, sql, seasonId).Scan(&exists)
+// 	if err != nil {
+// 		return false, err
+// 	}
 
-	return exists, nil
-}
+// 	return exists, nil
+// }

@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/markovidakovic/gdsi/server/response"
+	"github.com/markovidakovic/gdsi/server/failure"
 	"github.com/markovidakovic/gdsi/server/types"
 )
 
@@ -27,9 +27,9 @@ func (sm *SeasonModel) ScanRow(row pgx.Row) error {
 	err := row.Scan(&sm.Id, &sm.Title, &sm.Description, &sm.StartDate, &sm.EndDate, &sm.Creator.Id, &sm.Creator.Name, &sm.CreatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return fmt.Errorf("scanning season row: %w", response.ErrNotFound)
+			return failure.New("scanning season row", fmt.Errorf("%w -> %v", failure.ErrNotFound, err))
 		}
-		return fmt.Errorf("scanning season row: %v", err)
+		return failure.New("database error scanning season row", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 
 	return nil
@@ -38,7 +38,7 @@ func (sm *SeasonModel) ScanRow(row pgx.Row) error {
 func (sm *SeasonModel) ScanRows(rows pgx.Rows) error {
 	err := rows.Scan(&sm.Id, &sm.Title, &sm.Description, &sm.StartDate, &sm.EndDate, &sm.Creator.Id, &sm.Creator.Name, &sm.CreatedAt)
 	if err != nil {
-		return fmt.Errorf("scanning season rows: %v", err)
+		return failure.New("database error scanning season rows", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 
 	return nil
@@ -52,18 +52,18 @@ type CreateSeasonRequestModel struct {
 	CreatorId   string     `json:"-"`
 }
 
-func (m CreateSeasonRequestModel) Validate() []response.InvalidField {
-	var inv []response.InvalidField
+func (m CreateSeasonRequestModel) Validate() []failure.InvalidField {
+	var inv []failure.InvalidField
 
 	if m.Title == "" {
-		inv = append(inv, response.InvalidField{
+		inv = append(inv, failure.InvalidField{
 			Field:    "title",
 			Message:  "Title is required",
 			Location: "body",
 		})
 	}
 	if m.EndDate.Time().Before(m.StartDate.Time()) {
-		inv = append(inv, response.InvalidField{
+		inv = append(inv, failure.InvalidField{
 			Field:    "end_date",
 			Message:  "End date must be after start date",
 			Location: "body",
@@ -84,18 +84,18 @@ type UpdateSeasonRequestModel struct {
 	EndDate     types.Date `json:"end_date"`
 }
 
-func (m UpdateSeasonRequestModel) Validate() []response.InvalidField {
-	var inv []response.InvalidField
+func (m UpdateSeasonRequestModel) Validate() []failure.InvalidField {
+	var inv []failure.InvalidField
 
 	if m.Title == "" {
-		inv = append(inv, response.InvalidField{
+		inv = append(inv, failure.InvalidField{
 			Field:    "title",
 			Message:  "Title is required",
 			Location: "body",
 		})
 	}
 	if m.EndDate.Time().Before(m.StartDate.Time()) {
-		inv = append(inv, response.InvalidField{
+		inv = append(inv, failure.InvalidField{
 			Field:    "end_date",
 			Message:  "End date must be after start date",
 			Location: "body",

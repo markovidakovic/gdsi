@@ -11,7 +11,7 @@ import (
 	"fmt"
 
 	"github.com/markovidakovic/gdsi/server/db"
-	"github.com/markovidakovic/gdsi/server/response"
+	"github.com/markovidakovic/gdsi/server/failure"
 )
 
 type Validator struct {
@@ -25,12 +25,12 @@ func NewValidator(db *db.Conn) *Validator {
 // ValidationResult holds invalid fields and a possible internal failure
 // when quering the db
 type ValidationResult struct {
-	invalidFields []response.InvalidField
-	failure       *response.Failure
+	invalidFields []failure.InvalidField
+	failure       *failure.Failure
 }
 
 func (vr *ValidationResult) addInvalFld(field, message, location string) {
-	vr.invalidFields = append(vr.invalidFields, response.InvalidField{
+	vr.invalidFields = append(vr.invalidFields, failure.InvalidField{
 		Field:    field,
 		Message:  message,
 		Location: location,
@@ -42,7 +42,7 @@ func (vr *ValidationResult) result() error {
 		return vr.failure
 	}
 	if len(vr.invalidFields) > 0 {
-		return response.NewValidationFailure("Invalid request paramters", vr.invalidFields)
+		return failure.NewValidation("invalid request parameters", vr.invalidFields)
 	}
 	return nil
 }
@@ -54,7 +54,7 @@ func (v *Validator) courtExists(ctx context.Context, courtId string) *Validation
 	var exists bool
 
 	if err := v.db.QueryRow(ctx, sql, courtId).Scan(&exists); err != nil {
-		vr.failure = response.NewInternalFailure(fmt.Errorf("checking court existance: %v", err))
+		vr.failure = failure.New("checking court existance", fmt.Errorf("%w: %v", failure.ErrInternal, err))
 		return vr
 	}
 
@@ -72,7 +72,7 @@ func (v *Validator) seasonExists(ctx context.Context, seasonId string) *Validati
 	var exists bool
 
 	if err := v.db.QueryRow(ctx, sql, seasonId).Scan(&exists); err != nil {
-		vr.failure = response.NewInternalFailure(fmt.Errorf("checking season existance: %v", err))
+		vr.failure = failure.New("checking season existance", fmt.Errorf("%w: %v", failure.ErrInternal, err))
 		return vr
 	}
 
@@ -90,7 +90,7 @@ func (v *Validator) leagueExists(ctx context.Context, leagueId string) *Validati
 	var exists bool
 
 	if err := v.db.QueryRow(ctx, sql, leagueId).Scan(&exists); err != nil {
-		vr.failure = response.NewInternalFailure(fmt.Errorf("checking league existance: %v", err))
+		vr.failure = failure.New("checking league existance", fmt.Errorf("%w: %v", failure.ErrInternal, err))
 		return vr
 	}
 	if !exists {
@@ -106,7 +106,7 @@ func (v *Validator) leagueInSeason(ctx context.Context, seasonId, leagueId strin
 	var exists bool
 
 	if err := v.db.QueryRow(ctx, sql, leagueId, seasonId).Scan(&exists); err != nil {
-		vr.failure = response.NewInternalFailure(fmt.Errorf("checking league in season: %v", err))
+		vr.failure = failure.New("checking if league part of season", fmt.Errorf("%w: %v", failure.ErrInternal, err))
 		return vr
 	}
 	if !exists {
@@ -122,7 +122,7 @@ func (v *Validator) playerExists(ctx context.Context, playerId string) *Validati
 	var exists bool
 
 	if err := v.db.QueryRow(ctx, sql, playerId).Scan(&exists); err != nil {
-		vr.failure = response.NewInternalFailure(fmt.Errorf("checking player existande: %v", err))
+		vr.failure = failure.New("checking player existance", fmt.Errorf("%w: %v", failure.ErrInternal, err))
 		return vr
 	}
 	if !exists {
@@ -144,7 +144,7 @@ func (v *Validator) playersInLeague(ctx context.Context, leagueId, playerOneId, 
 	`
 	var exists bool
 	if err := v.db.QueryRow(ctx, sql, playerOneId, playerTwoId, leagueId).Scan(&exists); err != nil {
-		vr.failure = response.NewInternalFailure(fmt.Errorf("checking players in league: %v", err))
+		vr.failure = failure.New("checking if player part of league", fmt.Errorf("%w: %v", failure.ErrInternal, err))
 		return vr
 	}
 	if !exists {
@@ -219,6 +219,35 @@ func (vb *ValidationBuilder) LeagueExists(leagueId string) *ValidationBuilder {
 	}
 
 	vr := vb.validator.leagueExists(vb.ctx, leagueId)
+	if vr.failure != nil {
+		vb.result.failure = vr.failure
+		return vb
+	}
+	vb.result.invalidFields = append(vb.result.invalidFields, vr.invalidFields...)
+	return vb
+}
+
+func (vb *ValidationBuilder) PlayerExists(playerId string) *ValidationBuilder {
+	// fail fast if there is a critical error in prev validation
+	if vb.result.failure != nil {
+		return vb
+	}
+
+	vr := vb.validator.playerExists(vb.ctx, playerId)
+	if vr.failure != nil {
+		vb.result.failure = vr.failure
+		return vb
+	}
+	vb.result.invalidFields = append(vb.result.invalidFields, vr.invalidFields...)
+	return vb
+}
+
+func (vb *ValidationBuilder) PlayersInLeague(leagueId, playerOneId, playerTwoId string) *ValidationBuilder {
+	if vb.result.failure != nil {
+		return vb
+	}
+
+	vr := vb.validator.playersInLeague(vb.ctx, leagueId, playerOneId, playerTwoId)
 	if vr.failure != nil {
 		vb.result.failure = vr.failure
 		return vb

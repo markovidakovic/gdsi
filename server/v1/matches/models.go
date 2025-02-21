@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/markovidakovic/gdsi/server/response"
+	"github.com/markovidakovic/gdsi/server/failure"
 )
 
 type MatchModel struct {
@@ -30,9 +30,9 @@ func (mm *MatchModel) ScanRow(row pgx.Row) error {
 	err := row.Scan(&mm.Id, &mm.Court.Id, &mm.Court.Name, &mm.ScheduledAt, &mm.PlayerOne.Id, &mm.PlayerOne.Name, &mm.PlayerTwo.Id, &mm.PlayerTwo.Name, &winnerId, &winnerName, &mm.Score, &mm.Season.Id, &mm.Season.Title, &mm.League.Id, &mm.League.Title, &mm.CreatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return response.ErrNotFound
+			return failure.New("scanning match row", fmt.Errorf("%w -> %v", failure.ErrNotFound, err))
 		}
-		return fmt.Errorf("scanning match row: %v", err)
+		return failure.New("database error scanning match row", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 
 	if !winnerId.Valid {
@@ -51,7 +51,7 @@ func (mm *MatchModel) ScanRows(rows pgx.Rows) error {
 	var winnerId, winnerName sql.NullString
 	err := rows.Scan(&mm.Id, &mm.Court.Id, &mm.Court.Name, &mm.ScheduledAt, &mm.PlayerOne.Id, &mm.PlayerOne.Name, &mm.PlayerTwo.Id, &mm.PlayerTwo.Name, &winnerId, &winnerName, &mm.Score, &mm.Season.Id, &mm.Season.Title, &mm.League.Id, &mm.League.Title, &mm.CreatedAt)
 	if err != nil {
-		return fmt.Errorf("scanning match rows: %v", err)
+		return failure.New("database error scanning match rows", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 
 	if !winnerId.Valid {
@@ -97,25 +97,25 @@ type CreateMatchRequestModel struct {
 	LeagueId    string  `json:"-"`
 }
 
-func (m CreateMatchRequestModel) Validate() []response.InvalidField {
-	var inv []response.InvalidField
+func (m CreateMatchRequestModel) Validate() []failure.InvalidField {
+	var inv []failure.InvalidField
 
 	if m.CourtId == "" {
-		inv = append(inv, response.InvalidField{
+		inv = append(inv, failure.InvalidField{
 			Field:    "court_id",
 			Message:  "Court id is required",
 			Location: "body",
 		})
 	}
 	if m.ScheduledAt == "" {
-		inv = append(inv, response.InvalidField{
+		inv = append(inv, failure.InvalidField{
 			Field:    "scheduled_at",
 			Message:  "Scheduled at is required",
 			Location: "body",
 		})
 	}
 	if m.PlayerTwoId == "" {
-		inv = append(inv, response.InvalidField{
+		inv = append(inv, failure.InvalidField{
 			Field:    "player_two_id",
 			Message:  "Player two id is required",
 			Location: "body",
@@ -123,7 +123,7 @@ func (m CreateMatchRequestModel) Validate() []response.InvalidField {
 	}
 	if m.Score != nil {
 		if *m.Score == "" {
-			inv = append(inv, response.InvalidField{
+			inv = append(inv, failure.InvalidField{
 				Field:    "score",
 				Message:  "Invalid score value",
 				Location: "body",
@@ -152,25 +152,25 @@ type UpdateMatchRequestModel struct {
 }
 
 // todo:
-func (m UpdateMatchRequestModel) Validate() []response.InvalidField {
-	var inv []response.InvalidField
+func (m UpdateMatchRequestModel) Validate() []failure.InvalidField {
+	var inv []failure.InvalidField
 
 	if m.CourtId == "" {
-		inv = append(inv, response.InvalidField{
+		inv = append(inv, failure.InvalidField{
 			Field:    "court_id",
 			Message:  "Court id is required",
 			Location: "body",
 		})
 	}
 	if m.ScheduledAt == "" {
-		inv = append(inv, response.InvalidField{
+		inv = append(inv, failure.InvalidField{
 			Field:    "scheduled_at",
 			Message:  "Scheduled at is required",
 			Location: "body",
 		})
 	}
 	if m.PlayerTwoId == "" {
-		inv = append(inv, response.InvalidField{
+		inv = append(inv, failure.InvalidField{
 			Field:    "player_two_id",
 			Message:  "Player two id is required",
 			Location: "body",
@@ -195,11 +195,11 @@ type SubmitMatchScoreRequestModel struct {
 	PlayerTwoId string `json:"-"`
 }
 
-func (m SubmitMatchScoreRequestModel) Validate() []response.InvalidField {
-	var inv []response.InvalidField
+func (m SubmitMatchScoreRequestModel) Validate() []failure.InvalidField {
+	var inv []failure.InvalidField
 
 	if m.Score == "" || !isValidScore(m.Score) {
-		inv = append(inv, response.InvalidField{
+		inv = append(inv, failure.InvalidField{
 			Field:    "score",
 			Message:  "Score is not valid",
 			Location: "body",

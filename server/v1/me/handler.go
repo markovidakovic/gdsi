@@ -2,11 +2,12 @@ package me
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/markovidakovic/gdsi/server/config"
 	"github.com/markovidakovic/gdsi/server/db"
+	"github.com/markovidakovic/gdsi/server/failure"
 	"github.com/markovidakovic/gdsi/server/middleware"
 	"github.com/markovidakovic/gdsi/server/response"
 )
@@ -28,20 +29,24 @@ func newHandler(cfg *config.Config, db *db.Conn) *handler {
 // @Tags me
 // @Produce json
 // @Success 200 {object} me.MeModel "OK"
-// @Failure 401 {object} response.Failure "Unauthorized"
-// @Failure 500 {object} response.Failure "Internal server error"
+// @Failure 401 {object} failure.Failure "Unauthorized"
+// @Failure 500 {object} failure.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/me [get]
 func (h *handler) getMe(w http.ResponseWriter, r *http.Request) {
-	// get account id
 	accountId := r.Context().Value(middleware.AccountIdCtxKey).(string)
+
 	result, err := h.store.findMe(r.Context(), accountId)
 	if err != nil {
-		switch {
-		case errors.Is(err, response.ErrNotFound):
-			response.WriteFailure(w, response.NewNotFoundFailure("account not found"))
+		switch f := err.(type) {
+		case *failure.ValidationFailure:
+			response.WriteFailure(w, f)
+			return
+		case *failure.Failure:
+			response.WriteFailure(w, f)
+			return
 		default:
-			response.WriteFailure(w, response.NewInternalFailure(err))
+			response.WriteFailure(w, failure.New("internal server error", err))
 			return
 		}
 	}
@@ -56,23 +61,23 @@ func (h *handler) getMe(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param body body me.UpdateMeRequestModel true "Request body"
 // @Success 200 {object} me.MeModel "OK"
-// @Failure 400 {object} response.ValidationFailure "Bad request"
-// @Failure 401 {object} response.Failure "Unauthorized"
-// @Failure 404 {object} response.Failure "Not found"
-// @Failure 500 {object} response.Failure "Internal server error"
+// @Failure 400 {object} failure.ValidationFailure "Bad request"
+// @Failure 401 {object} failure.Failure "Unauthorized"
+// @Failure 404 {object} failure.Failure "Not found"
+// @Failure 500 {object} failure.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/me [put]
 func (h *handler) updateMe(w http.ResponseWriter, r *http.Request) {
 	var model UpdateMeRequestModel
 	err := json.NewDecoder(r.Body).Decode(&model)
 	if err != nil {
-		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))
+		response.WriteFailure(w, failure.New("invalid request body", fmt.Errorf("%w -> %v", failure.ErrBadRequest, err)))
 		return
 	}
 
 	// validation
 	if valErr := model.Validate(); valErr != nil {
-		response.WriteFailure(w, response.NewBadRequestFailure("validation failed"))
+		response.WriteFailure(w, failure.NewValidation("validation failed", valErr))
 		return
 	}
 
@@ -81,11 +86,15 @@ func (h *handler) updateMe(w http.ResponseWriter, r *http.Request) {
 
 	result, err := h.store.updateMe(r.Context(), nil, accountId, model)
 	if err != nil {
-		switch {
-		case errors.Is(err, response.ErrNotFound):
-			response.WriteFailure(w, response.NewNotFoundFailure("account not found"))
+		switch f := err.(type) {
+		case *failure.ValidationFailure:
+			response.WriteFailure(w, f)
+			return
+		case *failure.Failure:
+			response.WriteFailure(w, f)
+			return
 		default:
-			response.WriteFailure(w, response.NewInternalFailure(err))
+			response.WriteFailure(w, failure.New("internal server error", err))
 			return
 		}
 	}

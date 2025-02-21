@@ -8,7 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/markovidakovic/gdsi/server/db"
-	"github.com/markovidakovic/gdsi/server/response"
+	"github.com/markovidakovic/gdsi/server/failure"
 )
 
 type store struct {
@@ -40,12 +40,13 @@ func (s *store) insertAccount(ctx context.Context, tx pgx.Tx, model SignupReques
 	row := q.QueryRow(ctx, sql, model.Name, model.Email, model.Dob, model.Gender, model.PhoneNumber, model.Password)
 	err := dest.ScanRow(row)
 	if err != nil {
-		return dest, fmt.Errorf("inserting account: %w", err)
+		return dest, failure.New("failed to insert account", err)
 	}
 
 	return dest, nil
 }
 
+// todo: instead of returning string return the full model here
 func (s *store) insertPlayer(ctx context.Context, tx pgx.Tx, accountId string) (string, error) {
 	sql := `
 		insert into player (account_id)
@@ -64,7 +65,7 @@ func (s *store) insertPlayer(ctx context.Context, tx pgx.Tx, accountId string) (
 
 	err := q.QueryRow(ctx, sql, accountId).Scan(&playerId)
 	if err != nil {
-		return "", fmt.Errorf("inserting player: %v", err)
+		return "", failure.New("failed to insert player", fmt.Errorf("%w: %v", failure.ErrInternal, err))
 	}
 
 	return playerId, nil
@@ -100,7 +101,10 @@ func (s *store) findAccountByEmail(ctx context.Context, tx pgx.Tx, email string)
 	row := q.QueryRow(ctx, sql, email)
 	err := dest.ScanRow(row)
 	if err != nil {
-		return nil, fmt.Errorf("finding account by email: %w", err)
+		if errors.Is(err, failure.ErrNotFound) {
+			return nil, failure.New(fmt.Sprintf("account with email %s not found", email), err)
+		}
+		return nil, failure.New("unable to retreive account", err)
 	}
 
 	return &dest, nil
@@ -122,7 +126,7 @@ func (s *store) insertRefreshToken(ctx context.Context, tx pgx.Tx, accountId str
 
 	_, err := q.Exec(ctx, sql, accountId, token, issuedAt, expiresAt)
 	if err != nil {
-		return err
+		return failure.New("failed to insert refresh token", fmt.Errorf("%w: %v", failure.ErrInternal, err))
 	}
 
 	return nil
@@ -144,7 +148,7 @@ func (s *store) revokeAccountRefreshTokens(ctx context.Context, tx pgx.Tx, accou
 
 	_, err := q.Exec(ctx, sql, accountId)
 	if err != nil {
-		return fmt.Errorf("revoking refresh tokens: %v", err)
+		return failure.New("failed to revoke account refresh tokens", fmt.Errorf("%w: %v", failure.ErrInternal, err))
 	}
 
 	return nil
@@ -183,12 +187,16 @@ func (s *store) findRefreshTokenByHash(ctx context.Context, tx pgx.Tx, rt string
 	row := q.QueryRow(ctx, sql, rt)
 	err := dest.ScanRow(row)
 	if err != nil {
-		return &dest, fmt.Errorf("finding refresh token: %w", err)
+		if errors.Is(err, failure.ErrNotFound) {
+			return nil, failure.New("refresh token not found", err)
+		}
+		return nil, failure.New("unable to retreive refresh token", err)
 	}
 
 	return &dest, nil
 }
 
+// todo: refactor this to return a full refresh token model and not just the error
 func (s *store) updateRefreshToken(ctx context.Context, tx pgx.Tx, rtId string) error {
 	sql := `
 		update refresh_token
@@ -209,9 +217,9 @@ func (s *store) updateRefreshToken(ctx context.Context, tx pgx.Tx, rtId string) 
 	_, err := q.Exec(ctx, sql, lua, rtId)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return fmt.Errorf("finding refresh token for updated: %w", response.ErrNotFound)
+			return failure.New("refresh token not found", fmt.Errorf("%w: %v", failure.ErrNotFound, err))
 		}
-		return fmt.Errorf("updating refresh token: %v", err)
+		return failure.New("unable to update refresh token", fmt.Errorf("%w: %v", failure.ErrInternal, err))
 	}
 
 	return nil
@@ -233,7 +241,10 @@ func (s *store) revokeRefreshToken(ctx context.Context, tx pgx.Tx, rtId string) 
 
 	_, err := q.Exec(ctx, sql, rtId)
 	if err != nil {
-		return fmt.Errorf("revoking refresh token: %v", err)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return failure.New("refresh token not found", fmt.Errorf("%w: %v", failure.ErrNotFound, err))
+		}
+		return failure.New("unable to revoke refresh token", fmt.Errorf("%w: %v", failure.ErrInternal, err))
 	}
 
 	return nil

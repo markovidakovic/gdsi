@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/markovidakovic/gdsi/server/response"
+	"github.com/markovidakovic/gdsi/server/failure"
 )
 
 type LeagueModel struct {
@@ -22,9 +22,9 @@ func (lm *LeagueModel) ScanRow(row pgx.Row) error {
 	err := row.Scan(&lm.Id, &lm.Title, &lm.Description, &lm.Season.Id, &lm.Season.Title, &lm.Creator.Id, &lm.Creator.Name, &lm.CreatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return response.ErrNotFound
+			return failure.New("scanning league row", fmt.Errorf("%w -> %v", failure.ErrNotFound, err))
 		}
-		return fmt.Errorf("scanning league row: %v", err)
+		return failure.New("database error", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 	return nil
 }
@@ -32,7 +32,7 @@ func (lm *LeagueModel) ScanRow(row pgx.Row) error {
 func (lm *LeagueModel) ScanRows(rows pgx.Rows) error {
 	err := rows.Scan(&lm.Id, &lm.Title, &lm.Description, &lm.Season.Id, &lm.Season.Title, &lm.Creator.Id, &lm.Creator.Name, &lm.CreatedAt)
 	if err != nil {
-		return fmt.Errorf("scanning league rows: %v", err)
+		return failure.New("database error", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 	return nil
 }
@@ -54,11 +54,11 @@ type CreateLeagueRequestModel struct {
 	SeasonId    string  `json:"-"`
 }
 
-func (m CreateLeagueRequestModel) Validate() []response.InvalidField {
-	var inv []response.InvalidField
+func (m CreateLeagueRequestModel) Validate() []failure.InvalidField {
+	var inv []failure.InvalidField
 
 	if m.Title == "" {
-		inv = append(inv, response.InvalidField{
+		inv = append(inv, failure.InvalidField{
 			Field:    "title",
 			Message:  "Title is required",
 			Location: "body",
@@ -79,11 +79,11 @@ type UpdateLeagueRequestModel struct {
 	LeagueId    string  `json:"-"`
 }
 
-func (m UpdateLeagueRequestModel) Validate() []response.InvalidField {
-	var inv []response.InvalidField
+func (m UpdateLeagueRequestModel) Validate() []failure.InvalidField {
+	var inv []failure.InvalidField
 
 	if m.Title == "" {
-		inv = append(inv, response.InvalidField{
+		inv = append(inv, failure.InvalidField{
 			Field:    "title",
 			Message:  "Title is required",
 			Location: "body",

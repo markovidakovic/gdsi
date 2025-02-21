@@ -2,11 +2,12 @@ package seasons
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/markovidakovic/gdsi/server/db"
-	"github.com/markovidakovic/gdsi/server/response"
+	"github.com/markovidakovic/gdsi/server/failure"
 )
 
 type store struct {
@@ -43,7 +44,7 @@ func (s *store) insertSeason(ctx context.Context, tx pgx.Tx, model CreateSeasonR
 	row := q.QueryRow(ctx, sql, model.Title, model.Description, model.StartDate, model.EndDate, model.CreatorId)
 	err := dest.ScanRow(row)
 	if err != nil {
-		return dest, fmt.Errorf("inserting season: %w", err)
+		return dest, failure.New("failed to insert season", err)
 	}
 
 	return dest, nil
@@ -67,7 +68,7 @@ func (s *store) findSeasons(ctx context.Context) ([]SeasonModel, error) {
 
 	rows, err := s.db.Query(ctx, sql)
 	if err != nil {
-		return nil, fmt.Errorf("quering seasons: %v", err)
+		return nil, failure.New("unable to find seasons", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 	defer rows.Close()
 
@@ -77,14 +78,14 @@ func (s *store) findSeasons(ctx context.Context) ([]SeasonModel, error) {
 
 		err := sm.ScanRows(rows)
 		if err != nil {
-			return nil, err
+			return nil, failure.New("unable to find seasons", err)
 		}
 
 		dest = append(dest, sm)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("scanning season rows: %v", err)
+		return nil, failure.New("unable to find seasons", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 
 	return dest, nil
@@ -111,7 +112,10 @@ func (s *store) findSeason(ctx context.Context, seasonId string) (*SeasonModel, 
 	row := s.db.QueryRow(ctx, sql, seasonId)
 	err := dest.ScanRow(row)
 	if err != nil {
-		return nil, fmt.Errorf("finding season: %w", err)
+		if errors.Is(err, failure.ErrNotFound) {
+			return nil, failure.New("season not found", err)
+		}
+		return nil, failure.New("unable to find season", err)
 	}
 
 	return &dest, nil
@@ -150,7 +154,10 @@ func (s *store) updateSeason(ctx context.Context, tx pgx.Tx, seasonId string, mo
 	row := q.QueryRow(ctx, sql, model.Title, model.Description, model.StartDate, model.EndDate, seasonId)
 	err := dest.ScanRow(row)
 	if err != nil {
-		return nil, fmt.Errorf("updating season: %w", err)
+		if errors.Is(err, failure.ErrNotFound) {
+			return nil, failure.New("season for update not found", err)
+		}
+		return nil, failure.New("unable to update season", err)
 	}
 
 	return &dest, nil
@@ -170,10 +177,10 @@ func (s *store) deleteSeason(ctx context.Context, tx pgx.Tx, seasonId string) er
 
 	ct, err := q.Exec(ctx, sql, seasonId)
 	if err != nil {
-		return err
+		return failure.New("unable to delete season", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 	if ct.RowsAffected() == 0 {
-		return response.ErrNotFound
+		return failure.New("season for deletion not found", failure.ErrNotFound)
 	}
 
 	return nil

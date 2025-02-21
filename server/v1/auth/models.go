@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/markovidakovic/gdsi/server/response"
+	"github.com/markovidakovic/gdsi/server/failure"
 	"github.com/markovidakovic/gdsi/server/sec"
 )
 
@@ -27,9 +27,9 @@ func (am *AccountModel) ScanRow(row pgx.Row) error {
 	err := row.Scan(&am.Id, &am.Name, &am.Email, &am.Dob, &am.Gender, &am.PhoneNumber, &am.Password, &am.Role, &am.PlayerId, &am.CreatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return fmt.Errorf("scanning account row: %w", response.ErrNotFound)
+			return failure.New("scanning account row", fmt.Errorf("%w: %v", failure.ErrNotFound, err))
 		}
-		return fmt.Errorf("scanning account row: %v", err)
+		return failure.New("database error", fmt.Errorf("%w: %v", failure.ErrInternal, err))
 	}
 
 	return nil
@@ -54,9 +54,9 @@ func (rtm *RefreshTokenModel) ScanRow(row pgx.Row) error {
 	err := row.Scan(&rtm.Id, &rtm.AccountId, &rtm.AccountRole, &rtm.TokenHash, &rtm.DeviceId, &rtm.IpAddress, &rtm.UserAgent, &rtm.IssuedAt, &rtm.ExpiresAt, &rtm.LastUsedAt, &rtm.IsRevoked, &rtm.PlayerId)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return fmt.Errorf("scanning refresh token row: %w", response.ErrNotFound)
+			return failure.New("scanning refresh token row", fmt.Errorf("%w: %v", failure.ErrNotFound, err))
 		}
-		return fmt.Errorf("scanning refresh token row: %v", err)
+		return failure.New("database error", fmt.Errorf("%w: %v", failure.ErrInternal, err))
 	}
 	return nil
 }
@@ -71,38 +71,38 @@ type SignupRequestModel struct {
 	Password    string `json:"password"`
 }
 
-func (m SignupRequestModel) Validate() []response.InvalidField {
-	var inv []response.InvalidField
+func (m SignupRequestModel) Validate() []failure.InvalidField {
+	var inv []failure.InvalidField
 
 	if m.Name == "" {
-		inv = append(inv, response.InvalidField{
+		inv = append(inv, failure.InvalidField{
 			Field:    "name",
 			Message:  "Name field is required",
 			Location: "body",
 		})
 	}
 	if m.Email == "" {
-		inv = append(inv, response.InvalidField{
+		inv = append(inv, failure.InvalidField{
 			Field:    "email",
 			Message:  "Email field is required",
 			Location: "body",
 		})
 	} else if !sec.IsValidEmail(m.Email) {
-		inv = append(inv, response.InvalidField{
+		inv = append(inv, failure.InvalidField{
 			Field:    "email",
 			Message:  "Invalid email",
 			Location: "body",
 		})
 	}
 	if m.Dob == "" {
-		inv = append(inv, response.InvalidField{
+		inv = append(inv, failure.InvalidField{
 			Field:    "dob",
 			Message:  "Date of birth field is required",
 			Location: "body",
 		})
 	} else {
 		if _, err := time.Parse("2006-01-02", m.Dob); err != nil {
-			inv = append(inv, response.InvalidField{
+			inv = append(inv, failure.InvalidField{
 				Field:    "dob",
 				Message:  "Invalid date format",
 				Location: "body",
@@ -110,33 +110,33 @@ func (m SignupRequestModel) Validate() []response.InvalidField {
 		}
 	}
 	if m.Gender == "" {
-		inv = append(inv, response.InvalidField{
+		inv = append(inv, failure.InvalidField{
 			Field:    "gender",
 			Message:  "Gender field is required",
 			Location: "body",
 		})
 	} else if m.Gender != "male" && m.Gender != "female" {
-		inv = append(inv, response.InvalidField{
+		inv = append(inv, failure.InvalidField{
 			Field:    "gender",
 			Message:  "Invalid gender, expected male or female",
 			Location: "body",
 		})
 	}
 	if m.PhoneNumber == "" {
-		inv = append(inv, response.InvalidField{
+		inv = append(inv, failure.InvalidField{
 			Field:    "phone_number",
 			Message:  "Phone number field is required",
 			Location: "body",
 		})
 	} else if !sec.IsValidPhone(m.PhoneNumber) {
-		inv = append(inv, response.InvalidField{
+		inv = append(inv, failure.InvalidField{
 			Field:    "phone_number",
 			Message:  "Invalid phone number",
 			Location: "body",
 		})
 	}
 	if m.Password == "" {
-		inv = append(inv, response.InvalidField{
+		inv = append(inv, failure.InvalidField{
 			Field:    "password",
 			Message:  "Password field required",
 			Location: "body",
@@ -156,24 +156,24 @@ type LoginRequestModel struct {
 	Password string `json:"password"`
 }
 
-func (m LoginRequestModel) Validate() []response.InvalidField {
-	var inv []response.InvalidField
+func (m LoginRequestModel) Validate() []failure.InvalidField {
+	var inv []failure.InvalidField
 
 	if m.Email == "" {
-		inv = append(inv, response.InvalidField{
+		inv = append(inv, failure.InvalidField{
 			Field:    "email",
 			Message:  "Email field is required",
 			Location: "body",
 		})
 	} else if !sec.IsValidEmail(m.Email) {
-		inv = append(inv, response.InvalidField{
+		inv = append(inv, failure.InvalidField{
 			Field:    "email",
 			Message:  "Invalid email",
 			Location: "body",
 		})
 	}
 	if m.Password == "" {
-		inv = append(inv, response.InvalidField{
+		inv = append(inv, failure.InvalidField{
 			Field:    "password",
 			Message:  "Password field is required",
 			Location: "body",
@@ -200,8 +200,8 @@ type ForgottenPasswordRequestModel struct {
 	Email string `json:"email"`
 }
 
-func (m ForgottenPasswordRequestModel) Validate() []response.InvalidField {
-	var inv []response.InvalidField
+func (m ForgottenPasswordRequestModel) Validate() []failure.InvalidField {
+	var inv []failure.InvalidField
 
 	if len(inv) > 0 {
 		return inv
@@ -223,8 +223,8 @@ type ChangeForgottenPasswordRequestModel struct {
 	ConfirmPassword string `json:"confirm_password"`
 }
 
-func (m ChangeForgottenPasswordRequestModel) Validate() []response.InvalidField {
-	var inv []response.InvalidField
+func (m ChangeForgottenPasswordRequestModel) Validate() []failure.InvalidField {
+	var inv []failure.InvalidField
 
 	if len(inv) > 0 {
 		return inv
@@ -243,11 +243,11 @@ type RefreshTokenRequestModel struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-func (m RefreshTokenRequestModel) Validate() []response.InvalidField {
-	var inv []response.InvalidField
+func (m RefreshTokenRequestModel) Validate() []failure.InvalidField {
+	var inv []failure.InvalidField
 
 	if m.RefreshToken == "" {
-		inv = append(inv, response.InvalidField{
+		inv = append(inv, failure.InvalidField{
 			Field:    "refresh_token",
 			Message:  "Refresh token field is required",
 			Location: "body",

@@ -2,33 +2,30 @@ package leagues
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/markovidakovic/gdsi/server/config"
-	"github.com/markovidakovic/gdsi/server/response"
+	"github.com/markovidakovic/gdsi/server/validation"
 )
 
 type service struct {
-	cfg   *config.Config
-	store *store
+	cfg       *config.Config
+	store     *store
+	validator *validation.Validator
 }
 
-func newService(cfg *config.Config, store *store) *service {
+func newService(cfg *config.Config, store *store, validator *validation.Validator) *service {
 	return &service{
 		cfg,
 		store,
+		validator,
 	}
 }
 
 func (s *service) processCreateLeague(ctx context.Context, model CreateLeagueRequestModel) (*LeagueModel, error) {
-	// check if season exists
-	seasonExists, err := s.store.checkSeasonExistance(ctx, model.SeasonId)
+	// validation
+	err := s.validator.NewValidation(ctx).SeasonExists(model.SeasonId).Result()
 	if err != nil {
 		return nil, err
-	}
-
-	if !seasonExists {
-		return nil, fmt.Errorf("finding season: %w", response.ErrNotFound)
 	}
 
 	// create league
@@ -41,14 +38,10 @@ func (s *service) processCreateLeague(ctx context.Context, model CreateLeagueReq
 }
 
 func (s *service) processFindLeagues(ctx context.Context, seasonId string) ([]LeagueModel, error) {
-	// check if season exists
-	seasonExists, err := s.store.checkSeasonExistance(ctx, seasonId)
+	// validation
+	err := s.validator.NewValidation(ctx).SeasonExists(seasonId).Result()
 	if err != nil {
 		return nil, err
-	}
-
-	if !seasonExists {
-		return nil, fmt.Errorf("finding season: %w", response.ErrNotFound)
 	}
 
 	// find leagues
@@ -61,14 +54,10 @@ func (s *service) processFindLeagues(ctx context.Context, seasonId string) ([]Le
 }
 
 func (s *service) processFindLeague(ctx context.Context, seasonId, leagueId string) (*LeagueModel, error) {
-	// check if season exists
-	seasonExists, err := s.store.checkSeasonExistance(ctx, seasonId)
+	// validation
+	err := s.validator.NewValidation(ctx).SeasonExists(seasonId).Result()
 	if err != nil {
 		return nil, err
-	}
-
-	if !seasonExists {
-		return nil, fmt.Errorf("finding season: %w", response.ErrNotFound)
 	}
 
 	// find league
@@ -81,14 +70,10 @@ func (s *service) processFindLeague(ctx context.Context, seasonId, leagueId stri
 }
 
 func (s *service) processUpdateLeague(ctx context.Context, model UpdateLeagueRequestModel) (*LeagueModel, error) {
-	// check if season exists
-	seasonExists, err := s.store.checkSeasonExistance(ctx, model.SeasonId)
+	// validation
+	err := s.validator.NewValidation(ctx).SeasonExists(model.SeasonId).Result()
 	if err != nil {
 		return nil, err
-	}
-
-	if !seasonExists {
-		return nil, fmt.Errorf("finding season: %w", response.ErrNotFound)
 	}
 
 	// update league
@@ -101,14 +86,10 @@ func (s *service) processUpdateLeague(ctx context.Context, model UpdateLeagueReq
 }
 
 func (s *service) processDeleteLeague(ctx context.Context, seasonId, leagueId string) error {
-	// check if season exists
-	seasonExists, err := s.store.checkSeasonExistance(ctx, seasonId)
+	// validation
+	err := s.validator.NewValidation(ctx).SeasonExists(seasonId).Result()
 	if err != nil {
 		return err
-	}
-
-	if !seasonExists {
-		return fmt.Errorf("finding season: %w", response.ErrNotFound)
 	}
 
 	// delete league

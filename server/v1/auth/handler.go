@@ -2,11 +2,12 @@ package auth
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/markovidakovic/gdsi/server/config"
 	"github.com/markovidakovic/gdsi/server/db"
+	"github.com/markovidakovic/gdsi/server/failure"
 	"github.com/markovidakovic/gdsi/server/response"
 )
 
@@ -28,8 +29,8 @@ func newHandler(cfg *config.Config, db *db.Conn) *handler {
 // @Produce json
 // @Param body body SignupRequestModel true "Request body"
 // @Success 200 {object} auth.TokensResponseModel "OK"
-// @Failure 400 {object} response.ValidationFailure "Bad request"
-// @Failure 500 {object} response.Failure "Internal server error"
+// @Failure 400 {object} failure.ValidationFailure "Bad request"
+// @Failure 500 {object} failure.Failure "Internal server error"
 // @Router /v1/auth/signup [post]
 func (h *handler) signup(w http.ResponseWriter, r *http.Request) {
 	var model SignupRequestModel
@@ -37,26 +38,29 @@ func (h *handler) signup(w http.ResponseWriter, r *http.Request) {
 	// decode request body
 	err := json.NewDecoder(r.Body).Decode(&model)
 	if err != nil {
-		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))
+		response.WriteFailure(w, failure.New("invalid request body", fmt.Errorf("%w: %v", failure.ErrBadRequest, err)))
 		return
 	}
 
 	// validation
 	if valErr := model.Validate(); valErr != nil {
-		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
+		response.WriteFailure(w, failure.NewValidation("validation failed", valErr))
 		return
 	}
 
 	// call the service
 	accessToken, refreshToken, err := h.service.processSignup(r.Context(), model)
 	if err != nil {
-		switch {
-		case errors.Is(err, response.ErrDuplicateRecord):
-			response.WriteFailure(w, response.NewBadRequestFailure("account with email already exists"))
+		switch f := err.(type) {
+		case *failure.ValidationFailure:
+			response.WriteFailure(w, f)
+			return
+		case *failure.Failure:
+			response.WriteFailure(w, f)
+			return
 		default:
-			response.WriteFailure(w, response.NewInternalFailure(err))
+			response.WriteFailure(w, failure.New("internal server error", err))
 		}
-		return
 	}
 
 	resp := TokensResponseModel{
@@ -74,8 +78,8 @@ func (h *handler) signup(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param body body LoginRequestModel true "Request body"
 // @Success 200 {object} auth.TokensResponseModel "OK"
-// @Failure 400 {object} response.ValidationFailure "Bad request"
-// @Failure 500 {object} response.Failure "Internal server error"
+// @Failure 400 {object} failure.ValidationFailure "Bad request"
+// @Failure 500 {object} failure.Failure "Internal server error"
 // @Router /v1/auth/tokens/access [post]
 func (h *handler) login(w http.ResponseWriter, r *http.Request) {
 	var model LoginRequestModel
@@ -83,13 +87,13 @@ func (h *handler) login(w http.ResponseWriter, r *http.Request) {
 	// decode request body
 	err := json.NewDecoder(r.Body).Decode(&model)
 	if err != nil {
-		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))
+		response.WriteFailure(w, failure.New("invalid request body", fmt.Errorf("%w: %v", failure.ErrBadRequest, err)))
 		return
 	}
 
 	// validate model
 	if valErr := model.Validate(); valErr != nil {
-		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
+		response.WriteFailure(w, failure.NewValidation("validation failed", valErr))
 		return
 	}
 
@@ -104,16 +108,20 @@ func (h *handler) login(w http.ResponseWriter, r *http.Request) {
 	// fmt.Printf("port: %v\n", port)
 	// fmt.Printf("r.UserAgent(): %v\n", r.UserAgent())
 
-	// Call the service
+	// call the service
 	accessToken, refreshToken, err := h.service.processLogin(r.Context(), model)
 	if err != nil {
-		switch {
-		case errors.Is(err, response.ErrNotFound):
-			response.WriteFailure(w, response.NewBadRequestFailure("invalid email or password"))
+		switch f := err.(type) {
+		case *failure.Failure:
+			response.WriteFailure(w, f)
+			return
+		case *failure.ValidationFailure:
+			response.WriteFailure(w, f)
+			return
 		default:
-			response.WriteFailure(w, response.NewInternalFailure(err))
+			response.WriteFailure(w, failure.New("internal server error", err))
+			return
 		}
-		return
 	}
 
 	resp := TokensResponseModel{
@@ -131,7 +139,7 @@ func (h *handler) login(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param body body RefreshTokenRequestModel true "Request body"
 // @Success 200 {object} auth.TokensResponseModel "OK"
-// @Failure 500 {object} response.Failure "Internal server error"
+// @Failure 500 {object} failure.Failure "Internal server error"
 // @Router /v1/auth/tokens/refresh [post]
 func (h *handler) refreshToken(w http.ResponseWriter, r *http.Request) {
 	var model RefreshTokenRequestModel
@@ -139,29 +147,29 @@ func (h *handler) refreshToken(w http.ResponseWriter, r *http.Request) {
 	// decode request body
 	err := json.NewDecoder(r.Body).Decode(&model)
 	if err != nil {
-		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))
+		response.WriteFailure(w, failure.New("invalid request body", fmt.Errorf("%w: %v", failure.ErrBadRequest, err)))
 		return
 	}
 
 	// validate model
 	if valErr := model.Validate(); valErr != nil {
-		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
+		response.WriteFailure(w, failure.NewValidation("validation failed", valErr))
 		return
 	}
 
 	access, refresh, err := h.service.processRefreshTokens(r.Context(), model)
 	if err != nil {
-		switch {
-		case errors.Is(err, response.ErrNotFound):
-			response.WriteFailure(w, response.NewUnauthorizedFailure("invalid refresh token"))
+		switch f := err.(type) {
+		case *failure.ValidationFailure:
+			response.WriteFailure(w, f)
 			return
-		case errors.Is(err, response.ErrUnauthorized):
-			response.WriteFailure(w, response.NewUnauthorizedFailure(err.Error()))
+		case *failure.Failure:
+			response.WriteFailure(w, f)
 			return
 		default:
-			response.WriteFailure(w, response.NewInternalFailure(err))
+			response.WriteFailure(w, failure.New("internal server error", err))
+			return
 		}
-		return
 	}
 
 	resp := TokensResponseModel{

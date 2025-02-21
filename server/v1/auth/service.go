@@ -12,7 +12,7 @@ import (
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/jackc/pgx/v5"
 	"github.com/markovidakovic/gdsi/server/config"
-	"github.com/markovidakovic/gdsi/server/response"
+	"github.com/markovidakovic/gdsi/server/failure"
 	"github.com/markovidakovic/gdsi/server/sec"
 )
 
@@ -35,23 +35,24 @@ func (s *service) processSignup(ctx context.Context, model SignupRequestModel) (
 	// hash the password
 	model.Password, err = sec.EncryptPwd(model.Password)
 	if err != nil {
-		return "", "", fmt.Errorf("encrypting the password: %v", err)
+		return "", "", failure.New("signup failed", fmt.Errorf("%w: %v", failure.ErrInternal, err))
 	}
 
 	// check if email exists
 	existingAccount, err := s.store.findAccountByEmail(ctx, nil, model.Email)
 	if err != nil {
-		if !errors.Is(err, response.ErrNotFound) {
-			return "", "", err
+		if !errors.Is(err, failure.ErrNotFound) {
+			return "", "", failure.New("signup failed", err)
 		}
 	}
 	if existingAccount != nil {
-		return "", "", response.ErrDuplicateRecord
+		return "", "", failure.New("email already registered", failure.ErrDuplicate)
 	}
 
 	// begin tx
 	tx, err := s.store.db.Begin(ctx)
 	if err != nil {
+		// todo: how to do these errors??
 		return "", "", err
 	}
 
@@ -67,13 +68,13 @@ func (s *service) processSignup(ctx context.Context, model SignupRequestModel) (
 	// insert account
 	account, err := s.store.insertAccount(ctx, tx, model)
 	if err != nil {
-		return "", "", err
+		return "", "", failure.New("signup failed", err)
 	}
 
 	// insert player
 	playerId, err := s.store.insertPlayer(ctx, tx, account.Id)
 	if err != nil {
-		return "", "", err
+		return "", "", failure.New("signup failed", err)
 	}
 
 	account.PlayerId = &playerId
@@ -81,7 +82,7 @@ func (s *service) processSignup(ctx context.Context, model SignupRequestModel) (
 	// generate jwts
 	accessTkn, refreshTkn, err := generateAuthTokens(s.cfg.JwtAuth, s.cfg.JwtAccessExpiration, s.cfg.JwtRefreshExpiration, account.Id, account.Role, *account.PlayerId)
 	if err != nil {
-		return "", "", fmt.Errorf("generating auth tokens: %v", err)
+		return "", "", failure.New("signup failed", fmt.Errorf("%w: %v", failure.ErrInternal, err))
 	}
 
 	// hash the refresh token
@@ -90,11 +91,12 @@ func (s *service) processSignup(ctx context.Context, model SignupRequestModel) (
 	// insert refresh token
 	err = s.store.insertRefreshToken(ctx, tx, account.Id, hashedRfrTkn, refreshTkn.issAt, refreshTkn.expAt)
 	if err != nil {
-		return "", "", err
+		return "", "", failure.New("signup failed", err)
 	}
 
 	err = tx.Commit(ctx)
 	if err != nil {
+		// todo: how to fo these errors??
 		return "", "", fmt.Errorf("commiting tx: %v", err)
 	}
 
@@ -105,24 +107,33 @@ func (s *service) processLogin(ctx context.Context, model LoginRequestModel) (st
 	// call the store
 	account, err := s.store.findAccountByEmail(ctx, nil, model.Email)
 	if err != nil {
-		return "", "", err
+		// special case here. the findAccountByEmail method returns failure.ErrNotFound or failure.ErrInternal
+		// in the login endpoint we don't want to return the failure.ErrNotFound if the account has not been found.
+		// rather, we want to return the failure.ErrBadRequest, so we disregard the previous error from the store method
+		// the drawback is that the error msg from the store method will not be logged - for now this is ok
+		if errors.Is(err, failure.ErrNotFound) {
+			return "", "", failure.New("invalid email or password", failure.ErrBadRequest)
+		}
+		return "", "", failure.New("login failed", err)
 	}
 
 	// validate password
 	err = bcrypt.CompareHashAndPassword([]byte(account.Password), []byte(model.Password))
 	if err != nil {
-		return "", "", response.ErrNotFound
+		// todo: maybe refactor this err msg later
+		return "", "", failure.New("invalid email or password", fmt.Errorf("%w: %v", failure.ErrBadRequest, err))
 	}
 
 	// generate jwts
 	accessTkn, refreshTkn, err := generateAuthTokens(s.cfg.JwtAuth, s.cfg.JwtAccessExpiration, s.cfg.JwtRefreshExpiration, account.Id, account.Role, *account.PlayerId)
 	if err != nil {
-		return "", "", err
+		return "", "", failure.New("login failed", fmt.Errorf("%w: %v", failure.ErrInternal, err))
 	}
 
 	// begin tx
 	tx, err := s.store.db.Begin(ctx)
 	if err != nil {
+		// todo: how to handle these errors??
 		return "", "", fmt.Errorf("beginning tx: %v", err)
 	}
 
@@ -138,18 +149,19 @@ func (s *service) processLogin(ctx context.Context, model LoginRequestModel) (st
 	// revoke previous refresh tkns
 	err = s.store.revokeAccountRefreshTokens(ctx, tx, account.Id)
 	if err != nil {
-		return "", "", err
+		return "", "", failure.New("login failed", err)
 	}
 
 	// insert refresh token
 	err = s.store.insertRefreshToken(ctx, tx, account.Id, sec.HashToken(refreshTkn.val), refreshTkn.issAt, refreshTkn.expAt)
 	if err != nil {
-		return "", "", err
+		return "", "", failure.New("login failed", err)
 	}
 
 	// commit tx
 	err = tx.Commit(ctx)
 	if err != nil {
+		// todo: how to handle these errors??
 		return "", "", fmt.Errorf("commiting tx: %v", err)
 	}
 
@@ -163,6 +175,7 @@ func (s *service) processRefreshTokens(ctx context.Context, model RefreshTokenRe
 	// begin tx
 	tx, err := s.store.db.Begin(ctx)
 	if err != nil {
+		// todo: how to handle this??
 		return "", "", fmt.Errorf("begining tx: %v", err)
 	}
 
@@ -187,16 +200,17 @@ func (s *service) processRefreshTokens(ctx context.Context, model RefreshTokenRe
 		if err != nil {
 			return "", "", err
 		}
-		return "", "", fmt.Errorf("%w: refresh token is revoked", response.ErrUnauthorized)
+		return "", "", failure.New("refresh token revoked", failure.ErrUnauthorized)
 	} else if time.Now().After(rt.ExpiresAt) {
 		// revoke the expired refresh token
 		err := s.store.revokeRefreshToken(ctx, nil, rt.Id)
 		if err != nil {
 			return "", "", err
 		}
-		return "", "", fmt.Errorf("%w: refresh token has expired", response.ErrUnauthorized)
+		return "", "", failure.New("refresh token expired", failure.ErrUnauthorized)
 	}
 
+	// update prev RT - it just updates the lat column
 	err = s.store.updateRefreshToken(ctx, tx, rt.Id)
 	if err != nil {
 		return "", "", err
@@ -211,18 +225,19 @@ func (s *service) processRefreshTokens(ctx context.Context, model RefreshTokenRe
 	// generate tokens
 	accessTkn, refreshTkn, err := generateAuthTokens(s.cfg.JwtAuth, s.cfg.JwtAccessExpiration, s.cfg.JwtRefreshExpiration, rt.AccountId, rt.AccountRole, rt.PlayerId)
 	if err != nil {
-		return "", "", err
+		return "", "", failure.New("refresh tokens failed", fmt.Errorf("%w: %v", failure.ErrInternal, err))
 	}
 
 	// insert refresh token
 	err = s.store.insertRefreshToken(ctx, tx, rt.AccountId, sec.HashToken(refreshTkn.val), refreshTkn.issAt, refreshTkn.expAt)
 	if err != nil {
-		return "", "", err
+		return "", "", failure.New("refresh tokens failed", err)
 	}
 
 	// commit tx
 	err = tx.Commit(ctx)
 	if err != nil {
+		// todo: how to handle this
 		return "", "", err
 	}
 

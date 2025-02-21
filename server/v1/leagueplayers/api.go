@@ -7,6 +7,7 @@ import (
 	"github.com/markovidakovic/gdsi/server/middleware"
 	"github.com/markovidakovic/gdsi/server/permission"
 	"github.com/markovidakovic/gdsi/server/router"
+	"github.com/markovidakovic/gdsi/server/validation"
 )
 
 type api struct {
@@ -17,7 +18,7 @@ var _ router.Mounter = (*api)(nil)
 
 func New(cfg *config.Config, db *db.Conn) *api {
 	return &api{
-		hdl: newHandler(cfg, db),
+		hdl: newHandler(cfg, db, validation.NewValidator(db)),
 	}
 }
 

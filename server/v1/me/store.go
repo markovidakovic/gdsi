@@ -2,10 +2,11 @@ package me
 
 import (
 	"context"
-	"fmt"
+	"errors"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/markovidakovic/gdsi/server/db"
+	"github.com/markovidakovic/gdsi/server/failure"
 )
 
 type store struct {
@@ -53,7 +54,10 @@ func (s *store) findMe(ctx context.Context, accountId string) (*MeModel, error) 
 	row := s.db.QueryRow(ctx, sql, accountId)
 	err := dest.ScanRow(row)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, failure.ErrNotFound) {
+			return nil, failure.New("account not found", err)
+		}
+		return nil, failure.New("unable to find account", err)
 	}
 
 	return &dest, nil
@@ -106,7 +110,10 @@ func (s *store) updateMe(ctx context.Context, tx pgx.Tx, accountId string, model
 	row := q.QueryRow(ctx, sql, model.Name, accountId)
 	err := dest.ScanRow(row)
 	if err != nil {
-		return nil, fmt.Errorf("updating me: %w", err)
+		if errors.Is(err, failure.ErrNotFound) {
+			return nil, failure.New("account for updating not found", err)
+		}
+		return nil, failure.New("unable to update account", err)
 	}
 
 	return &dest, nil

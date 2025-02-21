@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/markovidakovic/gdsi/server/response"
+	"github.com/markovidakovic/gdsi/server/failure"
 )
 
 type StandingModel struct {
@@ -37,9 +37,10 @@ func (sm *StandingModel) ScanRow(row pgx.Row) error {
 	err := row.Scan(&sm.Id, &sm.Points, &sm.MatchesPlayed, &sm.MatchesWon, &sm.SetsWon, &sm.SetsLost, &sm.GamesWon, &sm.GamesLost, &sm.Season.Id, &sm.Season.Title, &sm.League.Id, &sm.League.Title, &sm.Player.Id, &sm.Player.Name, &sm.CreatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return response.ErrNotFound
+			return failure.New("standing not found", fmt.Errorf("%w: %v", failure.ErrNotFound, err))
 		}
-		return fmt.Errorf("scanning standing row: %v", err)
+		// return fmt.Errorf("scanning standing row: %v", err)
+		return failure.New("scanning standing row", fmt.Errorf("%w: %v", failure.ErrInternal, err))
 	}
 
 	return nil
@@ -48,7 +49,8 @@ func (sm *StandingModel) ScanRow(row pgx.Row) error {
 func (sm *StandingModel) ScanRows(rows pgx.Rows) error {
 	err := rows.Scan(&sm.Id, &sm.Points, &sm.MatchesPlayed, &sm.MatchesWon, &sm.SetsWon, &sm.SetsLost, &sm.GamesWon, &sm.GamesLost, &sm.Season.Id, &sm.Season.Title, &sm.League.Id, &sm.League.Title, &sm.Player.Id, &sm.Player.Name, &sm.CreatedAt)
 	if err != nil {
-		return fmt.Errorf("scanning standing rows: %v", err)
+		// return fmt.Errorf("scanning standing rows: %v", err)
+		return failure.New("scanning standing rows", fmt.Errorf("%w: %v", failure.ErrInternal, err))
 	}
 
 	return nil

@@ -8,7 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/markovidakovic/gdsi/server/db"
-	"github.com/markovidakovic/gdsi/server/response"
+	"github.com/markovidakovic/gdsi/server/failure"
 )
 
 type store struct {
@@ -69,7 +69,7 @@ func (s *store) insertMatch(ctx context.Context, tx pgx.Tx, courtId, scheduledAt
 	row := q.QueryRow(ctx, sql, courtId, scheduledAt, playerOneId, playerTwoId, winnerId, score, seasonId, leagueId, playerOneId)
 	err := dest.ScanRow(row)
 	if err != nil {
-		return dest, err
+		return dest, failure.New("unable to insert match", err)
 	}
 
 	return dest, nil
@@ -112,7 +112,7 @@ func (s *store) findMatches(ctx context.Context, seasonId, leagueId string) ([]M
 
 	rows, err := s.db.Query(ctx, sql, seasonId, leagueId)
 	if err != nil {
-		return nil, fmt.Errorf("quering match rows: %v", err)
+		return nil, failure.New("unable to find matches", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 	defer rows.Close()
 
@@ -120,14 +120,14 @@ func (s *store) findMatches(ctx context.Context, seasonId, leagueId string) ([]M
 		var mm MatchModel
 		err := mm.ScanRows(rows)
 		if err != nil {
-			return nil, err
+			return nil, failure.New("unable to find matches", err)
 		}
 
 		dest = append(dest, mm)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("iterating match rows: %v", err)
+		return nil, failure.New("unable to find matches", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 
 	return dest, nil
@@ -170,7 +170,10 @@ func (s *store) findMatch(ctx context.Context, seasonId, leagueId, matchId strin
 	row := s.db.QueryRow(ctx, sql, matchId, seasonId, leagueId)
 	err := dest.ScanRow(row)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, failure.ErrNotFound) {
+			return nil, failure.New("match not found", err)
+		}
+		return nil, failure.New("unable to find match", err)
 	}
 
 	return &dest, nil
@@ -225,7 +228,10 @@ func (s *store) updateMatch(ctx context.Context, tx pgx.Tx, courtId, scheduledAt
 	row := q.QueryRow(ctx, sql, courtId, scheduledAt, playerTwoId, matchId, seasonId, leagueId)
 	err := dest.ScanRow(row)
 	if err != nil {
-		return nil, fmt.Errorf("updating match: %w", err)
+		if errors.Is(err, failure.ErrNotFound) {
+			return nil, failure.New("match for update not found", err)
+		}
+		return nil, failure.New("unable to update match", err)
 	}
 
 	return &dest, nil
@@ -249,7 +255,10 @@ func (s *store) updatePlayerStatistics(ctx context.Context, tx pgx.Tx, winnerId,
 
 	_, err := q.Exec(ctx, sql, winnerId, playerOneId, playerTwoId)
 	if err != nil {
-		return fmt.Errorf("updating player stats: %v", err)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return failure.New("players for updating statistics not found", fmt.Errorf("%w -> %v", failure.ErrNotFound, err))
+		}
+		return failure.New("unable to update player statistics", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 
 	return nil
@@ -272,7 +281,10 @@ func (s *store) incrementPlayerMatchesScheduled(ctx context.Context, tx pgx.Tx, 
 
 	_, err := q.Exec(ctx, sql, playerId)
 	if err != nil {
-		return fmt.Errorf("incrementing player matches scheduled: %v", err)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return failure.New("player for updating matches scheduled not found", fmt.Errorf("%w -> %v", failure.ErrNotFound, err))
+		}
+		return failure.New("unable to increment player matches scheduled", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 
 	return nil
@@ -302,7 +314,7 @@ func (s *store) updateStanding(ctx context.Context, tx pgx.Tx, seasonId, leagueI
 
 	_, err := q.Exec(ctx, sql, plStats.Pts, plStats.WonMatches, plStats.SetsWon, plStats.SetsLost, plStats.GamesWon, plStats.GamesLost, seasonId, leagueId, playerId)
 	if err != nil {
-		return fmt.Errorf("updating player one standing: %v", err)
+		return failure.New("unable to update standings", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 
 	return nil
@@ -357,70 +369,16 @@ func (s *store) updateMatchScore(ctx context.Context, tx pgx.Tx, seasonId, leagu
 	row := q.QueryRow(ctx, sql, score, winnerId, matchId, seasonId, leagueId)
 	err := dest.ScanRow(row)
 	if err != nil {
-		return nil, fmt.Errorf("updating match score: %w", err)
+		if errors.Is(err, failure.ErrNotFound) {
+			return nil, failure.New("match for updating score not found", err)
+		}
+		return nil, failure.New("unable to update match score", err)
 	}
 
 	return &dest, nil
 }
 
-// helper
-func (s *store) validateInsertUpdateMatch(ctx context.Context, courtId, seasonId, leagueId, player1Id, player2Id string) (courtExists bool, seasonExists bool, leagueExists bool, playerOneExists bool, playerTwoExists bool, playersInLeague bool, err error) {
-	sql1 := `
-		select
-			exists (
-				select 1 from court where id = $1
-			) as court_exists,
-			exists ( 
-				select 1 from season where id = $2
-			) as season_exists,
-			exists (
-				select 1 from league where id = $3 and season_id = $2
-			) as league_exists,
-			exists (
-				select 1 from player where id = $4
-			) as player_one_exists,
-			exists (
-				select 1 from player where id = $5
-			) as player_two_exists,
-			exists (
-				select 1 from player
-				where id in ($4, $5)
-				and current_league_id = $3
-				having count(*) = 2
-			) as players_in_league
-	`
-
-	err = s.db.QueryRow(ctx, sql1, courtId, seasonId, leagueId, player1Id, player2Id).Scan(&courtExists, &seasonExists, &leagueExists, &playerOneExists, &playerTwoExists, &playersInLeague)
-	if err != nil {
-		return
-	}
-
-	return
-}
-
-// helper
-func (s *store) validateSubmitMatchScore(ctx context.Context, seasonId, leagueId, matchId string) (seasonExists bool, leagueExists bool, matchExists bool, err error) {
-	sql1 := `
-		select
-			exists (
-				select 1 from season where id = $1
-			) as season_exists,
-			exists (
-				select 1 from league where id = $2 and season_id = $1
-			) as league_exists,
-			exists (
-				select 1 from match where id = $3 and season_id = $1 and league_id = $2
-			) as match_exists
-	`
-
-	err = s.db.QueryRow(ctx, sql1, seasonId, leagueId, matchId).Scan(&seasonExists, &leagueExists, &matchExists)
-	if err != nil {
-		return
-	}
-	return
-}
-
-// helper
+// helper - is the player part of a match
 func (s *store) checkMatchParticipation(ctx context.Context, matchId, playerId string) (bool, error) {
 	sql := `
 		select exists (
@@ -432,13 +390,13 @@ func (s *store) checkMatchParticipation(ctx context.Context, matchId, playerId s
 	var exists bool
 	err := s.db.QueryRow(ctx, sql, matchId, playerId).Scan(&exists)
 	if err != nil {
-		return false, err
+		return false, failure.New("unable to check if player is a match participant", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 
 	return exists, nil
 }
 
-// helper
+// helper - did the player create the match
 func (s *store) checkMatchOwnership(ctx context.Context, matchId, playerId string) (bool, error) {
 	sql := `
 		select exists (
@@ -450,25 +408,21 @@ func (s *store) checkMatchOwnership(ctx context.Context, matchId, playerId strin
 	var exists bool
 	err := s.db.QueryRow(ctx, sql, matchId, playerId).Scan(&exists)
 	if err != nil {
-		return false, err
+		return false, failure.New("unable to check match ownership", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 	return exists, nil
 }
 
-// helper
+// helper - check if the match score has been entered (not null)
 func (s *store) checkMatchScore(ctx context.Context, matchId string) (bool, error) {
 	var score sql.NullString
 
-	err := s.db.QueryRow(ctx, `
-		select score
-		from match
-		where id = $1
-	`, matchId).Scan(&score)
+	err := s.db.QueryRow(ctx, `select score from match where id = $1`, matchId).Scan(&score)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return false, fmt.Errorf("finding match: %w", response.ErrNotFound)
+			return false, failure.New("checking match score - match not found", fmt.Errorf("%w -> %v", failure.ErrNotFound, err))
 		}
-		return false, err
+		return false, failure.New("unable to find match score", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 
 	return score.Valid, nil

@@ -2,12 +2,13 @@ package matches
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/markovidakovic/gdsi/server/config"
 	"github.com/markovidakovic/gdsi/server/db"
+	"github.com/markovidakovic/gdsi/server/failure"
 	"github.com/markovidakovic/gdsi/server/middleware"
 	"github.com/markovidakovic/gdsi/server/response"
 	"github.com/markovidakovic/gdsi/server/validation"
@@ -34,22 +35,22 @@ func newHandler(cfg *config.Config, db *db.Conn, validator *validation.Validator
 // @Param leagueId path string true "League id"
 // @Param body body matches.CreateMatchRequestModel true "Request body"
 // @Success 201 {object} matches.MatchModel "OK"
-// @Failure 400 {object} response.ValidationFailure "Bad request"
-// @Failure 401 {object} response.Failure "Unauthorized"
-// @Failure 500 {object} response.Failure "Internal server error"
+// @Failure 400 {object} failure.ValidationFailure "Bad request"
+// @Failure 401 {object} failure.Failure "Unauthorized"
+// @Failure 500 {object} failure.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId}/matches [post]
 func (h *handler) createMatch(w http.ResponseWriter, r *http.Request) {
 	// decode model
 	var model CreateMatchRequestModel
 	if err := json.NewDecoder(r.Body).Decode(&model); err != nil {
-		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))
+		response.WriteFailure(w, failure.New("invalid request body", fmt.Errorf("%w -> %v", failure.ErrBadRequest, err)))
 		return
 	}
 
 	// validate model
 	if valErr := model.Validate(); valErr != nil {
-		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
+		response.WriteFailure(w, failure.NewValidation("validation failed", valErr))
 		return
 	}
 
@@ -63,15 +64,15 @@ func (h *handler) createMatch(w http.ResponseWriter, r *http.Request) {
 	// call the service
 	result, err := h.service.processCreateMatch(ctx, model)
 	if err != nil {
-		switch {
-		case errors.Is(err, response.ErrBadRequest):
-			response.WriteFailure(w, response.NewBadRequestFailure(err.Error()))
+		switch f := err.(type) {
+		case *failure.ValidationFailure:
+			response.WriteFailure(w, f)
 			return
-		case errors.Is(err, response.ErrNotFound):
-			response.WriteFailure(w, response.NewNotFoundFailure(err.Error()))
+		case *failure.Failure:
+			response.WriteFailure(w, f)
 			return
 		default:
-			response.WriteFailure(w, response.NewInternalFailure(err))
+			response.WriteFailure(w, failure.New("internal server error", err))
 			return
 		}
 	}
@@ -86,24 +87,24 @@ func (h *handler) createMatch(w http.ResponseWriter, r *http.Request) {
 // @Param seasonId path string true "Season id"
 // @Param leagueId path string true "League id"
 // @Success 200 {array} matches.MatchModel "OK"
-// @Failure 400 {object} response.ValidationFailure "Bad request"
-// @Failure 401 {object} response.Failure "Unauthorized"
-// @Failure 500 {object} response.Failure "Internal server error"
+// @Failure 400 {object} failure.ValidationFailure "Bad request"
+// @Failure 401 {object} failure.Failure "Unauthorized"
+// @Failure 500 {object} failure.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId}/matches [get]
 func (h *handler) getMatches(w http.ResponseWriter, r *http.Request) {
 	// call the service
 	result, err := h.service.processGetMatches(r.Context(), chi.URLParam(r, "seasonId"), chi.URLParam(r, "leagueId"))
 	if err != nil {
-		switch {
-		case errors.Is(err, response.ErrBadRequest):
-			response.WriteFailure(w, response.NewBadRequestFailure(err.Error()))
+		switch f := err.(type) {
+		case *failure.ValidationFailure:
+			response.WriteFailure(w, f)
 			return
-		case errors.Is(err, response.ErrNotFound):
-			response.WriteFailure(w, response.NewNotFoundFailure(err.Error()))
+		case *failure.Failure:
+			response.WriteFailure(w, f)
 			return
 		default:
-			response.WriteFailure(w, response.NewInternalFailure(err))
+			response.WriteFailure(w, failure.New("internal server error", err))
 			return
 		}
 	}
@@ -119,25 +120,25 @@ func (h *handler) getMatches(w http.ResponseWriter, r *http.Request) {
 // @Param leagueId path string true "League id"
 // @Param matchId path string true "Match id"
 // @Success 200 {object} matches.MatchModel "OK"
-// @Failure 400 {object} response.ValidationFailure "Bad request"
-// @Failure 401 {object} response.Failure "Unauthorized"
-// @Failure 404 {object} response.Failure "Not found"
-// @Failure 500 {object} response.Failure "Internal server error"
+// @Failure 400 {object} failure.ValidationFailure "Bad request"
+// @Failure 401 {object} failure.Failure "Unauthorized"
+// @Failure 404 {object} failure.Failure "Not found"
+// @Failure 500 {object} failure.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId}/matches/{matchId} [get]
 func (h *handler) getMatch(w http.ResponseWriter, r *http.Request) {
 	// call the service
 	result, err := h.service.processGetMatch(r.Context(), chi.URLParam(r, "seasonId"), chi.URLParam(r, "leagueId"), chi.URLParam(r, "matchId"))
 	if err != nil {
-		switch {
-		case errors.Is(err, response.ErrBadRequest):
-			response.WriteFailure(w, response.NewBadRequestFailure(err.Error()))
+		switch f := err.(type) {
+		case *failure.ValidationFailure:
+			response.WriteFailure(w, f)
 			return
-		case errors.Is(err, response.ErrNotFound):
-			response.WriteFailure(w, response.NewNotFoundFailure(err.Error()))
+		case *failure.Failure:
+			response.WriteFailure(w, f)
 			return
 		default:
-			response.WriteFailure(w, response.NewInternalFailure(err))
+			response.WriteFailure(w, failure.New("internal server error", err))
 			return
 		}
 	}
@@ -155,23 +156,23 @@ func (h *handler) getMatch(w http.ResponseWriter, r *http.Request) {
 // @Param matchId path string true "Match id"
 // @Param body body matches.UpdateMatchRequestModel true "Request body"
 // @Success 200 {object} matches.MatchModel "OK"
-// @Failure 400 {object} response.ValidationFailure "Bad request"
-// @Failure 401 {object} response.Failure "Unauthorized"
-// @Failure 404 {object} response.Failure "Not found"
-// @Failure 409 {object} response.Failure "Conflict"
-// @Failure 500 {object} response.Failure "Internal server error"
+// @Failure 400 {object} failure.ValidationFailure "Bad request"
+// @Failure 401 {object} failure.Failure "Unauthorized"
+// @Failure 404 {object} failure.Failure "Not found"
+// @Failure 409 {object} failure.Failure "Conflict"
+// @Failure 500 {object} failure.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId}/matches/{matchId} [put]
 func (h *handler) updateMatch(w http.ResponseWriter, r *http.Request) {
 	// decode model
 	var model UpdateMatchRequestModel
 	if err := json.NewDecoder(r.Body).Decode(&model); err != nil {
-		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))
+		response.WriteFailure(w, failure.New("invalid request body", fmt.Errorf("%w -> %v", failure.ErrBadRequest, err)))
 		return
 	}
 
 	if valErr := model.Validate(); valErr != nil {
-		response.WriteFailure(w, response.NewBadRequestFailure("validation failed"))
+		response.WriteFailure(w, failure.NewValidation("validation failed", valErr))
 		return
 	}
 
@@ -185,15 +186,15 @@ func (h *handler) updateMatch(w http.ResponseWriter, r *http.Request) {
 	// call the service
 	result, err := h.service.processUpdateMatch(ctx, model)
 	if err != nil {
-		switch {
-		case errors.Is(err, response.ErrBadRequest):
-			response.WriteFailure(w, response.NewBadRequestFailure(err.Error()))
+		switch f := err.(type) {
+		case *failure.ValidationFailure:
+			response.WriteFailure(w, f)
 			return
-		case errors.Is(err, response.ErrNotFound):
-			response.WriteFailure(w, response.NewNotFoundFailure(err.Error()))
+		case *failure.Failure:
+			response.WriteFailure(w, f)
 			return
 		default:
-			response.WriteFailure(w, response.NewInternalFailure(err))
+			response.WriteFailure(w, failure.New("internal server error", err))
 			return
 		}
 	}
@@ -211,24 +212,24 @@ func (h *handler) updateMatch(w http.ResponseWriter, r *http.Request) {
 // @Param matchId path string true "Match id"
 // @Param body body matches.SubmitMatchScoreRequestModel true "Request body"
 // @Success 200 {object} matches.MatchModel "OK"
-// @Failure 400 {object} response.ValidationFailure "Bad request"
-// @Failure 401 {object} response.Failure "Unauthorized"
-// @Failure 404 {object} response.Failure "Not found"
-// @Failure 409 {object} response.Failure "Conflict"
-// @Failure 500 {object} response.Failure "Internal server error"
+// @Failure 400 {object} failure.ValidationFailure "Bad request"
+// @Failure 401 {object} failure.Failure "Unauthorized"
+// @Failure 404 {object} failure.Failure "Not found"
+// @Failure 409 {object} failure.Failure "Conflict"
+// @Failure 500 {object} failure.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/seasons/{seasonId}/leagues/{leagueId}/matches/{matchId}/score [post]
 func (h *handler) submitMatchScore(w http.ResponseWriter, r *http.Request) {
 	// decode req body
 	var model SubmitMatchScoreRequestModel
 	if err := json.NewDecoder(r.Body).Decode(&model); err != nil {
-		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))
+		response.WriteFailure(w, failure.New("invalid request body", fmt.Errorf("%w -> %v", failure.ErrBadRequest, err)))
 		return
 	}
 
-	// validation
+	// validate model
 	if valErr := model.Validate(); valErr != nil {
-		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
+		response.WriteFailure(w, failure.NewValidation("validation failed", valErr))
 		return
 	}
 
@@ -240,18 +241,15 @@ func (h *handler) submitMatchScore(w http.ResponseWriter, r *http.Request) {
 	// call the service
 	result, err := h.service.processSubmitMatchScore(r.Context(), model)
 	if err != nil {
-		switch {
-		case errors.Is(err, response.ErrBadRequest):
-			response.WriteFailure(w, response.NewBadRequestFailure(err.Error()))
+		switch f := err.(type) {
+		case *failure.ValidationFailure:
+			response.WriteFailure(w, f)
 			return
-		case errors.Is(err, response.ErrNotFound):
-			response.WriteFailure(w, response.NewNotFoundFailure(err.Error()))
-			return
-		case errors.Is(err, response.ErrConflict):
-			response.WriteFailure(w, response.NewConflictFailure(err.Error()))
+		case *failure.Failure:
+			response.WriteFailure(w, f)
 			return
 		default:
-			response.WriteFailure(w, response.NewInternalFailure(err))
+			response.WriteFailure(w, failure.New("internal server error", err))
 			return
 		}
 	}

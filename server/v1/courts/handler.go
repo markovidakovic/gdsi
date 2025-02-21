@@ -2,12 +2,13 @@ package courts
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/markovidakovic/gdsi/server/config"
 	"github.com/markovidakovic/gdsi/server/db"
+	"github.com/markovidakovic/gdsi/server/failure"
 	"github.com/markovidakovic/gdsi/server/middleware"
 	"github.com/markovidakovic/gdsi/server/response"
 )
@@ -31,22 +32,22 @@ func newHandler(cfg *config.Config, db *db.Conn) *handler {
 // @Produce json
 // @Param body body courts.CreateCourtRequestModel true "Request body"
 // @Success 200 {object} courts.CourtModel "OK"
-// @Failure 400 {object} response.ValidationFailure "Bad request"
-// @Failure 401 {object} response.Failure "Unauthorized"
-// @Failure 500 {object} response.Failure "Internal server error"
+// @Failure 400 {object} failure.ValidationFailure "Bad request"
+// @Failure 401 {object} failure.Failure "Unauthorized"
+// @Failure 500 {object} failure.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/courts [post]
 func (h *handler) createCourt(w http.ResponseWriter, r *http.Request) {
 	var model CreateCourtRequestModel
 	err := json.NewDecoder(r.Body).Decode(&model)
 	if err != nil {
-		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))
+		response.WriteFailure(w, failure.New("invalid request body", fmt.Errorf("%w -> %v", failure.ErrBadRequest, err)))
 		return
 	}
 
 	// validate
 	if valErr := model.Validate(); valErr != nil {
-		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
+		response.WriteFailure(w, failure.NewValidation("validation failed", valErr))
 		return
 	}
 
@@ -56,9 +57,15 @@ func (h *handler) createCourt(w http.ResponseWriter, r *http.Request) {
 	// store call
 	result, err := h.store.insertCourt(r.Context(), nil, model.Name, model.CreatorId)
 	if err != nil {
-		switch {
+		switch f := err.(type) {
+		case *failure.ValidationFailure:
+			response.WriteFailure(w, f)
+			return
+		case *failure.Failure:
+			response.WriteFailure(w, f)
+			return
 		default:
-			response.WriteFailure(w, response.NewInternalFailure(err))
+			response.WriteFailure(w, failure.New("internal server error", err))
 			return
 		}
 	}
@@ -71,18 +78,24 @@ func (h *handler) createCourt(w http.ResponseWriter, r *http.Request) {
 // @Tags courts
 // @Produce json
 // @Success 200 {array} courts.CourtModel "OK"
-// @Failure 400 {object} response.ValidationFailure "Bad request"
-// @Failure 401 {object} response.Failure "Unauthorized"
-// @Failure 500 {object} response.Failure "Internal server error"
+// @Failure 400 {object} failure.ValidationFailure "Bad request"
+// @Failure 401 {object} failure.Failure "Unauthorized"
+// @Failure 500 {object} failure.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/courts [get]
 func (h *handler) getCourts(w http.ResponseWriter, r *http.Request) {
 	// store call
 	result, err := h.store.findCourts(r.Context())
 	if err != nil {
-		switch {
+		switch f := err.(type) {
+		case *failure.ValidationFailure:
+			response.WriteFailure(w, f)
+			return
+		case *failure.Failure:
+			response.WriteFailure(w, f)
+			return
 		default:
-			response.WriteFailure(w, response.NewInternalFailure(err))
+			response.WriteFailure(w, failure.New("internal server error", err))
 			return
 		}
 	}
@@ -96,22 +109,25 @@ func (h *handler) getCourts(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param courtId path string true "Court id"
 // @Success 200 {object} courts.CourtModel "OK"
-// @Failure 400 {object} response.ValidationFailure "Bad request"
-// @Failure 401 {object} response.Failure "Unauthorized"
-// @Failure 404 {object} response.Failure "Not found"
-// @Failure 500 {object} response.Failure "Internal server error"
+// @Failure 400 {object} failure.ValidationFailure "Bad request"
+// @Failure 401 {object} failure.Failure "Unauthorized"
+// @Failure 404 {object} failure.Failure "Not found"
+// @Failure 500 {object} failure.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/courts/{courtId} [get]
 func (h *handler) getCourt(w http.ResponseWriter, r *http.Request) {
 	// store call
 	result, err := h.store.findCourt(r.Context(), chi.URLParam(r, "courtId"))
 	if err != nil {
-		switch {
-		case errors.Is(err, response.ErrNotFound):
-			response.WriteFailure(w, response.NewNotFoundFailure("court not found"))
+		switch f := err.(type) {
+		case *failure.ValidationFailure:
+			response.WriteFailure(w, f)
+			return
+		case *failure.Failure:
+			response.WriteFailure(w, f)
 			return
 		default:
-			response.WriteFailure(w, response.NewInternalFailure(err))
+			response.WriteFailure(w, failure.New("internal server error", err))
 			return
 		}
 	}
@@ -126,34 +142,37 @@ func (h *handler) getCourt(w http.ResponseWriter, r *http.Request) {
 // @Param courtId path string true "Court id"
 // @Param body body courts.UpdateCourtRequestModel true "Request body"
 // @Success 200 {object} courts.CourtModel "OK"
-// @Failure 400 {object} response.ValidationFailure "Bad request"
-// @Failure 401 {object} response.Failure "Unauthorized"
-// @Failure 404 {object} response.Failure "Not found"
-// @Failure 500 {object} response.Failure "Internal server error"
+// @Failure 400 {object} failure.ValidationFailure "Bad request"
+// @Failure 401 {object} failure.Failure "Unauthorized"
+// @Failure 404 {object} failure.Failure "Not found"
+// @Failure 500 {object} failure.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/courts/{courtId} [put]
 func (h *handler) updateCourt(w http.ResponseWriter, r *http.Request) {
 	var model UpdateCourtRequestModel
 	err := json.NewDecoder(r.Body).Decode(&model)
 	if err != nil {
-		response.WriteFailure(w, response.NewBadRequestFailure("invalid request body"))
+		response.WriteFailure(w, failure.New("invalid request body", fmt.Errorf("%w -> %v", failure.ErrBadRequest, err)))
 		return
 	}
 
 	// validate model
 	if valErr := model.Validate(); valErr != nil {
-		response.WriteFailure(w, response.NewValidationFailure("validation failed", valErr))
+		response.WriteFailure(w, failure.NewValidation("validation failed", valErr))
 		return
 	}
 
 	result, err := h.store.updateCourt(r.Context(), nil, chi.URLParam(r, "courtId"), model.Name)
 	if err != nil {
-		switch {
-		case errors.Is(err, response.ErrNotFound):
-			response.WriteFailure(w, response.NewNotFoundFailure("court not found"))
+		switch f := err.(type) {
+		case *failure.ValidationFailure:
+			response.WriteFailure(w, f)
+			return
+		case *failure.Failure:
+			response.WriteFailure(w, f)
 			return
 		default:
-			response.WriteFailure(w, response.NewInternalFailure(err))
+			response.WriteFailure(w, failure.New("internal server error", err))
 			return
 		}
 	}
@@ -167,22 +186,25 @@ func (h *handler) updateCourt(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param courtId path string true "Court id"
 // @Success 204 "No content"
-// @Failure 400 {object} response.ValidationFailure "Bad request"
-// @Failure 401 {object} response.Failure "Unauthorized"
-// @Failure 404 {object} response.Failure "Not found"
-// @Failure 500 {object} response.Failure "Internal server error"
+// @Failure 400 {object} failure.ValidationFailure "Bad request"
+// @Failure 401 {object} failure.Failure "Unauthorized"
+// @Failure 404 {object} failure.Failure "Not found"
+// @Failure 500 {object} failure.Failure "Internal server error"
 // @Security BearerAuth
 // @Router /v1/courts/{courtId} [delete]
 func (h *handler) deleteCourt(w http.ResponseWriter, r *http.Request) {
 	// call store
 	err := h.store.deleteCourt(r.Context(), nil, chi.URLParam(r, "courtId"))
 	if err != nil {
-		switch {
-		case errors.Is(err, response.ErrNotFound):
-			response.WriteFailure(w, response.NewNotFoundFailure("court not found"))
+		switch f := err.(type) {
+		case *failure.ValidationFailure:
+			response.WriteFailure(w, f)
+			return
+		case *failure.Failure:
+			response.WriteFailure(w, f)
 			return
 		default:
-			response.WriteFailure(w, response.NewInternalFailure(err))
+			response.WriteFailure(w, failure.New("internal server error", err))
 			return
 		}
 	}

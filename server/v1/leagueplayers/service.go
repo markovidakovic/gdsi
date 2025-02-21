@@ -7,34 +7,34 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/markovidakovic/gdsi/server/config"
-	"github.com/markovidakovic/gdsi/server/response"
+	"github.com/markovidakovic/gdsi/server/failure"
 	"github.com/markovidakovic/gdsi/server/v1/players"
+	"github.com/markovidakovic/gdsi/server/validation"
 )
 
 type service struct {
-	cfg   *config.Config
-	store *store
+	cfg       *config.Config
+	store     *store
+	validator *validation.Validator
 }
 
-func newService(cfg *config.Config, store *store) *service {
+func newService(cfg *config.Config, store *store, validator *validation.Validator) *service {
 	return &service{
 		cfg,
 		store,
+		validator,
 	}
 }
 
 func (s *service) processGetLeaguePlayers(ctx context.Context, seasonId, leagueId string) ([]players.PlayerModel, error) {
-	// validate params
-	seasonExists, leagueExists, err := s.store.validateFindLeaguePlayers(ctx, seasonId, leagueId)
+	// validation
+	err := s.validator.NewValidation(ctx).
+		SeasonExists(seasonId).
+		LeagueExists(leagueId).
+		LeagueInSeason(seasonId, leagueId).
+		Result()
 	if err != nil {
 		return nil, err
-	}
-
-	if !seasonExists {
-		return nil, fmt.Errorf("finding season: %w", response.ErrNotFound)
-	}
-	if !leagueExists {
-		return nil, fmt.Errorf("finding league: %w", response.ErrNotFound)
 	}
 
 	// find league players
@@ -47,20 +47,15 @@ func (s *service) processGetLeaguePlayers(ctx context.Context, seasonId, leagueI
 }
 
 func (s *service) processGetLeaguePlayer(ctx context.Context, seasonId, leagueId, playerId string) (*players.PlayerModel, error) {
-	// validate params
-	seasonExists, leagueExists, playerExists, err := s.store.validateFindLeaguePlayer(ctx, seasonId, leagueId, playerId)
+	// validation
+	err := s.validator.NewValidation(ctx).
+		SeasonExists(seasonId).
+		LeagueExists(leagueId).
+		LeagueInSeason(seasonId, leagueId).
+		PlayerExists(playerId).
+		Result()
 	if err != nil {
 		return nil, err
-	}
-
-	if !seasonExists {
-		return nil, fmt.Errorf("finding season: %w", response.ErrNotFound)
-	}
-	if !leagueExists {
-		return nil, fmt.Errorf("finding league: %w", response.ErrNotFound)
-	}
-	if !playerExists {
-		return nil, fmt.Errorf("finding player: %w", response.ErrNotFound)
 	}
 
 	// find league player
@@ -73,76 +68,76 @@ func (s *service) processGetLeaguePlayer(ctx context.Context, seasonId, leagueId
 }
 
 func (s *service) processAssignPlayerToLeague(ctx context.Context, seasonId, leagueId, playerId string) (*players.PlayerModel, error) {
-	// validate params
-	seasonExists, leagueExists, playerExists, err := s.store.validateUpdatePlayerCurrentLeague(ctx, seasonId, leagueId, playerId)
+	// validation
+	err := s.validator.NewValidation(ctx).
+		SeasonExists(seasonId).
+		LeagueExists(leagueId).
+		LeagueInSeason(seasonId, leagueId).
+		PlayerExists(playerId).
+		Result()
 	if err != nil {
 		return nil, err
-	}
-
-	if !seasonExists {
-		return nil, fmt.Errorf("finding season: %w", response.ErrNotFound)
-	}
-	if !leagueExists {
-		return nil, fmt.Errorf("finding league: %w", response.ErrNotFound)
-	}
-	if !playerExists {
-		return nil, fmt.Errorf("finding player: %w", response.ErrNotFound)
 	}
 
 	// begin tx
 	tx, err := s.store.db.Begin(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("beginning tx: %v", err)
+		return nil, failure.New("unable to assign player to league", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 
 	defer func() {
 		err := tx.Rollback(ctx)
 		if err != nil && err != pgx.ErrTxClosed {
-			log.Printf("failed to rollback the insert match tx: %v", err)
+			log.Printf("failed to rollback assign player to league tx: %v", err)
 		}
 	}()
 
 	// update player current league
 	player, err := s.store.updatePlayerCurrentLeague(ctx, tx, &leagueId, playerId)
 	if err != nil {
-		return nil, err
+		// another option to do here? could just return nil, err
+		// the updatePlayerCurrentLeague will never return (i think so) "player not found"
+		// because we check the player existance in the validation above.
+		// so checking for errors.Is(err, failure.ErrNotFound) is not necessary
+		// so we could just return a generic message from the service layer and not the specific from the store
+		return nil, failure.New("unable to assign player to league", err)
 	}
 
 	// increment player seasons played
 	player, err = s.store.incrementPlayerSeasonsPlayed(ctx, tx, leagueId, playerId)
 	if err != nil {
-		return nil, err
+		// same as above, this will most likely be a db error
+		return nil, failure.New("unable to assign player to league", err)
 	}
 
+	// commit tx
 	err = tx.Commit(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("committing tx: %v", err)
+		return nil, failure.New("unable to assign player to league", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 
 	return &player, nil
 }
 
 func (s *service) processUnassignPlayerFromLeague(ctx context.Context, seasonId, leagueId, playerId string) (*players.PlayerModel, error) {
-	// validate params
-	seasonExists, leagueExists, playerExists, err := s.store.validateUpdatePlayerCurrentLeague(ctx, seasonId, leagueId, playerId)
+	// validation
+	// todo: maybe do a validation in validation.go for playerInLeague
+	err := s.validator.NewValidation(ctx).
+		SeasonExists(seasonId).
+		LeagueExists(leagueId).
+		LeagueInSeason(seasonId, leagueId).
+		PlayerExists(playerId).
+		Result()
 	if err != nil {
 		return nil, err
-	}
-
-	if !seasonExists {
-		return nil, fmt.Errorf("finding season: %w", response.ErrNotFound)
-	}
-	if !leagueExists {
-		return nil, fmt.Errorf("finding league: %w", response.ErrNotFound)
-	}
-	if !playerExists {
-		return nil, fmt.Errorf("finding player: %w", response.ErrNotFound)
 	}
 
 	// update player current league
 	lp, err := s.store.updatePlayerCurrentLeague(ctx, nil, nil, playerId)
 	if err != nil {
-		return nil, err
+		// same as in other methods. this will most likely be a db error
+		// and not a player not found because the player existance is confirmed in the validation above
+		return nil, failure.New("unable to unassign player from league", err)
 	}
 
 	return &lp, nil

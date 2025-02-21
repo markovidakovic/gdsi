@@ -2,10 +2,12 @@ package players
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/markovidakovic/gdsi/server/db"
+	"github.com/markovidakovic/gdsi/server/failure"
 )
 
 type store struct {
@@ -46,7 +48,7 @@ func (s *store) findPlayers(ctx context.Context) ([]PlayerModel, error) {
 
 	rows, err := s.db.Query(ctx, sql)
 	if err != nil {
-		return nil, fmt.Errorf("quering players: %v", err)
+		return nil, failure.New("unable to find players", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 	defer rows.Close()
 
@@ -54,14 +56,14 @@ func (s *store) findPlayers(ctx context.Context) ([]PlayerModel, error) {
 		var pm PlayerModel
 		err := pm.ScanRows(rows)
 		if err != nil {
-			return nil, err
+			return nil, failure.New("unable to find players", err)
 		}
 
 		dest = append(dest, pm)
 	}
 
 	if err = rows.Err(); err != nil {
-		return nil, fmt.Errorf("scanning player rows: %v", err)
+		return nil, failure.New("unable to find players", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 
 	return dest, nil
@@ -96,7 +98,10 @@ func (s *store) findPlayer(ctx context.Context, playerId string) (*PlayerModel, 
 	row := s.db.QueryRow(ctx, sql, playerId)
 	err := dest.ScanRow(row)
 	if err != nil {
-		return nil, fmt.Errorf("finding player: %w", err)
+		if errors.Is(err, failure.ErrNotFound) {
+			return nil, failure.New("player not found", err)
+		}
+		return nil, failure.New("unable to find player", err)
 	}
 
 	return &dest, nil
@@ -143,7 +148,10 @@ func (s *store) updatePlayer(ctx context.Context, tx pgx.Tx, playerId string, mo
 	row := q.QueryRow(ctx, sql, model.Height, model.Weight, model.Handedness, model.Racket, playerId)
 	err := dest.ScanRow(row)
 	if err != nil {
-		return nil, fmt.Errorf("updating player: %w", err)
+		if errors.Is(err, failure.ErrNotFound) {
+			return nil, failure.New("player for update not found", err)
+		}
+		return nil, failure.New("unable to update player", err)
 	}
 
 	return &dest, nil
@@ -160,7 +168,7 @@ func (s *store) checkPlayerOwnership(ctx context.Context, playerId, accountId st
 	var exists bool
 	err := s.db.QueryRow(ctx, sql1, playerId, accountId).Scan(&exists)
 	if err != nil {
-		return false, err
+		return false, failure.New("unable to check player ownership", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 
 	return exists, nil

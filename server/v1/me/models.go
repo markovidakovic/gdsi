@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/markovidakovic/gdsi/server/response"
+	"github.com/markovidakovic/gdsi/server/failure"
 )
 
 type MeModel struct {
@@ -52,9 +52,9 @@ func (mm *MeModel) ScanRow(row pgx.Row) error {
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return fmt.Errorf("scanning me row: %w", response.ErrNotFound)
+			return failure.New("scanning me row", fmt.Errorf("%w -> %v", failure.ErrNotFound, err))
 		}
-		return fmt.Errorf("scanning me row: %v", err)
+		return failure.New("database error scanning me row", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 
 	if !leagueId.Valid {
@@ -94,8 +94,8 @@ type UpdateMeRequestModel struct {
 }
 
 // todo:
-func (m UpdateMeRequestModel) Validate() []response.InvalidField {
-	var inv []response.InvalidField
+func (m UpdateMeRequestModel) Validate() []failure.InvalidField {
+	var inv []failure.InvalidField
 
 	if len(inv) > 0 {
 		return inv
@@ -111,8 +111,8 @@ type UpdatePasswordRequestModel struct {
 }
 
 // todo:
-func (m UpdatePasswordRequestModel) Validate() []response.InvalidField {
-	var inv []response.InvalidField
+func (m UpdatePasswordRequestModel) Validate() []failure.InvalidField {
+	var inv []failure.InvalidField
 
 	if len(inv) > 0 {
 		return inv
