@@ -24,7 +24,7 @@ func New(cfg *config.Config, db *db.Conn) *api {
 func (a *api) Mount(r chi.Router) {
 	r.With(middleware.RequirePermission(permission.CreateCourt)).Post("/", a.hdl.createCourt)
 	r.Get("/", a.hdl.getCourts)
-	r.Get("/{courtId}", a.hdl.getCourt)
-	r.With(middleware.RequirePermission(permission.UpdateCourt)).Put("/{courtId}", a.hdl.updateCourt)
-	r.With(middleware.RequirePermission(permission.DeleteCourt)).Delete("/{courtId}", a.hdl.deleteCourt)
+	r.With(middleware.URLPathParamUUIDs("courtId")).Get("/{courtId}", a.hdl.getCourt)
+	r.With(middleware.URLPathParamUUIDs("courtId")).With(middleware.RequirePermission(permission.UpdateCourt)).Put("/{courtId}", a.hdl.updateCourt)
+	r.With(middleware.URLPathParamUUIDs("courtId")).With(middleware.RequirePermission(permission.DeleteCourt)).Delete("/{courtId}", a.hdl.deleteCourt)
 }

@@ -4,6 +4,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/markovidakovic/gdsi/server/config"
 	"github.com/markovidakovic/gdsi/server/db"
+	"github.com/markovidakovic/gdsi/server/middleware"
 	"github.com/markovidakovic/gdsi/server/router"
 	"github.com/markovidakovic/gdsi/server/validation"
 )
@@ -21,5 +22,5 @@ func New(cfg *config.Config, db *db.Conn) *api {
 }
 
 func (a *api) Mount(r chi.Router) {
-	r.Get("/", a.hdl.getStandings)
+	r.With(middleware.URLPathParamUUIDs("seasonId", "leagueId")).Get("/", a.hdl.getStandings)
 }

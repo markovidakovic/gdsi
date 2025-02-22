@@ -68,6 +68,9 @@ func (v *Validator) courtExists(ctx context.Context, courtId, location string) *
 func (v *Validator) seasonExists(ctx context.Context, seasonId, location string) *ValidationResult {
 	vr := &ValidationResult{}
 
+	fmt.Printf("seasonId: %v\n", seasonId)
+	fmt.Printf("location: %v\n", location)
+
 	sql := `select exists(select 1 from season where id = $1)`
 	var exists bool
 

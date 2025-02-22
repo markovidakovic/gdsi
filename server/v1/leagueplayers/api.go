@@ -23,8 +23,8 @@ func New(cfg *config.Config, db *db.Conn) *api {
 }
 
 func (a *api) Mount(r chi.Router) {
-	r.Get("/", a.hdl.getLeaguePlayers)
-	r.Get("/{playerId}", a.hdl.getLeaguePlayer)
-	r.With(middleware.RequirePermission(permission.UpdatePlayer)).Post("/{playerId}/assign", a.hdl.assignPlayerToLeague)
-	r.With(middleware.RequirePermission(permission.UpdatePlayer)).Delete("/{playerId}/assign", a.hdl.unassignPlayerFromLeague)
+	r.With(middleware.URLPathParamUUIDs("seasonId", "leagueId")).Get("/", a.hdl.getLeaguePlayers)
+	r.With(middleware.URLPathParamUUIDs("seasonId", "leagueId", "playerId")).Get("/{playerId}", a.hdl.getLeaguePlayer)
+	r.With(middleware.URLPathParamUUIDs("seasonId", "leagueId", "playerId")).With(middleware.RequirePermission(permission.UpdatePlayer)).Post("/{playerId}/assign", a.hdl.assignPlayerToLeague)
+	r.With(middleware.URLPathParamUUIDs("seasonId", "leagueId", "playerId")).With(middleware.RequirePermission(permission.UpdatePlayer)).Delete("/{playerId}/assign", a.hdl.unassignPlayerFromLeague)
 }

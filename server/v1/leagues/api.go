@@ -23,9 +23,9 @@ func New(cfg *config.Config, db *db.Conn) *api {
 }
 
 func (a *api) Mount(r chi.Router) {
-	r.With(middleware.RequirePermission(permission.CreateLeague)).Post("/", a.hdl.createLeague)
-	r.Get("/", a.hdl.getLeagues)
-	r.Get("/{leagueId}", a.hdl.getLeague)
-	r.With(middleware.RequirePermission(permission.UpdateLeague)).Put("/{leagueId}", a.hdl.updateLeague)
-	r.With(middleware.RequirePermission(permission.DeleteLeague)).Delete("/{leagueId}", a.hdl.deleteLeague)
+	r.With(middleware.URLPathParamUUIDs("seasonId")).With(middleware.RequirePermission(permission.CreateLeague)).Post("/", a.hdl.createLeague)
+	r.With(middleware.URLPathParamUUIDs("seasonId")).Get("/", a.hdl.getLeagues)
+	r.With(middleware.URLPathParamUUIDs("seasonId", "leagueId")).Get("/{leagueId}", a.hdl.getLeague)
+	r.With(middleware.URLPathParamUUIDs("seasonId", "leagueId")).With(middleware.RequirePermission(permission.UpdateLeague)).Put("/{leagueId}", a.hdl.updateLeague)
+	r.With(middleware.URLPathParamUUIDs("seasonId", "leagueId")).With(middleware.RequirePermission(permission.DeleteLeague)).Delete("/{leagueId}", a.hdl.deleteLeague)
 }

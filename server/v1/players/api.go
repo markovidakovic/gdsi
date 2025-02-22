@@ -23,6 +23,6 @@ func New(cfg *config.Config, db *db.Conn) *api {
 
 func (a *api) Mount(r chi.Router) {
 	r.Get("/", a.hdl.getPlayers)
-	r.Get("/{playerId}", a.hdl.getPlayer)
-	r.With(middleware.RequirePermissionOrOwnership(permission.UpdatePlayer, a.hdl.store.checkPlayerOwnership, "account", "playerId")).Put("/{playerId}", a.hdl.updatePlayer)
+	r.With(middleware.URLPathParamUUIDs("playerId")).Get("/{playerId}", a.hdl.getPlayer)
+	r.With(middleware.URLPathParamUUIDs("playerId")).With(middleware.RequirePermissionOrOwnership(permission.UpdatePlayer, a.hdl.store.checkPlayerOwnership, "account", "playerId")).Put("/{playerId}", a.hdl.updatePlayer)
 }
