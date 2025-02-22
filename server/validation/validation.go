@@ -47,7 +47,7 @@ func (vr *ValidationResult) result() error {
 	return nil
 }
 
-func (v *Validator) courtExists(ctx context.Context, courtId string) *ValidationResult {
+func (v *Validator) courtExists(ctx context.Context, courtId, location string) *ValidationResult {
 	vr := &ValidationResult{}
 
 	sql := `select exists(select 1 from court where id = $1)`
@@ -59,13 +59,13 @@ func (v *Validator) courtExists(ctx context.Context, courtId string) *Validation
 	}
 
 	if !exists {
-		vr.addInvalFld("courtId", "court not found", "path")
+		vr.addInvalFld("courtId", "court not found", location)
 	}
 
 	return vr
 }
 
-func (v *Validator) seasonExists(ctx context.Context, seasonId string) *ValidationResult {
+func (v *Validator) seasonExists(ctx context.Context, seasonId, location string) *ValidationResult {
 	vr := &ValidationResult{}
 
 	sql := `select exists(select 1 from season where id = $1)`
@@ -77,13 +77,13 @@ func (v *Validator) seasonExists(ctx context.Context, seasonId string) *Validati
 	}
 
 	if !exists {
-		vr.addInvalFld("seasonId", "season not found", "path")
+		vr.addInvalFld("seasonId", "season not found", location)
 	}
 
 	return vr
 }
 
-func (v *Validator) leagueExists(ctx context.Context, leagueId string) *ValidationResult {
+func (v *Validator) leagueExists(ctx context.Context, leagueId, location string) *ValidationResult {
 	vr := &ValidationResult{}
 
 	sql := `select exists(select 1 from season where id = $1)`
@@ -94,12 +94,12 @@ func (v *Validator) leagueExists(ctx context.Context, leagueId string) *Validati
 		return vr
 	}
 	if !exists {
-		vr.addInvalFld("leagueId", "league not found", "path")
+		vr.addInvalFld("leagueId", "league not found", location)
 	}
 	return vr
 }
 
-func (v *Validator) leagueInSeason(ctx context.Context, seasonId, leagueId string) *ValidationResult {
+func (v *Validator) leagueInSeason(ctx context.Context, seasonId, leagueId, location string) *ValidationResult {
 	vr := &ValidationResult{}
 
 	sql := `select exists(select 1 from league where id = $1 and season_id = $2)`
@@ -110,12 +110,12 @@ func (v *Validator) leagueInSeason(ctx context.Context, seasonId, leagueId strin
 		return vr
 	}
 	if !exists {
-		vr.addInvalFld("leagueId", "league not in season", "path")
+		vr.addInvalFld("leagueId", "league not in season", location)
 	}
 	return vr
 }
 
-func (v *Validator) playerExists(ctx context.Context, playerId string) *ValidationResult {
+func (v *Validator) playerExists(ctx context.Context, playerId, location string) *ValidationResult {
 	vr := &ValidationResult{}
 
 	sql := `select exists(select 1 from player where id = $1)`
@@ -126,13 +126,13 @@ func (v *Validator) playerExists(ctx context.Context, playerId string) *Validati
 		return vr
 	}
 	if !exists {
-		vr.addInvalFld("playerId", "player not found", "body")
+		vr.addInvalFld("playerId", "player not found", location)
 	}
 	return vr
 }
 
 // todo: later should be refactored to support a slice of player ids
-func (v *Validator) playersInLeague(ctx context.Context, leagueId, playerOneId, playerTwoId string) *ValidationResult {
+func (v *Validator) playersInLeague(ctx context.Context, leagueId, playerOneId, playerTwoId, location string) *ValidationResult {
 	vr := &ValidationResult{}
 
 	sql := `
@@ -148,7 +148,7 @@ func (v *Validator) playersInLeague(ctx context.Context, leagueId, playerOneId, 
 		return vr
 	}
 	if !exists {
-		vr.addInvalFld("playerId", "players not in same league", "body")
+		vr.addInvalFld("playerId", "players not in same league", location)
 	}
 	return vr
 }
@@ -167,13 +167,13 @@ func (v *Validator) NewValidation(ctx context.Context) *ValidationBuilder {
 	}
 }
 
-func (vb *ValidationBuilder) CourtExists(courtId string) *ValidationBuilder {
+func (vb *ValidationBuilder) CourtExists(courtId, location string) *ValidationBuilder {
 	// fail-fast if there is a critical error in prev validation
 	if vb.result.failure != nil {
 		return vb
 	}
 
-	vr := vb.validator.courtExists(vb.ctx, courtId)
+	vr := vb.validator.courtExists(vb.ctx, courtId, location)
 	if vr.failure != nil {
 		vb.result.failure = vr.failure
 		return vb
@@ -182,13 +182,13 @@ func (vb *ValidationBuilder) CourtExists(courtId string) *ValidationBuilder {
 	return vb
 }
 
-func (vb *ValidationBuilder) SeasonExists(seasonId string) *ValidationBuilder {
+func (vb *ValidationBuilder) SeasonExists(seasonId, location string) *ValidationBuilder {
 	// fail-fast if there is a critical error in prev validation
 	if vb.result.failure != nil {
 		return vb
 	}
 
-	vr := vb.validator.seasonExists(vb.ctx, seasonId)
+	vr := vb.validator.seasonExists(vb.ctx, seasonId, location)
 	if vr.failure != nil {
 		vb.result.failure = vr.failure
 		return vb
@@ -197,13 +197,28 @@ func (vb *ValidationBuilder) SeasonExists(seasonId string) *ValidationBuilder {
 	return vb
 }
 
-func (vb *ValidationBuilder) LeagueInSeason(seasonId, leagueId string) *ValidationBuilder {
+func (vb *ValidationBuilder) LeagueExists(leagueId, location string) *ValidationBuilder {
+	// fail-fast if there is a critical error in prev validation
+	if vb.result.failure != nil {
+		return vb
+	}
+
+	vr := vb.validator.leagueExists(vb.ctx, leagueId, location)
+	if vr.failure != nil {
+		vb.result.failure = vr.failure
+		return vb
+	}
+	vb.result.invalidFields = append(vb.result.invalidFields, vr.invalidFields...)
+	return vb
+}
+
+func (vb *ValidationBuilder) LeagueInSeason(seasonId, leagueId, location string) *ValidationBuilder {
 	// fal-fast if there is a critical error in prev validation
 	if vb.result.failure != nil {
 		return vb
 	}
 
-	vr := vb.validator.leagueInSeason(vb.ctx, seasonId, leagueId)
+	vr := vb.validator.leagueInSeason(vb.ctx, seasonId, leagueId, location)
 	if vr.failure != nil {
 		vb.result.failure = vr.failure
 		return vb
@@ -212,28 +227,13 @@ func (vb *ValidationBuilder) LeagueInSeason(seasonId, leagueId string) *Validati
 	return vb
 }
 
-func (vb *ValidationBuilder) LeagueExists(leagueId string) *ValidationBuilder {
-	// fail-fast if there is a critical error in prev validation
-	if vb.result.failure != nil {
-		return vb
-	}
-
-	vr := vb.validator.leagueExists(vb.ctx, leagueId)
-	if vr.failure != nil {
-		vb.result.failure = vr.failure
-		return vb
-	}
-	vb.result.invalidFields = append(vb.result.invalidFields, vr.invalidFields...)
-	return vb
-}
-
-func (vb *ValidationBuilder) PlayerExists(playerId string) *ValidationBuilder {
+func (vb *ValidationBuilder) PlayerExists(playerId, location string) *ValidationBuilder {
 	// fail fast if there is a critical error in prev validation
 	if vb.result.failure != nil {
 		return vb
 	}
 
-	vr := vb.validator.playerExists(vb.ctx, playerId)
+	vr := vb.validator.playerExists(vb.ctx, playerId, location)
 	if vr.failure != nil {
 		vb.result.failure = vr.failure
 		return vb
@@ -242,12 +242,12 @@ func (vb *ValidationBuilder) PlayerExists(playerId string) *ValidationBuilder {
 	return vb
 }
 
-func (vb *ValidationBuilder) PlayersInLeague(leagueId, playerOneId, playerTwoId string) *ValidationBuilder {
+func (vb *ValidationBuilder) PlayersInLeague(leagueId, playerOneId, playerTwoId, location string) *ValidationBuilder {
 	if vb.result.failure != nil {
 		return vb
 	}
 
-	vr := vb.validator.playersInLeague(vb.ctx, leagueId, playerOneId, playerTwoId)
+	vr := vb.validator.playersInLeague(vb.ctx, leagueId, playerOneId, playerTwoId, location)
 	if vr.failure != nil {
 		vb.result.failure = vr.failure
 		return vb

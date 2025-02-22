@@ -23,7 +23,7 @@ func newService(cfg *config.Config, store *store, validator *validation.Validato
 
 func (s *service) processCreateLeague(ctx context.Context, model CreateLeagueRequestModel) (*LeagueModel, error) {
 	// validation
-	err := s.validator.NewValidation(ctx).SeasonExists(model.SeasonId).Result()
+	err := s.validator.NewValidation(ctx).SeasonExists(model.SeasonId, "path").Result()
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +39,7 @@ func (s *service) processCreateLeague(ctx context.Context, model CreateLeagueReq
 
 func (s *service) processFindLeagues(ctx context.Context, seasonId string) ([]LeagueModel, error) {
 	// validation
-	err := s.validator.NewValidation(ctx).SeasonExists(seasonId).Result()
+	err := s.validator.NewValidation(ctx).SeasonExists(seasonId, "path").Result()
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func (s *service) processFindLeagues(ctx context.Context, seasonId string) ([]Le
 
 func (s *service) processFindLeague(ctx context.Context, seasonId, leagueId string) (*LeagueModel, error) {
 	// validation
-	err := s.validator.NewValidation(ctx).SeasonExists(seasonId).Result()
+	err := s.validator.NewValidation(ctx).SeasonExists(seasonId, "path").Result()
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func (s *service) processFindLeague(ctx context.Context, seasonId, leagueId stri
 
 func (s *service) processUpdateLeague(ctx context.Context, model UpdateLeagueRequestModel) (*LeagueModel, error) {
 	// validation
-	err := s.validator.NewValidation(ctx).SeasonExists(model.SeasonId).Result()
+	err := s.validator.NewValidation(ctx).SeasonExists(model.SeasonId, "path").Result()
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func (s *service) processUpdateLeague(ctx context.Context, model UpdateLeagueReq
 
 func (s *service) processDeleteLeague(ctx context.Context, seasonId, leagueId string) error {
 	// validation
-	err := s.validator.NewValidation(ctx).SeasonExists(seasonId).Result()
+	err := s.validator.NewValidation(ctx).SeasonExists(seasonId, "path").Result()
 	if err != nil {
 		return err
 	}

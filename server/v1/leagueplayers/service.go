@@ -29,9 +29,9 @@ func newService(cfg *config.Config, store *store, validator *validation.Validato
 func (s *service) processGetLeaguePlayers(ctx context.Context, seasonId, leagueId string) ([]players.PlayerModel, error) {
 	// validation
 	err := s.validator.NewValidation(ctx).
-		SeasonExists(seasonId).
-		LeagueExists(leagueId).
-		LeagueInSeason(seasonId, leagueId).
+		SeasonExists(seasonId, "path").
+		LeagueExists(leagueId, "path").
+		LeagueInSeason(seasonId, leagueId, "path").
 		Result()
 	if err != nil {
 		return nil, err
@@ -49,10 +49,10 @@ func (s *service) processGetLeaguePlayers(ctx context.Context, seasonId, leagueI
 func (s *service) processGetLeaguePlayer(ctx context.Context, seasonId, leagueId, playerId string) (*players.PlayerModel, error) {
 	// validation
 	err := s.validator.NewValidation(ctx).
-		SeasonExists(seasonId).
-		LeagueExists(leagueId).
-		LeagueInSeason(seasonId, leagueId).
-		PlayerExists(playerId).
+		SeasonExists(seasonId, "path").
+		LeagueExists(leagueId, "path").
+		LeagueInSeason(seasonId, leagueId, "path").
+		PlayerExists(playerId, "path").
 		Result()
 	if err != nil {
 		return nil, err
@@ -70,10 +70,10 @@ func (s *service) processGetLeaguePlayer(ctx context.Context, seasonId, leagueId
 func (s *service) processAssignPlayerToLeague(ctx context.Context, seasonId, leagueId, playerId string) (*players.PlayerModel, error) {
 	// validation
 	err := s.validator.NewValidation(ctx).
-		SeasonExists(seasonId).
-		LeagueExists(leagueId).
-		LeagueInSeason(seasonId, leagueId).
-		PlayerExists(playerId).
+		SeasonExists(seasonId, "path").
+		LeagueExists(leagueId, "path").
+		LeagueInSeason(seasonId, leagueId, "path").
+		PlayerExists(playerId, "path").
 		Result()
 	if err != nil {
 		return nil, err
@@ -123,10 +123,10 @@ func (s *service) processUnassignPlayerFromLeague(ctx context.Context, seasonId,
 	// validation
 	// todo: maybe do a validation in validation.go for playerInLeague
 	err := s.validator.NewValidation(ctx).
-		SeasonExists(seasonId).
-		LeagueExists(leagueId).
-		LeagueInSeason(seasonId, leagueId).
-		PlayerExists(playerId).
+		SeasonExists(seasonId, "path").
+		LeagueExists(leagueId, "path").
+		LeagueInSeason(seasonId, leagueId, "path").
+		PlayerExists(playerId, "path").
 		Result()
 	if err != nil {
 		return nil, err

@@ -31,10 +31,10 @@ func newService(cfg *config.Config, store *store, validator *validation.Validato
 func (s *service) processCreateMatch(ctx context.Context, model CreateMatchRequestModel) (*MatchModel, error) {
 	// validation
 	err := s.validator.NewValidation(ctx).
-		CourtExists(model.CourtId).
-		SeasonExists(model.SeasonId).
-		LeagueExists(model.LeagueId).LeagueInSeason(model.SeasonId, model.LeagueId).
-		PlayerExists(model.PlayerOneId).PlayerExists(model.PlayerTwoId).PlayersInLeague(model.LeagueId, model.PlayerOneId, model.PlayerTwoId).
+		CourtExists(model.CourtId, "body").
+		SeasonExists(model.SeasonId, "path").
+		LeagueExists(model.LeagueId, "path").LeagueInSeason(model.SeasonId, model.LeagueId, "path").
+		PlayerExists(model.PlayerOneId, "body").PlayerExists(model.PlayerTwoId, "body").PlayersInLeague(model.LeagueId, model.PlayerOneId, model.PlayerTwoId, "body").
 		Result()
 	if err != nil {
 		return nil, err
@@ -108,8 +108,8 @@ func (s *service) processCreateMatch(ctx context.Context, model CreateMatchReque
 func (s *service) processGetMatches(ctx context.Context, seasonId, leagueId string) ([]MatchModel, error) {
 	// validation
 	err := s.validator.NewValidation(ctx).
-		SeasonExists(seasonId).
-		LeagueExists(leagueId).LeagueInSeason(seasonId, leagueId).
+		SeasonExists(seasonId, "path").
+		LeagueExists(leagueId, "path").LeagueInSeason(seasonId, leagueId, "path").
 		Result()
 	if err != nil {
 		return nil, err
@@ -127,8 +127,8 @@ func (s *service) processGetMatches(ctx context.Context, seasonId, leagueId stri
 func (s *service) processGetMatch(ctx context.Context, seasonId, leagueId, matchId string) (*MatchModel, error) {
 	// validate
 	err := s.validator.NewValidation(ctx).
-		SeasonExists(seasonId).
-		LeagueExists(leagueId).LeagueInSeason(seasonId, leagueId).
+		SeasonExists(seasonId, "path").
+		LeagueExists(leagueId, "path").LeagueInSeason(seasonId, leagueId, "path").
 		Result()
 	if err != nil {
 		return nil, err
@@ -145,10 +145,10 @@ func (s *service) processGetMatch(ctx context.Context, seasonId, leagueId, match
 func (s *service) processUpdateMatch(ctx context.Context, model UpdateMatchRequestModel) (*MatchModel, error) {
 	// validation
 	err := s.validator.NewValidation(ctx).
-		CourtExists(model.CourtId).
-		SeasonExists(model.SeasonId).
-		LeagueExists(model.LeagueId).LeagueInSeason(model.SeasonId, model.LeagueId).
-		PlayerExists(model.PlayerOneId).PlayerExists(model.PlayerTwoId).PlayersInLeague(model.LeagueId, model.PlayerOneId, model.PlayerTwoId).
+		CourtExists(model.CourtId, "body").
+		SeasonExists(model.SeasonId, "path").
+		LeagueExists(model.LeagueId, "path").LeagueInSeason(model.SeasonId, model.LeagueId, "path").
+		PlayerExists(model.PlayerTwoId, "body").PlayersInLeague(model.LeagueId, model.PlayerOneId, model.PlayerTwoId, "body").
 		Result()
 	if err != nil {
 		return nil, err
@@ -178,8 +178,8 @@ func (s *service) processUpdateMatch(ctx context.Context, model UpdateMatchReque
 func (s *service) processSubmitMatchScore(ctx context.Context, model SubmitMatchScoreRequestModel) (*MatchModel, error) {
 	// validation
 	err := s.validator.NewValidation(ctx).
-		SeasonExists(model.SeasonId).
-		LeagueExists(model.LeagueId).LeagueInSeason(model.SeasonId, model.LeagueId).
+		SeasonExists(model.SeasonId, "path").
+		LeagueExists(model.LeagueId, "path").LeagueInSeason(model.SeasonId, model.LeagueId, "path").
 		Result()
 	if err != nil {
 		return nil, err
