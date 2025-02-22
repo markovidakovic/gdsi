@@ -27,9 +27,9 @@ func (am *AccountModel) ScanRow(row pgx.Row) error {
 	err := row.Scan(&am.Id, &am.Name, &am.Email, &am.Dob, &am.Gender, &am.PhoneNumber, &am.Password, &am.Role, &am.PlayerId, &am.CreatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return failure.New("scanning account row", fmt.Errorf("%w: %v", failure.ErrNotFound, err))
+			return failure.New("scanning account row", fmt.Errorf("%w -> %v", failure.ErrNotFound, err))
 		}
-		return failure.New("database error", fmt.Errorf("%w: %v", failure.ErrInternal, err))
+		return failure.New("database error", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 
 	return nil
@@ -54,9 +54,9 @@ func (rtm *RefreshTokenModel) ScanRow(row pgx.Row) error {
 	err := row.Scan(&rtm.Id, &rtm.AccountId, &rtm.AccountRole, &rtm.TokenHash, &rtm.DeviceId, &rtm.IpAddress, &rtm.UserAgent, &rtm.IssuedAt, &rtm.ExpiresAt, &rtm.LastUsedAt, &rtm.IsRevoked, &rtm.PlayerId)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return failure.New("scanning refresh token row", fmt.Errorf("%w: %v", failure.ErrNotFound, err))
+			return failure.New("scanning refresh token row", fmt.Errorf("%w -> %v", failure.ErrNotFound, err))
 		}
-		return failure.New("database error", fmt.Errorf("%w: %v", failure.ErrInternal, err))
+		return failure.New("database error", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 	return nil
 }

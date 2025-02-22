@@ -65,7 +65,7 @@ func (s *store) insertPlayer(ctx context.Context, tx pgx.Tx, accountId string) (
 
 	err := q.QueryRow(ctx, sql, accountId).Scan(&playerId)
 	if err != nil {
-		return "", failure.New("failed to insert player", fmt.Errorf("%w: %v", failure.ErrInternal, err))
+		return "", failure.New("failed to insert player", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 
 	return playerId, nil
@@ -126,7 +126,7 @@ func (s *store) insertRefreshToken(ctx context.Context, tx pgx.Tx, accountId str
 
 	_, err := q.Exec(ctx, sql, accountId, token, issuedAt, expiresAt)
 	if err != nil {
-		return failure.New("failed to insert refresh token", fmt.Errorf("%w: %v", failure.ErrInternal, err))
+		return failure.New("failed to insert refresh token", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 
 	return nil
@@ -148,7 +148,7 @@ func (s *store) revokeAccountRefreshTokens(ctx context.Context, tx pgx.Tx, accou
 
 	_, err := q.Exec(ctx, sql, accountId)
 	if err != nil {
-		return failure.New("failed to revoke account refresh tokens", fmt.Errorf("%w: %v", failure.ErrInternal, err))
+		return failure.New("failed to revoke account refresh tokens", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 
 	return nil
@@ -217,9 +217,9 @@ func (s *store) updateRefreshToken(ctx context.Context, tx pgx.Tx, rtId string) 
 	_, err := q.Exec(ctx, sql, lua, rtId)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return failure.New("refresh token not found", fmt.Errorf("%w: %v", failure.ErrNotFound, err))
+			return failure.New("refresh token not found", fmt.Errorf("%w -> %v", failure.ErrNotFound, err))
 		}
-		return failure.New("unable to update refresh token", fmt.Errorf("%w: %v", failure.ErrInternal, err))
+		return failure.New("unable to update refresh token", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 
 	return nil
@@ -242,9 +242,9 @@ func (s *store) revokeRefreshToken(ctx context.Context, tx pgx.Tx, rtId string) 
 	_, err := q.Exec(ctx, sql, rtId)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return failure.New("refresh token not found", fmt.Errorf("%w: %v", failure.ErrNotFound, err))
+			return failure.New("refresh token not found", fmt.Errorf("%w -> %v", failure.ErrNotFound, err))
 		}
-		return failure.New("unable to revoke refresh token", fmt.Errorf("%w: %v", failure.ErrInternal, err))
+		return failure.New("unable to revoke refresh token", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 
 	return nil

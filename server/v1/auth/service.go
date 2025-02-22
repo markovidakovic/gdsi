@@ -35,7 +35,7 @@ func (s *service) processSignup(ctx context.Context, model SignupRequestModel) (
 	// hash the password
 	model.Password, err = sec.EncryptPwd(model.Password)
 	if err != nil {
-		return "", "", failure.New("signup failed", fmt.Errorf("%w: %v", failure.ErrInternal, err))
+		return "", "", failure.New("signup failed", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 
 	// check if email exists
@@ -52,8 +52,7 @@ func (s *service) processSignup(ctx context.Context, model SignupRequestModel) (
 	// begin tx
 	tx, err := s.store.db.Begin(ctx)
 	if err != nil {
-		// todo: how to do these errors??
-		return "", "", err
+		return "", "", failure.New("signup failed", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 
 	defer func() {
@@ -82,7 +81,7 @@ func (s *service) processSignup(ctx context.Context, model SignupRequestModel) (
 	// generate jwts
 	accessTkn, refreshTkn, err := generateAuthTokens(s.cfg.JwtAuth, s.cfg.JwtAccessExpiration, s.cfg.JwtRefreshExpiration, account.Id, account.Role, *account.PlayerId)
 	if err != nil {
-		return "", "", failure.New("signup failed", fmt.Errorf("%w: %v", failure.ErrInternal, err))
+		return "", "", failure.New("signup failed", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 
 	// hash the refresh token
@@ -96,8 +95,7 @@ func (s *service) processSignup(ctx context.Context, model SignupRequestModel) (
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		// todo: how to fo these errors??
-		return "", "", fmt.Errorf("commiting tx: %v", err)
+		return "", "", failure.New("signup failed", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 
 	return accessTkn.val, refreshTkn.val, nil
@@ -121,20 +119,19 @@ func (s *service) processLogin(ctx context.Context, model LoginRequestModel) (st
 	err = bcrypt.CompareHashAndPassword([]byte(account.Password), []byte(model.Password))
 	if err != nil {
 		// todo: maybe refactor this err msg later
-		return "", "", failure.New("invalid email or password", fmt.Errorf("%w: %v", failure.ErrBadRequest, err))
+		return "", "", failure.New("invalid email or password", fmt.Errorf("%w -> %v", failure.ErrBadRequest, err))
 	}
 
 	// generate jwts
 	accessTkn, refreshTkn, err := generateAuthTokens(s.cfg.JwtAuth, s.cfg.JwtAccessExpiration, s.cfg.JwtRefreshExpiration, account.Id, account.Role, *account.PlayerId)
 	if err != nil {
-		return "", "", failure.New("login failed", fmt.Errorf("%w: %v", failure.ErrInternal, err))
+		return "", "", failure.New("login failed", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 
 	// begin tx
 	tx, err := s.store.db.Begin(ctx)
 	if err != nil {
-		// todo: how to handle these errors??
-		return "", "", fmt.Errorf("beginning tx: %v", err)
+		return "", "", failure.New("login failed", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 
 	defer func() {
@@ -161,8 +158,7 @@ func (s *service) processLogin(ctx context.Context, model LoginRequestModel) (st
 	// commit tx
 	err = tx.Commit(ctx)
 	if err != nil {
-		// todo: how to handle these errors??
-		return "", "", fmt.Errorf("commiting tx: %v", err)
+		return "", "", failure.New("login failed", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 
 	return accessTkn.val, refreshTkn.val, nil
@@ -175,8 +171,7 @@ func (s *service) processRefreshTokens(ctx context.Context, model RefreshTokenRe
 	// begin tx
 	tx, err := s.store.db.Begin(ctx)
 	if err != nil {
-		// todo: how to handle this??
-		return "", "", fmt.Errorf("begining tx: %v", err)
+		return "", "", failure.New("refresh tokens failed", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 
 	defer func() {
@@ -225,7 +220,7 @@ func (s *service) processRefreshTokens(ctx context.Context, model RefreshTokenRe
 	// generate tokens
 	accessTkn, refreshTkn, err := generateAuthTokens(s.cfg.JwtAuth, s.cfg.JwtAccessExpiration, s.cfg.JwtRefreshExpiration, rt.AccountId, rt.AccountRole, rt.PlayerId)
 	if err != nil {
-		return "", "", failure.New("refresh tokens failed", fmt.Errorf("%w: %v", failure.ErrInternal, err))
+		return "", "", failure.New("refresh tokens failed", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 
 	// insert refresh token
@@ -237,8 +232,7 @@ func (s *service) processRefreshTokens(ctx context.Context, model RefreshTokenRe
 	// commit tx
 	err = tx.Commit(ctx)
 	if err != nil {
-		// todo: how to handle this
-		return "", "", err
+		return "", "", failure.New("refresh tokens failed", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 
 	return accessTkn.val, refreshTkn.val, nil

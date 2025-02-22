@@ -54,7 +54,7 @@ func (v *Validator) courtExists(ctx context.Context, courtId, location string) *
 	var exists bool
 
 	if err := v.db.QueryRow(ctx, sql, courtId).Scan(&exists); err != nil {
-		vr.failure = failure.New("checking court existance", fmt.Errorf("%w: %v", failure.ErrInternal, err))
+		vr.failure = failure.New("checking court existance", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 		return vr
 	}
 
@@ -72,7 +72,7 @@ func (v *Validator) seasonExists(ctx context.Context, seasonId, location string)
 	var exists bool
 
 	if err := v.db.QueryRow(ctx, sql, seasonId).Scan(&exists); err != nil {
-		vr.failure = failure.New("checking season existance", fmt.Errorf("%w: %v", failure.ErrInternal, err))
+		vr.failure = failure.New("checking season existance", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 		return vr
 	}
 
@@ -90,7 +90,7 @@ func (v *Validator) leagueExists(ctx context.Context, leagueId, location string)
 	var exists bool
 
 	if err := v.db.QueryRow(ctx, sql, leagueId).Scan(&exists); err != nil {
-		vr.failure = failure.New("checking league existance", fmt.Errorf("%w: %v", failure.ErrInternal, err))
+		vr.failure = failure.New("checking league existance", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 		return vr
 	}
 	if !exists {
@@ -106,7 +106,7 @@ func (v *Validator) leagueInSeason(ctx context.Context, seasonId, leagueId, loca
 	var exists bool
 
 	if err := v.db.QueryRow(ctx, sql, leagueId, seasonId).Scan(&exists); err != nil {
-		vr.failure = failure.New("checking if league part of season", fmt.Errorf("%w: %v", failure.ErrInternal, err))
+		vr.failure = failure.New("checking if league part of season", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 		return vr
 	}
 	if !exists {
@@ -122,7 +122,7 @@ func (v *Validator) playerExists(ctx context.Context, playerId, location string)
 	var exists bool
 
 	if err := v.db.QueryRow(ctx, sql, playerId).Scan(&exists); err != nil {
-		vr.failure = failure.New("checking player existance", fmt.Errorf("%w: %v", failure.ErrInternal, err))
+		vr.failure = failure.New("checking player existance", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 		return vr
 	}
 	if !exists {
@@ -144,7 +144,7 @@ func (v *Validator) playersInLeague(ctx context.Context, leagueId, playerOneId, 
 	`
 	var exists bool
 	if err := v.db.QueryRow(ctx, sql, playerOneId, playerTwoId, leagueId).Scan(&exists); err != nil {
-		vr.failure = failure.New("checking if player part of league", fmt.Errorf("%w: %v", failure.ErrInternal, err))
+		vr.failure = failure.New("checking if player part of league", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 		return vr
 	}
 	if !exists {

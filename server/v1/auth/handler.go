@@ -38,7 +38,7 @@ func (h *handler) signup(w http.ResponseWriter, r *http.Request) {
 	// decode request body
 	err := json.NewDecoder(r.Body).Decode(&model)
 	if err != nil {
-		response.WriteFailure(w, failure.New("invalid request body", fmt.Errorf("%w: %v", failure.ErrBadRequest, err)))
+		response.WriteFailure(w, failure.New("invalid request body", fmt.Errorf("%w -> %v", failure.ErrBadRequest, err)))
 		return
 	}
 
@@ -87,7 +87,7 @@ func (h *handler) login(w http.ResponseWriter, r *http.Request) {
 	// decode request body
 	err := json.NewDecoder(r.Body).Decode(&model)
 	if err != nil {
-		response.WriteFailure(w, failure.New("invalid request body", fmt.Errorf("%w: %v", failure.ErrBadRequest, err)))
+		response.WriteFailure(w, failure.New("invalid request body", fmt.Errorf("%w -> %v", failure.ErrBadRequest, err)))
 		return
 	}
 
@@ -147,7 +147,7 @@ func (h *handler) refreshToken(w http.ResponseWriter, r *http.Request) {
 	// decode request body
 	err := json.NewDecoder(r.Body).Decode(&model)
 	if err != nil {
-		response.WriteFailure(w, failure.New("invalid request body", fmt.Errorf("%w: %v", failure.ErrBadRequest, err)))
+		response.WriteFailure(w, failure.New("invalid request body", fmt.Errorf("%w -> %v", failure.ErrBadRequest, err)))
 		return
 	}
 
