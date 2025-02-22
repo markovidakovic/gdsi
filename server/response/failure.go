@@ -37,6 +37,10 @@ func WriteFailure(w http.ResponseWriter, fw FailureWriter) {
 	log.Printf("%v", fw.Error())
 	statusCode := statusCodeFromFailure(fw)
 
+	// if statusCode >= 500 {
+	// 	log.Printf("%v", fw.Error())
+	// }
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	if err := json.NewEncoder(w).Encode(fw); err != nil {
