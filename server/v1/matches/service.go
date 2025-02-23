@@ -35,6 +35,7 @@ func (s *service) processCreateMatch(ctx context.Context, model CreateMatchReque
 		SeasonExists(model.SeasonId, "path").
 		LeagueExists(model.LeagueId, "path").LeagueInSeason(model.SeasonId, model.LeagueId, "path").
 		PlayerExists(model.PlayerOneId, "body").PlayerExists(model.PlayerTwoId, "body").PlayersInLeague(model.LeagueId, model.PlayerOneId, model.PlayerTwoId, "body").
+		MatchExistsBetweenPlayers(model.SeasonId, model.LeagueId, model.PlayerOneId, model.PlayerTwoId, "body").MatchScheduledInSeason(model.SeasonId, model.ScheduledAt, "body").
 		Result()
 	if err != nil {
 		return nil, err
@@ -149,6 +150,7 @@ func (s *service) processUpdateMatch(ctx context.Context, model UpdateMatchReque
 		SeasonExists(model.SeasonId, "path").
 		LeagueExists(model.LeagueId, "path").LeagueInSeason(model.SeasonId, model.LeagueId, "path").
 		PlayerExists(model.PlayerTwoId, "body").PlayersInLeague(model.LeagueId, model.PlayerOneId, model.PlayerTwoId, "body").
+		MatchExistsBetweenPlayers(model.SeasonId, model.LeagueId, model.PlayerOneId, model.PlayerTwoId, "body").MatchScheduledInSeason(model.SeasonId, model.ScheduledAt, "body").
 		Result()
 	if err != nil {
 		return nil, err

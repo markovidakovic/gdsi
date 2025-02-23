@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/markovidakovic/gdsi/server/failure"
 )
@@ -106,6 +107,12 @@ func (m CreateMatchRequestModel) Validate() []failure.InvalidField {
 			Message:  "Court id is required",
 			Location: "body",
 		})
+	} else if err := uuid.Validate(m.CourtId); err != nil {
+		inv = append(inv, failure.InvalidField{
+			Field:    "court_id",
+			Message:  "Invalid uuid format",
+			Location: "body",
+		})
 	}
 	if m.ScheduledAt == "" {
 		inv = append(inv, failure.InvalidField{
@@ -120,16 +127,20 @@ func (m CreateMatchRequestModel) Validate() []failure.InvalidField {
 			Message:  "Player two id is required",
 			Location: "body",
 		})
+	} else if err := uuid.Validate(m.PlayerTwoId); err != nil {
+		inv = append(inv, failure.InvalidField{
+			Field:    "player_two_id",
+			Message:  "Invalid uuid format",
+			Location: "body",
+		})
 	}
 	if m.Score != nil {
-		if *m.Score == "" {
+		if *m.Score == "" || !isValidScore(*m.Score) {
 			inv = append(inv, failure.InvalidField{
 				Field:    "score",
 				Message:  "Invalid score value",
 				Location: "body",
 			})
-		} else {
-
 		}
 	}
 
@@ -161,6 +172,12 @@ func (m UpdateMatchRequestModel) Validate() []failure.InvalidField {
 			Message:  "Court id is required",
 			Location: "body",
 		})
+	} else if err := uuid.Validate(m.CourtId); err != nil {
+		inv = append(inv, failure.InvalidField{
+			Field:    "court_id",
+			Message:  "Invalid uuid value",
+			Location: "body",
+		})
 	}
 	if m.ScheduledAt == "" {
 		inv = append(inv, failure.InvalidField{
@@ -173,6 +190,12 @@ func (m UpdateMatchRequestModel) Validate() []failure.InvalidField {
 		inv = append(inv, failure.InvalidField{
 			Field:    "player_two_id",
 			Message:  "Player two id is required",
+			Location: "body",
+		})
+	} else if err := uuid.Validate(m.PlayerTwoId); err != nil {
+		inv = append(inv, failure.InvalidField{
+			Field:    "player_two_id",
+			Message:  "Invalid uuid value",
 			Location: "body",
 		})
 	}

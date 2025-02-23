@@ -26,6 +26,7 @@ func AccountInfo(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, claims, _ := jwtauth.FromContext(r.Context())
 
+		// todo: uuid validation
 		accountId, ok := claims["sub"].(string)
 		if !ok {
 			response.WriteFailure(w, failure.New("account unauthorized", failure.ErrUnauthorized))
@@ -36,6 +37,7 @@ func AccountInfo(next http.Handler) http.Handler {
 			response.WriteFailure(w, failure.New("account unauthorized", failure.ErrUnauthorized))
 			return
 		}
+		// todo: uuid validation
 		playerId, ok := claims["player_id"].(string)
 		if !ok {
 			response.WriteFailure(w, failure.New("account unauthorized", failure.ErrUnauthorized))
