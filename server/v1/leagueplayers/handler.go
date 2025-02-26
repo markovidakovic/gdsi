@@ -1,6 +1,7 @@
 package leagueplayers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -26,17 +27,22 @@ func newHandler(cfg *config.Config, db *db.Conn, validator *validation.Validator
 // @Description Get league players
 // @Tags players
 // @Produce json
-// @Param seasonId path string true "Season id"
-// @Param leagueId path string true "League id"
+// @Param season_id path string true "Season id"
+// @Param league_id path string true "League id"
+// @Param match_available query bool false "Available opponents"
 // @Success 200 {array} players.PlayerModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
 // @Failure 401 {object} failure.Failure "Unauthorized"
 // @Failure 500 {object} failure.Failure "Internal server error"
 // @Security BearerAuth
-// @Router /v1/seasons/{seasonId}/leagues/{leagueId}/players [get]
+// @Router /v1/seasons/{season_id}/leagues/{league_id}/players [get]
 func (h *handler) getLeaguePlayers(w http.ResponseWriter, r *http.Request) {
+
+	query := r.URL.Query()
+	fmt.Printf("query: %v\n", query.Get("match_available"))
+
 	// call the service
-	result, err := h.service.processGetLeaguePlayers(r.Context(), chi.URLParam(r, "seasonId"), chi.URLParam(r, "leagueId"))
+	result, err := h.service.processGetLeaguePlayers(r.Context(), chi.URLParam(r, "season_id"), chi.URLParam(r, "league_id"))
 	if err != nil {
 		switch f := err.(type) {
 		case *failure.ValidationFailure:
@@ -57,18 +63,18 @@ func (h *handler) getLeaguePlayers(w http.ResponseWriter, r *http.Request) {
 // @Description Get league player
 // @Tags players
 // @Produce json
-// @Param seasonId path string true "Season id"
-// @Param leagueId path string true "League id"
-// @Param playerId path string true "Player id"
+// @Param season_id path string true "Season id"
+// @Param league_id path string true "League id"
+// @Param player_id path string true "Player id"
 // @Success 200 {object} players.PlayerModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
 // @Failure 401 {object} failure.Failure "Unauthorized"
 // @Failure 500 {object} failure.Failure "Internal server error"
 // @Security BearerAuth
-// @Router /v1/seasons/{seasonId}/leagues/{leagueId}/players/{playerId} [get]
+// @Router /v1/seasons/{season_id}/leagues/{league_id}/players/{player_id} [get]
 func (h *handler) getLeaguePlayer(w http.ResponseWriter, r *http.Request) {
 	// call the service
-	result, err := h.service.processGetLeaguePlayer(r.Context(), chi.URLParam(r, "seasonId"), chi.URLParam(r, "leagueId"), chi.URLParam(r, "playerId"))
+	result, err := h.service.processGetLeaguePlayer(r.Context(), chi.URLParam(r, "season_id"), chi.URLParam(r, "league_id"), chi.URLParam(r, "player_id"))
 	if err != nil {
 		switch f := err.(type) {
 		case *failure.ValidationFailure:
@@ -89,19 +95,19 @@ func (h *handler) getLeaguePlayer(w http.ResponseWriter, r *http.Request) {
 // @Descriptions Assigns player to a league
 // @Tags players
 // @Produce json
-// @Param seasonId path string true "Season id"
-// @Param leagueId path string true "League id"
-// @Param playerId path string true "Player id"
+// @Param season_id path string true "Season id"
+// @Param league_id path string true "League id"
+// @Param player_id path string true "Player id"
 // @Success 200 {object} players.PlayerModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
 // @Failure 401 {object} failure.Failure "Unauthorized"
 // @Failure 404 {object} failure.Failure "Not found"
 // @Failure 500 {object} failure.Failure "Internal server error"
 // @Security BearerAuth
-// @Router /v1/seasons/{seasonId}/leagues/{leagueId}/players/{playerId}/assign [post]
+// @Router /v1/seasons/{season_id}/leagues/{league_id}/players/{player_id}/assign [post]
 func (h *handler) assignPlayerToLeague(w http.ResponseWriter, r *http.Request) {
 	// call the service
-	result, err := h.service.processAssignPlayerToLeague(r.Context(), chi.URLParam(r, "seasonId"), chi.URLParam(r, "leagueId"), chi.URLParam(r, "playerId"))
+	result, err := h.service.processAssignPlayerToLeague(r.Context(), chi.URLParam(r, "season_id"), chi.URLParam(r, "league_id"), chi.URLParam(r, "player_id"))
 	if err != nil {
 		switch f := err.(type) {
 		case *failure.ValidationFailure:
@@ -122,19 +128,19 @@ func (h *handler) assignPlayerToLeague(w http.ResponseWriter, r *http.Request) {
 // @Descriptions Removes player from a league
 // @Tags players
 // @Produce json
-// @Param seasonId path string true "Season id"
-// @Param leagueId path string true "League id"
-// @Param playerId path string true "Player id"
+// @Param season_id path string true "Season id"
+// @Param league_id path string true "League id"
+// @Param player_id path string true "Player id"
 // @Success 200 {object} players.PlayerModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
 // @Failure 401 {object} failure.Failure "Unauthorized"
 // @Failure 404 {object} failure.Failure "Not found"
 // @Failure 500 {object} failure.Failure "Internal server error"
 // @Security BearerAuth
-// @Router /v1/seasons/{seasonId}/leagues/{leagueId}/players/{playerId}/assign [delete]
+// @Router /v1/seasons/{season_id}/leagues/{league_id}/players/{player_id}/assign [delete]
 func (h *handler) unassignPlayerFromLeague(w http.ResponseWriter, r *http.Request) {
 	// call the service
-	result, err := h.service.processUnassignPlayerFromLeague(r.Context(), chi.URLParam(r, "seasonId"), chi.URLParam(r, "leagueId"), chi.URLParam(r, "playerId"))
+	result, err := h.service.processUnassignPlayerFromLeague(r.Context(), chi.URLParam(r, "season_id"), chi.URLParam(r, "league_id"), chi.URLParam(r, "player_id"))
 	if err != nil {
 		switch f := err.(type) {
 		case *failure.ValidationFailure:

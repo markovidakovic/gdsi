@@ -26,16 +26,16 @@ func newHandler(cfg *config.Config, db *db.Conn, validator *validation.Validator
 // @Description Get standings
 // @Tags standings
 // @Produce json
-// @Param seasonId path string true "Season id"
-// @Param leagueId path string true "League id"
+// @Param season_id path string true "Season id"
+// @Param league_id path string true "League id"
 // @Success 200 {array} standings.StandingModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
 // @Failure 401 {object} failure.Failure "Unauthorized"
 // @Failure 500 {object} failure.Failure "Internal server error"
 // @Security BearerAuth
-// @Router /v1/seasons/{seasonId}/leagues/{leagueId}/standings [get]
+// @Router /v1/seasons/{season_id}/leagues/{league_id}/standings [get]
 func (h *handler) getStandings(w http.ResponseWriter, r *http.Request) {
-	result, err := h.service.processGetStandings(r.Context(), chi.URLParam(r, "seasonId"), chi.URLParam(r, "leagueId"))
+	result, err := h.service.processGetStandings(r.Context(), chi.URLParam(r, "season_id"), chi.URLParam(r, "league_id"))
 
 	if err != nil {
 		switch f := err.(type) {

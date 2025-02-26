@@ -248,7 +248,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/courts/{courtId}": {
+        "/v1/courts/{court_id}": {
             "get": {
                 "security": [
                     {
@@ -267,7 +267,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Court id",
-                        "name": "courtId",
+                        "name": "court_id",
                         "in": "path",
                         "required": true
                     }
@@ -326,7 +326,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Court id",
-                        "name": "courtId",
+                        "name": "court_id",
                         "in": "path",
                         "required": true
                     },
@@ -391,7 +391,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Court id",
-                        "name": "courtId",
+                        "name": "court_id",
                         "in": "path",
                         "required": true
                     }
@@ -571,7 +571,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/players/{playerId}": {
+        "/v1/players/{player_id}": {
             "get": {
                 "security": [
                     {
@@ -590,7 +590,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Player id",
-                        "name": "playerId",
+                        "name": "player_id",
                         "in": "path",
                         "required": true
                     }
@@ -649,7 +649,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Player id",
-                        "name": "playerId",
+                        "name": "player_id",
                         "in": "path",
                         "required": true
                     },
@@ -798,7 +798,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/seasons/{seasonId}": {
+        "/v1/seasons/{season_id}": {
             "get": {
                 "security": [
                     {
@@ -817,7 +817,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Season id",
-                        "name": "seasonId",
+                        "name": "season_id",
                         "in": "path",
                         "required": true
                     }
@@ -876,7 +876,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Season id",
-                        "name": "seasonId",
+                        "name": "season_id",
                         "in": "path",
                         "required": true
                     },
@@ -941,7 +941,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Season id",
-                        "name": "seasonId",
+                        "name": "season_id",
                         "in": "path",
                         "required": true
                     }
@@ -977,7 +977,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/seasons/{seasonId}/leagues": {
+        "/v1/seasons/{season_id}/leagues": {
             "get": {
                 "security": [
                     {
@@ -996,7 +996,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Season id",
-                        "name": "seasonId",
+                        "name": "season_id",
                         "in": "path",
                         "required": true
                     }
@@ -1052,7 +1052,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Season id",
-                        "name": "seasonId",
+                        "name": "season_id",
                         "in": "path",
                         "required": true
                     },
@@ -1094,7 +1094,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/seasons/{seasonId}/leagues/{leagueId}": {
+        "/v1/seasons/{season_id}/leagues/{league_id}": {
             "get": {
                 "security": [
                     {
@@ -1113,14 +1113,14 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Season id",
-                        "name": "seasonId",
+                        "name": "season_id",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "League id",
-                        "name": "leagueId",
+                        "name": "league_id",
                         "in": "path",
                         "required": true
                     }
@@ -1179,14 +1179,14 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Season id",
-                        "name": "seasonId",
+                        "name": "season_id",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "League id",
-                        "name": "leagueId",
+                        "name": "league_id",
                         "in": "path",
                         "required": true
                     },
@@ -1251,14 +1251,14 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Season id",
-                        "name": "seasonId",
+                        "name": "season_id",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "League id",
-                        "name": "leagueId",
+                        "name": "league_id",
                         "in": "path",
                         "required": true
                     }
@@ -1294,7 +1294,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/seasons/{seasonId}/leagues/{leagueId}/matches": {
+        "/v1/seasons/{season_id}/leagues/{league_id}/matches": {
             "get": {
                 "security": [
                     {
@@ -1313,14 +1313,14 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Season id",
-                        "name": "seasonId",
+                        "name": "season_id",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "League id",
-                        "name": "leagueId",
+                        "name": "league_id",
                         "in": "path",
                         "required": true
                     }
@@ -1376,14 +1376,14 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Season id",
-                        "name": "seasonId",
+                        "name": "season_id",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "League id",
-                        "name": "leagueId",
+                        "name": "league_id",
                         "in": "path",
                         "required": true
                     },
@@ -1425,7 +1425,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/seasons/{seasonId}/leagues/{leagueId}/matches/{matchId}": {
+        "/v1/seasons/{season_id}/leagues/{league_id}/matches/{match_id}": {
             "get": {
                 "security": [
                     {
@@ -1444,21 +1444,21 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Season id",
-                        "name": "seasonId",
+                        "name": "season_id",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "League id",
-                        "name": "leagueId",
+                        "name": "league_id",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "Match id",
-                        "name": "matchId",
+                        "name": "match_id",
                         "in": "path",
                         "required": true
                     }
@@ -1517,21 +1517,21 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Season id",
-                        "name": "seasonId",
+                        "name": "season_id",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "League id",
-                        "name": "leagueId",
+                        "name": "league_id",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "Match id",
-                        "name": "matchId",
+                        "name": "match_id",
                         "in": "path",
                         "required": true
                     },
@@ -1585,7 +1585,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/seasons/{seasonId}/leagues/{leagueId}/matches/{matchId}/score": {
+        "/v1/seasons/{season_id}/leagues/{league_id}/matches/{match_id}/score": {
             "post": {
                 "security": [
                     {
@@ -1607,21 +1607,21 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Season id",
-                        "name": "seasonId",
+                        "name": "season_id",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "League id",
-                        "name": "leagueId",
+                        "name": "league_id",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "Match id",
-                        "name": "matchId",
+                        "name": "match_id",
                         "in": "path",
                         "required": true
                     },
@@ -1675,7 +1675,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/seasons/{seasonId}/leagues/{leagueId}/players": {
+        "/v1/seasons/{season_id}/leagues/{league_id}/players": {
             "get": {
                 "security": [
                     {
@@ -1694,16 +1694,22 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Season id",
-                        "name": "seasonId",
+                        "name": "season_id",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "League id",
-                        "name": "leagueId",
+                        "name": "league_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Available opponents",
+                        "name": "match_available",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -1737,7 +1743,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/seasons/{seasonId}/leagues/{leagueId}/players/{playerId}": {
+        "/v1/seasons/{season_id}/leagues/{league_id}/players/{player_id}": {
             "get": {
                 "security": [
                     {
@@ -1756,21 +1762,21 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Season id",
-                        "name": "seasonId",
+                        "name": "season_id",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "League id",
-                        "name": "leagueId",
+                        "name": "league_id",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "Player id",
-                        "name": "playerId",
+                        "name": "player_id",
                         "in": "path",
                         "required": true
                     }
@@ -1803,7 +1809,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/seasons/{seasonId}/leagues/{leagueId}/players/{playerId}/assign": {
+        "/v1/seasons/{season_id}/leagues/{league_id}/players/{player_id}/assign": {
             "post": {
                 "security": [
                     {
@@ -1821,21 +1827,21 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Season id",
-                        "name": "seasonId",
+                        "name": "season_id",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "League id",
-                        "name": "leagueId",
+                        "name": "league_id",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "Player id",
-                        "name": "playerId",
+                        "name": "player_id",
                         "in": "path",
                         "required": true
                     }
@@ -1890,21 +1896,21 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Season id",
-                        "name": "seasonId",
+                        "name": "season_id",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "League id",
-                        "name": "leagueId",
+                        "name": "league_id",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "Player id",
-                        "name": "playerId",
+                        "name": "player_id",
                         "in": "path",
                         "required": true
                     }
@@ -1943,7 +1949,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/seasons/{seasonId}/leagues/{leagueId}/standings": {
+        "/v1/seasons/{season_id}/leagues/{league_id}/standings": {
             "get": {
                 "security": [
                     {
@@ -1962,14 +1968,14 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Season id",
-                        "name": "seasonId",
+                        "name": "season_id",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "League id",
-                        "name": "leagueId",
+                        "name": "league_id",
                         "in": "path",
                         "required": true
                     }

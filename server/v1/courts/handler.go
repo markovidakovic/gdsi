@@ -107,17 +107,17 @@ func (h *handler) getCourts(w http.ResponseWriter, r *http.Request) {
 // @Description Get court by id
 // @Tags courts
 // @Produce json
-// @Param courtId path string true "Court id"
+// @Param court_id path string true "Court id"
 // @Success 200 {object} courts.CourtModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
 // @Failure 401 {object} failure.Failure "Unauthorized"
 // @Failure 404 {object} failure.Failure "Not found"
 // @Failure 500 {object} failure.Failure "Internal server error"
 // @Security BearerAuth
-// @Router /v1/courts/{courtId} [get]
+// @Router /v1/courts/{court_id} [get]
 func (h *handler) getCourt(w http.ResponseWriter, r *http.Request) {
 	// store call
-	result, err := h.store.findCourt(r.Context(), chi.URLParam(r, "courtId"))
+	result, err := h.store.findCourt(r.Context(), chi.URLParam(r, "court_id"))
 	if err != nil {
 		switch f := err.(type) {
 		case *failure.ValidationFailure:
@@ -139,7 +139,7 @@ func (h *handler) getCourt(w http.ResponseWriter, r *http.Request) {
 // @Tags courts
 // @Accept json
 // @Produce json
-// @Param courtId path string true "Court id"
+// @Param court_id path string true "Court id"
 // @Param body body courts.UpdateCourtRequestModel true "Request body"
 // @Success 200 {object} courts.CourtModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
@@ -147,7 +147,7 @@ func (h *handler) getCourt(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {object} failure.Failure "Not found"
 // @Failure 500 {object} failure.Failure "Internal server error"
 // @Security BearerAuth
-// @Router /v1/courts/{courtId} [put]
+// @Router /v1/courts/{court_id} [put]
 func (h *handler) updateCourt(w http.ResponseWriter, r *http.Request) {
 	var model UpdateCourtRequestModel
 	err := json.NewDecoder(r.Body).Decode(&model)
@@ -162,7 +162,7 @@ func (h *handler) updateCourt(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := h.store.updateCourt(r.Context(), nil, chi.URLParam(r, "courtId"), model.Name)
+	result, err := h.store.updateCourt(r.Context(), nil, chi.URLParam(r, "court_id"), model.Name)
 	if err != nil {
 		switch f := err.(type) {
 		case *failure.ValidationFailure:
@@ -184,17 +184,17 @@ func (h *handler) updateCourt(w http.ResponseWriter, r *http.Request) {
 // @Description Delete an existing court
 // @Tags courts
 // @Produce json
-// @Param courtId path string true "Court id"
+// @Param court_id path string true "Court id"
 // @Success 204 "No content"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
 // @Failure 401 {object} failure.Failure "Unauthorized"
 // @Failure 404 {object} failure.Failure "Not found"
 // @Failure 500 {object} failure.Failure "Internal server error"
 // @Security BearerAuth
-// @Router /v1/courts/{courtId} [delete]
+// @Router /v1/courts/{court_id} [delete]
 func (h *handler) deleteCourt(w http.ResponseWriter, r *http.Request) {
 	// call store
-	err := h.store.deleteCourt(r.Context(), nil, chi.URLParam(r, "courtId"))
+	err := h.store.deleteCourt(r.Context(), nil, chi.URLParam(r, "court_id"))
 	if err != nil {
 		switch f := err.(type) {
 		case *failure.ValidationFailure:

@@ -22,9 +22,9 @@ func New(cfg *config.Config, db *db.Conn, validator *validation.Validator) *api 
 }
 
 func (a *api) Mount(r chi.Router) {
-	r.With(middleware.URLPathParamUUIDs("seasonId", "leagueId")).Post("/", a.hdl.createMatch)
-	r.With(middleware.URLPathParamUUIDs("seasonId", "leagueId")).Get("/", a.hdl.getMatches)
-	r.With(middleware.URLPathParamUUIDs("seasonId", "leagueId", "matchId")).Get("/{matchId}", a.hdl.getMatch)
-	r.With(middleware.URLPathParamUUIDs("seasonId", "leagueId", "matchId")).With(middleware.RequireOwnership(a.hdl.store.checkMatchOwnership, "player", "matchId")).Put("/{matchId}", a.hdl.updateMatch)
-	r.With(middleware.URLPathParamUUIDs("seasonId", "leagueId", "matchId")).With(middleware.RequireOwnership(a.hdl.store.checkMatchParticipation, "player", "matchId")).Post("/{matchId}/score", a.hdl.submitMatchScore)
+	r.With(middleware.URLPathParamUUIDs("season_id", "league_id")).Post("/", a.hdl.createMatch)
+	r.With(middleware.URLPathParamUUIDs("season_id", "league_id")).Get("/", a.hdl.getMatches)
+	r.With(middleware.URLPathParamUUIDs("season_id", "league_id", "match_id")).Get("/{match_id}", a.hdl.getMatch)
+	r.With(middleware.URLPathParamUUIDs("season_id", "league_id", "match_id")).With(middleware.RequireOwnership(a.hdl.store.checkMatchOwnership, "player", "match_id")).Put("/{match_id}", a.hdl.updateMatch)
+	r.With(middleware.URLPathParamUUIDs("season_id", "league_id", "match_id")).With(middleware.RequireOwnership(a.hdl.store.checkMatchParticipation, "player", "match_id")).Post("/{match_id}/score", a.hdl.submitMatchScore)
 }

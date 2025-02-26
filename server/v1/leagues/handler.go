@@ -31,14 +31,14 @@ func newHandler(cfg *config.Config, db *db.Conn, validator *validation.Validator
 // @Tags leagues
 // @Accept json
 // @Produce json
-// @Param seasonId path string true "Season id"
+// @Param season_id path string true "Season id"
 // @Param body body leagues.CreateLeagueRequestModel true "Request body"
 // @Success 201 {object} leagues.LeagueModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
 // @Failure 401 {object} failure.Failure "Unauthorized"
 // @Failure 500 {object} failure.Failure "Internal server error"
 // @Security BearerAuth
-// @Router /v1/seasons/{seasonId}/leagues [post]
+// @Router /v1/seasons/{season_id}/leagues [post]
 func (h *handler) createLeague(w http.ResponseWriter, r *http.Request) {
 	// decode model
 	var model CreateLeagueRequestModel
@@ -53,7 +53,7 @@ func (h *handler) createLeague(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	model.SeasonId = chi.URLParam(r, "seasonId")
+	model.SeasonId = chi.URLParam(r, "season_id")
 	model.CreatorId = r.Context().Value(middleware.AccountIdCtxKey).(string)
 
 	// call the service
@@ -79,16 +79,16 @@ func (h *handler) createLeague(w http.ResponseWriter, r *http.Request) {
 // @Description Get leagues
 // @Tags leagues
 // @Produce json
-// @Param seasonId path string true "Season id"
+// @Param season_id path string true "Season id"
 // @Success 200 {array} leagues.LeagueModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
 // @Failure 401 {object} failure.Failure "Unauthorized"
 // @Failure 500 {object} failure.Failure "Internal server error"
 // @Security BearerAuth
-// @Router /v1/seasons/{seasonId}/leagues [get]
+// @Router /v1/seasons/{season_id}/leagues [get]
 func (h *handler) getLeagues(w http.ResponseWriter, r *http.Request) {
 	// call the service
-	result, err := h.service.processFindLeagues(r.Context(), chi.URLParam(r, "seasonId"))
+	result, err := h.service.processFindLeagues(r.Context(), chi.URLParam(r, "season_id"))
 	if err != nil {
 		switch f := err.(type) {
 		case *failure.ValidationFailure:
@@ -110,18 +110,18 @@ func (h *handler) getLeagues(w http.ResponseWriter, r *http.Request) {
 // @Description Get league by id
 // @Tags leagues
 // @Produce json
-// @Param seasonId path string true "Season id"
-// @Param leagueId path string true "League id"
+// @Param season_id path string true "Season id"
+// @Param league_id path string true "League id"
 // @Success 200 {object} leagues.LeagueModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
 // @Failure 401 {object} failure.Failure "Unauthorized"
 // @Failure 404 {object} failure.Failure "Not found"
 // @Failure 500 {object} failure.Failure "Internal server error"
 // @Security BearerAuth
-// @Router /v1/seasons/{seasonId}/leagues/{leagueId} [get]
+// @Router /v1/seasons/{season_id}/leagues/{league_id} [get]
 func (h *handler) getLeague(w http.ResponseWriter, r *http.Request) {
 	// call the service
-	result, err := h.service.processFindLeague(r.Context(), chi.URLParam(r, "seasonId"), chi.URLParam(r, "leagueId"))
+	result, err := h.service.processFindLeague(r.Context(), chi.URLParam(r, "season_id"), chi.URLParam(r, "league_id"))
 	if err != nil {
 		switch f := err.(type) {
 		case *failure.ValidationFailure:
@@ -144,8 +144,8 @@ func (h *handler) getLeague(w http.ResponseWriter, r *http.Request) {
 // @Tags leagues
 // @Accept json
 // @Produce json
-// @Param seasonId path string true "Season id"
-// @Param leagueId path string true "League id"
+// @Param season_id path string true "Season id"
+// @Param league_id path string true "League id"
 // @Param body body leagues.UpdateLeagueRequestModel true "Request body"
 // @Success 200 {object} leagues.LeagueModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
@@ -153,7 +153,7 @@ func (h *handler) getLeague(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {object} failure.Failure "Not found"
 // @Failure 500 {object} failure.Failure "Internal server error"
 // @Security BearerAuth
-// @Router /v1/seasons/{seasonId}/leagues/{leagueId} [put]
+// @Router /v1/seasons/{season_id}/leagues/{league_id} [put]
 func (h *handler) updateLeague(w http.ResponseWriter, r *http.Request) {
 	// decode model
 	var model UpdateLeagueRequestModel
@@ -168,8 +168,8 @@ func (h *handler) updateLeague(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	model.SeasonId = chi.URLParam(r, "seasonId")
-	model.LeagueId = chi.URLParam(r, "leagueId")
+	model.SeasonId = chi.URLParam(r, "season_id")
+	model.LeagueId = chi.URLParam(r, "league_id")
 
 	// call the service
 	result, err := h.service.processUpdateLeague(r.Context(), model)
@@ -194,18 +194,18 @@ func (h *handler) updateLeague(w http.ResponseWriter, r *http.Request) {
 // @Description Delete an existing league
 // @Tags leagues
 // @Produce json
-// @Param seasonId path string true "Season id"
-// @Param leagueId path string true "League id"
+// @Param season_id path string true "Season id"
+// @Param league_id path string true "League id"
 // @Success 204 "No content"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
 // @Failure 401 {object} failure.Failure "Unauthorized"
 // @Failure 404 {object} failure.Failure "Not found"
 // @Failure 500 {object} failure.Failure "Internal server error"
 // @Security BearerAuth
-// @Router /v1/seasons/{seasonId}/leagues/{leagueId} [delete]
+// @Router /v1/seasons/{season_id}/leagues/{league_id} [delete]
 func (h *handler) deleteLeague(w http.ResponseWriter, r *http.Request) {
 	// call the service
-	err := h.service.processDeleteLeague(r.Context(), chi.URLParam(r, "seasonId"), chi.URLParam(r, "leagueId"))
+	err := h.service.processDeleteLeague(r.Context(), chi.URLParam(r, "season_id"), chi.URLParam(r, "league_id"))
 	if err != nil {
 		switch f := err.(type) {
 		case *failure.ValidationFailure:

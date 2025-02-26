@@ -22,5 +22,5 @@ func New(cfg *config.Config, db *db.Conn) *api {
 }
 
 func (a *api) Mount(r chi.Router) {
-	r.With(middleware.URLPathParamUUIDs("seasonId", "leagueId")).Get("/", a.hdl.getStandings)
+	r.With(middleware.URLPathParamUUIDs("season_id", "league_id")).Get("/", a.hdl.getStandings)
 }

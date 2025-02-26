@@ -561,13 +561,13 @@ paths:
       summary: Create
       tags:
       - courts
-  /v1/courts/{courtId}:
+  /v1/courts/{court_id}:
     delete:
       description: Delete an existing court
       parameters:
       - description: Court id
         in: path
-        name: courtId
+        name: court_id
         required: true
         type: string
       produces:
@@ -601,7 +601,7 @@ paths:
       parameters:
       - description: Court id
         in: path
-        name: courtId
+        name: court_id
         required: true
         type: string
       produces:
@@ -639,7 +639,7 @@ paths:
       parameters:
       - description: Court id
         in: path
-        name: courtId
+        name: court_id
         required: true
         type: string
       - description: Request body
@@ -767,13 +767,13 @@ paths:
       summary: Get
       tags:
       - players
-  /v1/players/{playerId}:
+  /v1/players/{player_id}:
     get:
       description: Get player by id
       parameters:
       - description: Player id
         in: path
-        name: playerId
+        name: player_id
         required: true
         type: string
       produces:
@@ -811,7 +811,7 @@ paths:
       parameters:
       - description: Player id
         in: path
-        name: playerId
+        name: player_id
         required: true
         type: string
       - description: Request body
@@ -912,13 +912,13 @@ paths:
       summary: Create
       tags:
       - seasons
-  /v1/seasons/{seasonId}:
+  /v1/seasons/{season_id}:
     delete:
       description: Delete an existing season
       parameters:
       - description: Season id
         in: path
-        name: seasonId
+        name: season_id
         required: true
         type: string
       produces:
@@ -952,7 +952,7 @@ paths:
       parameters:
       - description: Season id
         in: path
-        name: seasonId
+        name: season_id
         required: true
         type: string
       produces:
@@ -990,7 +990,7 @@ paths:
       parameters:
       - description: Season id
         in: path
-        name: seasonId
+        name: season_id
         required: true
         type: string
       - description: Request body
@@ -1027,13 +1027,13 @@ paths:
       summary: Update
       tags:
       - seasons
-  /v1/seasons/{seasonId}/leagues:
+  /v1/seasons/{season_id}/leagues:
     get:
       description: Get leagues
       parameters:
       - description: Season id
         in: path
-        name: seasonId
+        name: season_id
         required: true
         type: string
       produces:
@@ -1069,7 +1069,7 @@ paths:
       parameters:
       - description: Season id
         in: path
-        name: seasonId
+        name: season_id
         required: true
         type: string
       - description: Request body
@@ -1102,18 +1102,18 @@ paths:
       summary: Create
       tags:
       - leagues
-  /v1/seasons/{seasonId}/leagues/{leagueId}:
+  /v1/seasons/{season_id}/leagues/{league_id}:
     delete:
       description: Delete an existing league
       parameters:
       - description: Season id
         in: path
-        name: seasonId
+        name: season_id
         required: true
         type: string
       - description: League id
         in: path
-        name: leagueId
+        name: league_id
         required: true
         type: string
       produces:
@@ -1147,12 +1147,12 @@ paths:
       parameters:
       - description: Season id
         in: path
-        name: seasonId
+        name: season_id
         required: true
         type: string
       - description: League id
         in: path
-        name: leagueId
+        name: league_id
         required: true
         type: string
       produces:
@@ -1190,12 +1190,12 @@ paths:
       parameters:
       - description: Season id
         in: path
-        name: seasonId
+        name: season_id
         required: true
         type: string
       - description: League id
         in: path
-        name: leagueId
+        name: league_id
         required: true
         type: string
       - description: Request body
@@ -1232,18 +1232,18 @@ paths:
       summary: Update
       tags:
       - leagues
-  /v1/seasons/{seasonId}/leagues/{leagueId}/matches:
+  /v1/seasons/{season_id}/leagues/{league_id}/matches:
     get:
       description: Get matches
       parameters:
       - description: Season id
         in: path
-        name: seasonId
+        name: season_id
         required: true
         type: string
       - description: League id
         in: path
-        name: leagueId
+        name: league_id
         required: true
         type: string
       produces:
@@ -1279,12 +1279,12 @@ paths:
       parameters:
       - description: Season id
         in: path
-        name: seasonId
+        name: season_id
         required: true
         type: string
       - description: League id
         in: path
-        name: leagueId
+        name: league_id
         required: true
         type: string
       - description: Request body
@@ -1317,23 +1317,23 @@ paths:
       summary: Create
       tags:
       - matches
-  /v1/seasons/{seasonId}/leagues/{leagueId}/matches/{matchId}:
+  /v1/seasons/{season_id}/leagues/{league_id}/matches/{match_id}:
     get:
       description: Get match by id
       parameters:
       - description: Season id
         in: path
-        name: seasonId
+        name: season_id
         required: true
         type: string
       - description: League id
         in: path
-        name: leagueId
+        name: league_id
         required: true
         type: string
       - description: Match id
         in: path
-        name: matchId
+        name: match_id
         required: true
         type: string
       produces:
@@ -1371,17 +1371,17 @@ paths:
       parameters:
       - description: Season id
         in: path
-        name: seasonId
+        name: season_id
         required: true
         type: string
       - description: League id
         in: path
-        name: leagueId
+        name: league_id
         required: true
         type: string
       - description: Match id
         in: path
-        name: matchId
+        name: match_id
         required: true
         type: string
       - description: Request body
@@ -1422,7 +1422,7 @@ paths:
       summary: Update
       tags:
       - matches
-  /v1/seasons/{seasonId}/leagues/{leagueId}/matches/{matchId}/score:
+  /v1/seasons/{season_id}/leagues/{league_id}/matches/{match_id}/score:
     post:
       consumes:
       - application/json
@@ -1430,17 +1430,17 @@ paths:
       parameters:
       - description: Season id
         in: path
-        name: seasonId
+        name: season_id
         required: true
         type: string
       - description: League id
         in: path
-        name: leagueId
+        name: league_id
         required: true
         type: string
       - description: Match id
         in: path
-        name: matchId
+        name: match_id
         required: true
         type: string
       - description: Request body
@@ -1481,20 +1481,24 @@ paths:
       summary: Score
       tags:
       - matches
-  /v1/seasons/{seasonId}/leagues/{leagueId}/players:
+  /v1/seasons/{season_id}/leagues/{league_id}/players:
     get:
       description: Get league players
       parameters:
       - description: Season id
         in: path
-        name: seasonId
+        name: season_id
         required: true
         type: string
       - description: League id
         in: path
-        name: leagueId
+        name: league_id
         required: true
         type: string
+      - description: Available opponents
+        in: query
+        name: match_available
+        type: boolean
       produces:
       - application/json
       responses:
@@ -1521,23 +1525,23 @@ paths:
       summary: Get
       tags:
       - players
-  /v1/seasons/{seasonId}/leagues/{leagueId}/players/{playerId}:
+  /v1/seasons/{season_id}/leagues/{league_id}/players/{player_id}:
     get:
       description: Get league player
       parameters:
       - description: Season id
         in: path
-        name: seasonId
+        name: season_id
         required: true
         type: string
       - description: League id
         in: path
-        name: leagueId
+        name: league_id
         required: true
         type: string
       - description: Player id
         in: path
-        name: playerId
+        name: player_id
         required: true
         type: string
       produces:
@@ -1564,22 +1568,22 @@ paths:
       summary: Get
       tags:
       - players
-  /v1/seasons/{seasonId}/leagues/{leagueId}/players/{playerId}/assign:
+  /v1/seasons/{season_id}/leagues/{league_id}/players/{player_id}/assign:
     delete:
       parameters:
       - description: Season id
         in: path
-        name: seasonId
+        name: season_id
         required: true
         type: string
       - description: League id
         in: path
-        name: leagueId
+        name: league_id
         required: true
         type: string
       - description: Player id
         in: path
-        name: playerId
+        name: player_id
         required: true
         type: string
       produces:
@@ -1614,17 +1618,17 @@ paths:
       parameters:
       - description: Season id
         in: path
-        name: seasonId
+        name: season_id
         required: true
         type: string
       - description: League id
         in: path
-        name: leagueId
+        name: league_id
         required: true
         type: string
       - description: Player id
         in: path
-        name: playerId
+        name: player_id
         required: true
         type: string
       produces:
@@ -1655,18 +1659,18 @@ paths:
       summary: Assign
       tags:
       - players
-  /v1/seasons/{seasonId}/leagues/{leagueId}/standings:
+  /v1/seasons/{season_id}/leagues/{league_id}/standings:
     get:
       description: Get standings
       parameters:
       - description: Season id
         in: path
-        name: seasonId
+        name: season_id
         required: true
         type: string
       - description: League id
         in: path
-        name: leagueId
+        name: league_id
         required: true
         type: string
       produces:

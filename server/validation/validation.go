@@ -59,7 +59,7 @@ func (v *Validator) courtExists(ctx context.Context, courtId string, source stri
 	}
 
 	if !exists {
-		vr.addInvalFld("courtId", "court not found", source)
+		vr.addInvalFld("court_id", "court not found", source)
 	}
 
 	return vr
@@ -77,7 +77,7 @@ func (v *Validator) seasonExists(ctx context.Context, seasonId string, source st
 	}
 
 	if !exists {
-		vr.addInvalFld("seasonId", "season not found", source)
+		vr.addInvalFld("season_id", "season not found", source)
 	}
 
 	return vr
@@ -94,7 +94,7 @@ func (v *Validator) leagueExists(ctx context.Context, leagueId string, source st
 		return vr
 	}
 	if !exists {
-		vr.addInvalFld("leagueId", "league not found", source)
+		vr.addInvalFld("league_id", "league not found", source)
 	}
 
 	return vr
@@ -111,7 +111,7 @@ func (v *Validator) leagueInSeason(ctx context.Context, seasonId, leagueId strin
 		return vr
 	}
 	if !exists {
-		vr.addInvalFld("leagueId", "league not in season", source)
+		vr.addInvalFld("league_id", "league not in season", source)
 	}
 	return vr
 }
@@ -127,7 +127,7 @@ func (v *Validator) playerExists(ctx context.Context, playerId string, source st
 		return vr
 	}
 	if !exists {
-		vr.addInvalFld("playerId", "player not found", source)
+		vr.addInvalFld("player_id", "player not found", source)
 	}
 	return vr
 }
@@ -149,7 +149,7 @@ func (v *Validator) playersInLeague(ctx context.Context, leagueId, playerOneId, 
 		return vr
 	}
 	if !exists {
-		vr.addInvalFld("playerId", "players not in same league", source)
+		vr.addInvalFld("player_id", "players not in same league", source)
 	}
 	return vr
 }
@@ -172,7 +172,7 @@ func (v *Validator) matchExistsBetweenPlayers(ctx context.Context, seasonId, lea
 		return vr
 	}
 	if exists {
-		vr.addInvalFld("playerId", "match between players already exists", source)
+		vr.addInvalFld("player_id", "match between players already exists", source)
 	}
 	return vr
 }

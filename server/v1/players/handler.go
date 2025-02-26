@@ -58,17 +58,17 @@ func (h *handler) getPlayers(w http.ResponseWriter, r *http.Request) {
 // @Description Get player by id
 // @Tags players
 // @Produce json
-// @Param playerId path string true "Player id"
+// @Param player_id path string true "Player id"
 // @Success 200 {object} matches.MatchModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
 // @Failure 401 {object} failure.Failure "Unauthorized"
 // @Failure 404 {object} failure.Failure "Not found"
 // @Failure 500 {object} failure.Failure "Internal server error"
 // @Security BearerAuth
-// @Router /v1/players/{playerId} [get]
+// @Router /v1/players/{player_id} [get]
 func (h *handler) getPlayer(w http.ResponseWriter, r *http.Request) {
 	// call store
-	result, err := h.store.findPlayer(r.Context(), chi.URLParam(r, "playerId"))
+	result, err := h.store.findPlayer(r.Context(), chi.URLParam(r, "player_id"))
 	if err != nil {
 		switch f := err.(type) {
 		case *failure.ValidationFailure:
@@ -91,7 +91,7 @@ func (h *handler) getPlayer(w http.ResponseWriter, r *http.Request) {
 // @Tags players
 // @Accept json
 // @Produce json
-// @Param playerId path string true "Player id"
+// @Param player_id path string true "Player id"
 // @Param body body players.UpdatePlayerRequestModel true "Request body"
 // @Success 200 {object} players.PlayerModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
@@ -99,7 +99,7 @@ func (h *handler) getPlayer(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {object} failure.Failure "Not found"
 // @Failure 500 {object} failure.Failure "Internal server error"
 // @Security BearerAuth
-// @Router /v1/players/{playerId} [put]
+// @Router /v1/players/{player_id} [put]
 func (h *handler) updatePlayer(w http.ResponseWriter, r *http.Request) {
 	var model UpdatePlayerRequestModel
 	err := json.NewDecoder(r.Body).Decode(&model)
@@ -115,7 +115,7 @@ func (h *handler) updatePlayer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// call store
-	result, err := h.store.updatePlayer(r.Context(), nil, chi.URLParam(r, "playerId"), model)
+	result, err := h.store.updatePlayer(r.Context(), nil, chi.URLParam(r, "player_id"), model)
 	if err != nil {
 		switch f := err.(type) {
 		case *failure.ValidationFailure:

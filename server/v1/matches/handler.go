@@ -31,15 +31,15 @@ func newHandler(cfg *config.Config, db *db.Conn, validator *validation.Validator
 // @Tags matches
 // @Accept json
 // @Produce json
-// @Param seasonId path string true "Season id"
-// @Param leagueId path string true "League id"
+// @Param season_id path string true "Season id"
+// @Param league_id path string true "League id"
 // @Param body body matches.CreateMatchRequestModel true "Request body"
 // @Success 201 {object} matches.MatchModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
 // @Failure 401 {object} failure.Failure "Unauthorized"
 // @Failure 500 {object} failure.Failure "Internal server error"
 // @Security BearerAuth
-// @Router /v1/seasons/{seasonId}/leagues/{leagueId}/matches [post]
+// @Router /v1/seasons/{season_id}/leagues/{league_id}/matches [post]
 func (h *handler) createMatch(w http.ResponseWriter, r *http.Request) {
 	// decode model
 	var model CreateMatchRequestModel
@@ -57,8 +57,8 @@ func (h *handler) createMatch(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// set additional values in model
-	model.SeasonId = chi.URLParam(r, "seasonId")
-	model.LeagueId = chi.URLParam(r, "leagueId")
+	model.SeasonId = chi.URLParam(r, "season_id")
+	model.LeagueId = chi.URLParam(r, "league_id")
 	model.PlayerOneId = ctx.Value(middleware.PlayerIdCtxKey).(string)
 
 	// call the service
@@ -84,17 +84,17 @@ func (h *handler) createMatch(w http.ResponseWriter, r *http.Request) {
 // @Description Get matches
 // @Tags matches
 // @Produce json
-// @Param seasonId path string true "Season id"
-// @Param leagueId path string true "League id"
+// @Param season_id path string true "Season id"
+// @Param league_id path string true "League id"
 // @Success 200 {array} matches.MatchModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
 // @Failure 401 {object} failure.Failure "Unauthorized"
 // @Failure 500 {object} failure.Failure "Internal server error"
 // @Security BearerAuth
-// @Router /v1/seasons/{seasonId}/leagues/{leagueId}/matches [get]
+// @Router /v1/seasons/{season_id}/leagues/{league_id}/matches [get]
 func (h *handler) getMatches(w http.ResponseWriter, r *http.Request) {
 	// call the service
-	result, err := h.service.processGetMatches(r.Context(), chi.URLParam(r, "seasonId"), chi.URLParam(r, "leagueId"))
+	result, err := h.service.processGetMatches(r.Context(), chi.URLParam(r, "season_id"), chi.URLParam(r, "league_id"))
 	if err != nil {
 		switch f := err.(type) {
 		case *failure.ValidationFailure:
@@ -116,19 +116,19 @@ func (h *handler) getMatches(w http.ResponseWriter, r *http.Request) {
 // @Description Get match by id
 // @Tags matches
 // @Produce json
-// @Param seasonId path string true "Season id"
-// @Param leagueId path string true "League id"
-// @Param matchId path string true "Match id"
+// @Param season_id path string true "Season id"
+// @Param league_id path string true "League id"
+// @Param match_id path string true "Match id"
 // @Success 200 {object} matches.MatchModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
 // @Failure 401 {object} failure.Failure "Unauthorized"
 // @Failure 404 {object} failure.Failure "Not found"
 // @Failure 500 {object} failure.Failure "Internal server error"
 // @Security BearerAuth
-// @Router /v1/seasons/{seasonId}/leagues/{leagueId}/matches/{matchId} [get]
+// @Router /v1/seasons/{season_id}/leagues/{league_id}/matches/{match_id} [get]
 func (h *handler) getMatch(w http.ResponseWriter, r *http.Request) {
 	// call the service
-	result, err := h.service.processGetMatch(r.Context(), chi.URLParam(r, "seasonId"), chi.URLParam(r, "leagueId"), chi.URLParam(r, "matchId"))
+	result, err := h.service.processGetMatch(r.Context(), chi.URLParam(r, "season_id"), chi.URLParam(r, "league_id"), chi.URLParam(r, "match_id"))
 	if err != nil {
 		switch f := err.(type) {
 		case *failure.ValidationFailure:
@@ -151,9 +151,9 @@ func (h *handler) getMatch(w http.ResponseWriter, r *http.Request) {
 // @Tags matches
 // @Accept json
 // @Produce json
-// @Param seasonId path string true "Season id"
-// @Param leagueId path string true "League id"
-// @Param matchId path string true "Match id"
+// @Param season_id path string true "Season id"
+// @Param league_id path string true "League id"
+// @Param match_id path string true "Match id"
 // @Param body body matches.UpdateMatchRequestModel true "Request body"
 // @Success 200 {object} matches.MatchModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
@@ -162,7 +162,7 @@ func (h *handler) getMatch(w http.ResponseWriter, r *http.Request) {
 // @Failure 409 {object} failure.Failure "Conflict"
 // @Failure 500 {object} failure.Failure "Internal server error"
 // @Security BearerAuth
-// @Router /v1/seasons/{seasonId}/leagues/{leagueId}/matches/{matchId} [put]
+// @Router /v1/seasons/{season_id}/leagues/{league_id}/matches/{match_id} [put]
 func (h *handler) updateMatch(w http.ResponseWriter, r *http.Request) {
 	// decode model
 	var model UpdateMatchRequestModel
@@ -178,9 +178,9 @@ func (h *handler) updateMatch(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
-	model.SeasonId = chi.URLParam(r, "seasonId")
-	model.LeagueId = chi.URLParam(r, "leagueId")
-	model.MatchId = chi.URLParam(r, "matchId")
+	model.SeasonId = chi.URLParam(r, "season_id")
+	model.LeagueId = chi.URLParam(r, "league_id")
+	model.MatchId = chi.URLParam(r, "match_id")
 	model.PlayerOneId = ctx.Value(middleware.PlayerIdCtxKey).(string)
 
 	// call the service
@@ -207,9 +207,9 @@ func (h *handler) updateMatch(w http.ResponseWriter, r *http.Request) {
 // @Tags matches
 // @Accept json
 // @Produce json
-// @Param seasonId path string true "Season id"
-// @Param leagueId path string true "League id"
-// @Param matchId path string true "Match id"
+// @Param season_id path string true "Season id"
+// @Param league_id path string true "League id"
+// @Param match_id path string true "Match id"
 // @Param body body matches.SubmitMatchScoreRequestModel true "Request body"
 // @Success 200 {object} matches.MatchModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
@@ -218,7 +218,7 @@ func (h *handler) updateMatch(w http.ResponseWriter, r *http.Request) {
 // @Failure 409 {object} failure.Failure "Conflict"
 // @Failure 500 {object} failure.Failure "Internal server error"
 // @Security BearerAuth
-// @Router /v1/seasons/{seasonId}/leagues/{leagueId}/matches/{matchId}/score [post]
+// @Router /v1/seasons/{season_id}/leagues/{league_id}/matches/{match_id}/score [post]
 func (h *handler) submitMatchScore(w http.ResponseWriter, r *http.Request) {
 	// decode req body
 	var model SubmitMatchScoreRequestModel
@@ -234,9 +234,9 @@ func (h *handler) submitMatchScore(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// add params to model
-	model.SeasonId = chi.URLParam(r, "seasonId")
-	model.LeagueId = chi.URLParam(r, "leagueId")
-	model.MatchId = chi.URLParam(r, "matchId")
+	model.SeasonId = chi.URLParam(r, "season_id")
+	model.LeagueId = chi.URLParam(r, "league_id")
+	model.MatchId = chi.URLParam(r, "match_id")
 
 	// call the service
 	result, err := h.service.processSubmitMatchScore(r.Context(), model)

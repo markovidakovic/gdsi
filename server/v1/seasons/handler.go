@@ -103,17 +103,17 @@ func (h *handler) getSeasons(w http.ResponseWriter, r *http.Request) {
 // @Description Get season by id
 // @Tags seasons
 // @Produce json
-// @Param seasonId path string true "Season id"
+// @Param season_id path string true "Season id"
 // @Success 200 {object} seasons.SeasonModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
 // @Failure 401 {object} failure.Failure "Unauthorized"
 // @Failure 404 {object} failure.Failure "Not found"
 // @Failure 500 {object} failure.Failure "Internal server error"
 // @Security BearerAuth
-// @Router /v1/seasons/{seasonId} [get]
+// @Router /v1/seasons/{season_id} [get]
 func (h *handler) getSeason(w http.ResponseWriter, r *http.Request) {
 	// call the store
-	result, err := h.store.findSeason(r.Context(), chi.URLParam(r, "seasonId"))
+	result, err := h.store.findSeason(r.Context(), chi.URLParam(r, "season_id"))
 	if err != nil {
 		switch f := err.(type) {
 		case *failure.ValidationFailure:
@@ -136,7 +136,7 @@ func (h *handler) getSeason(w http.ResponseWriter, r *http.Request) {
 // @Tags seasons
 // @Accept json
 // @Produce json
-// @Param seasonId path string true "Season id"
+// @Param season_id path string true "Season id"
 // @Param body body seasons.UpdateSeasonRequestModel true "Request body"
 // @Success 200 {object} seasons.SeasonModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
@@ -144,7 +144,7 @@ func (h *handler) getSeason(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {object} failure.Failure "Not found"
 // @Failure 500 {object} failure.Failure "Internal server error"
 // @Security BearerAuth
-// @Router /v1/seasons/{seasonId} [put]
+// @Router /v1/seasons/{season_id} [put]
 func (h *handler) updateSeason(w http.ResponseWriter, r *http.Request) {
 	// decode req body
 	var model UpdateSeasonRequestModel
@@ -160,7 +160,7 @@ func (h *handler) updateSeason(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// call the store
-	result, err := h.store.updateSeason(r.Context(), nil, chi.URLParam(r, "seasonId"), model)
+	result, err := h.store.updateSeason(r.Context(), nil, chi.URLParam(r, "season_id"), model)
 	if err != nil {
 		switch f := err.(type) {
 		case *failure.ValidationFailure:
@@ -182,17 +182,17 @@ func (h *handler) updateSeason(w http.ResponseWriter, r *http.Request) {
 // @Description Delete an existing season
 // @Tags seasons
 // @Produce json
-// @Param seasonId path string true "Season id"
+// @Param season_id path string true "Season id"
 // @Success 204 "No content"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
 // @Failure 401 {object} failure.Failure "Unauthorized"
 // @Failure 404 {object} failure.Failure "Not found"
 // @Failure 500 {object} failure.Failure "Internal server error"
 // @Security BearerAuth
-// @Router /v1/seasons/{seasonId} [delete]
+// @Router /v1/seasons/{season_id} [delete]
 func (h *handler) deleteSeason(w http.ResponseWriter, r *http.Request) {
 	// call the store
-	err := h.store.deleteSeason(r.Context(), nil, chi.URLParam(r, "seasonId"))
+	err := h.store.deleteSeason(r.Context(), nil, chi.URLParam(r, "season_id"))
 	if err != nil {
 		switch f := err.(type) {
 		case *failure.ValidationFailure:
