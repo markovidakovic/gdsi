@@ -1,7 +1,6 @@
 package leagueplayers
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -39,10 +38,6 @@ func newHandler(cfg *config.Config, db *db.Conn, validator *validation.Validator
 // @Security BearerAuth
 // @Router /v1/seasons/{season_id}/leagues/{league_id}/players [get]
 func (h *handler) getLeaguePlayers(w http.ResponseWriter, r *http.Request) {
-
-	query := r.URL.Query()
-	fmt.Printf("query: %v\n", query)
-
 	result, err := h.service.processGetLeaguePlayers(r.Context(), chi.URLParam(r, "season_id"), chi.URLParam(r, "league_id"))
 	if err != nil {
 		switch f := err.(type) {
