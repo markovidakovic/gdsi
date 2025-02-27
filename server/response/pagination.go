@@ -9,12 +9,14 @@ type Pagination[T any] struct {
 }
 
 type UrlQueryParams struct {
-	Page    int `json:"page"`
-	PerPage int `json:"per_page"`
+	Page           int    `json:"page"`
+	PerPage        int    `json:"per_page"`
+	OrderBy        string `json:"order_by"`
+	OrderField     string `json:"-"`
+	OrderDirection string `json:"-"`
 }
 
 func NewPagination[T any](page, perPage, itemCount int, items []T) Pagination[T] {
-	// pageCount := (itemCount + perPage - 1) / perPage
 	pageCount := itemCount / perPage
 	if itemCount%perPage > 0 {
 		pageCount++

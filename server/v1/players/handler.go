@@ -28,6 +28,9 @@ func newHandler(cfg *config.Config, db *db.Conn) *handler {
 // @Description Get players
 // @Tags players
 // @Produce json
+// @Param page query int false "page"
+// @Param per_page query int false "per page"
+// @Param order_by query string false "order by"
 // @Success 200 {array} players.PlayerModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
 // @Failure 401 {object} failure.Failure "Unauthorized"
@@ -57,7 +60,7 @@ func (h *handler) getPlayers(w http.ResponseWriter, r *http.Request) {
 // @Description Get player by id
 // @Tags players
 // @Produce json
-// @Param player_id path string true "Player id"
+// @Param player_id path string true "player id"
 // @Success 200 {object} matches.MatchModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
 // @Failure 401 {object} failure.Failure "Unauthorized"
@@ -89,7 +92,7 @@ func (h *handler) getPlayer(w http.ResponseWriter, r *http.Request) {
 // @Tags players
 // @Accept json
 // @Produce json
-// @Param player_id path string true "Player id"
+// @Param player_id path string true "player id"
 // @Param body body players.UpdatePlayerRequestModel true "Request body"
 // @Success 200 {object} players.PlayerModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"

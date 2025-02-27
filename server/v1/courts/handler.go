@@ -74,6 +74,9 @@ func (h *handler) createCourt(w http.ResponseWriter, r *http.Request) {
 // @Description Get courts
 // @Tags courts
 // @Produce json
+// @Param page query int false "page"
+// @Param per_page query int false "per page"
+// @Param order_by query string false "order by"
 // @Success 200 {array} courts.CourtModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
 // @Failure 401 {object} failure.Failure "Unauthorized"
@@ -103,7 +106,7 @@ func (h *handler) getCourts(w http.ResponseWriter, r *http.Request) {
 // @Description Get court by id
 // @Tags courts
 // @Produce json
-// @Param court_id path string true "Court id"
+// @Param court_id path string true "court id"
 // @Success 200 {object} courts.CourtModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
 // @Failure 401 {object} failure.Failure "Unauthorized"
@@ -134,7 +137,7 @@ func (h *handler) getCourt(w http.ResponseWriter, r *http.Request) {
 // @Tags courts
 // @Accept json
 // @Produce json
-// @Param court_id path string true "Court id"
+// @Param court_id path string true "court id"
 // @Param body body courts.UpdateCourtRequestModel true "Request body"
 // @Success 200 {object} courts.CourtModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
@@ -178,7 +181,7 @@ func (h *handler) updateCourt(w http.ResponseWriter, r *http.Request) {
 // @Description Delete an existing court
 // @Tags courts
 // @Produce json
-// @Param court_id path string true "Court id"
+// @Param court_id path string true "court id"
 // @Success 204 "No content"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
 // @Failure 401 {object} failure.Failure "Unauthorized"

@@ -23,8 +23,8 @@ func New(cfg *config.Config, db *db.Conn) *api {
 
 func (a *api) Mount(r chi.Router) {
 	r.With(middleware.RequirePermission(permission.CreateSeason)).Post("/", a.hdl.createSeason)
-	r.Get("/", a.hdl.getSeasons)
-	r.With(middleware.URLPathParamUUIDs("season_id")).Get("/{season_id}", a.hdl.getSeason)
-	r.With(middleware.URLPathParamUUIDs("season_id")).With(middleware.RequirePermission(permission.UpdateSeason)).Put("/{season_id}", a.hdl.updateSeason)
-	r.With(middleware.URLPathParamUUIDs("season_id")).With(middleware.RequirePermission(permission.DeleteSeason)).Delete("/{season_id}", a.hdl.deleteSeason)
+	r.With(middleware.URLQueryPaginationParams).Get("/", a.hdl.getSeasons)
+	r.With(middleware.URLPathUUIDParams("season_id")).Get("/{season_id}", a.hdl.getSeason)
+	r.With(middleware.URLPathUUIDParams("season_id")).With(middleware.RequirePermission(permission.UpdateSeason)).Put("/{season_id}", a.hdl.updateSeason)
+	r.With(middleware.URLPathUUIDParams("season_id")).With(middleware.RequirePermission(permission.DeleteSeason)).Delete("/{season_id}", a.hdl.deleteSeason)
 }

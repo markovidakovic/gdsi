@@ -23,9 +23,9 @@ func New(cfg *config.Config, db *db.Conn) *api {
 }
 
 func (a *api) Mount(r chi.Router) {
-	r.With(middleware.URLPathParamUUIDs("season_id")).With(middleware.RequirePermission(permission.CreateLeague)).Post("/", a.hdl.createLeague)
-	r.With(middleware.URLPathParamUUIDs("season_id")).Get("/", a.hdl.getLeagues)
-	r.With(middleware.URLPathParamUUIDs("season_id", "league_id")).Get("/{league_id}", a.hdl.getLeague)
-	r.With(middleware.URLPathParamUUIDs("season_id", "league_id")).With(middleware.RequirePermission(permission.UpdateLeague)).Put("/{league_id}", a.hdl.updateLeague)
-	r.With(middleware.URLPathParamUUIDs("season_id", "league_id")).With(middleware.RequirePermission(permission.DeleteLeague)).Delete("/{league_id}", a.hdl.deleteLeague)
+	r.With(middleware.URLPathUUIDParams("season_id")).With(middleware.RequirePermission(permission.CreateLeague)).Post("/", a.hdl.createLeague)
+	r.With(middleware.URLPathUUIDParams("season_id")).With(middleware.URLQueryPaginationParams).Get("/", a.hdl.getLeagues)
+	r.With(middleware.URLPathUUIDParams("season_id", "league_id")).Get("/{league_id}", a.hdl.getLeague)
+	r.With(middleware.URLPathUUIDParams("season_id", "league_id")).With(middleware.RequirePermission(permission.UpdateLeague)).Put("/{league_id}", a.hdl.updateLeague)
+	r.With(middleware.URLPathUUIDParams("season_id", "league_id")).With(middleware.RequirePermission(permission.DeleteLeague)).Delete("/{league_id}", a.hdl.deleteLeague)
 }

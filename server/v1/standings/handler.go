@@ -26,8 +26,11 @@ func newHandler(cfg *config.Config, db *db.Conn, validator *validation.Validator
 // @Description Get standings
 // @Tags standings
 // @Produce json
-// @Param season_id path string true "Season id"
-// @Param league_id path string true "League id"
+// @Param season_id path string true "season id"
+// @Param league_id path string true "league id"
+// @Param page query int false "page"
+// @Param per_page query int false "per page"
+// @Param order_by query string false "order by"
 // @Success 200 {array} standings.StandingModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
 // @Failure 401 {object} failure.Failure "Unauthorized"

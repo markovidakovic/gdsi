@@ -26,11 +26,11 @@ func newHandler(cfg *config.Config, db *db.Conn, validator *validation.Validator
 // @Description Get league players
 // @Tags players
 // @Produce json
-// @Param season_id path string true "Season id"
-// @Param league_id path string true "League id"
+// @Param season_id path string true "season id"
+// @Param league_id path string true "league id"
 // @Param page query int false "Page"
 // @Param per_page query int false "Per page"
-// @Param match_available query bool false "Match available"
+// @Param match_available query bool false "match available"
 // @Success 200 {array} players.PlayerModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
 // @Failure 401 {object} failure.Failure "Unauthorized"
@@ -59,9 +59,9 @@ func (h *handler) getLeaguePlayers(w http.ResponseWriter, r *http.Request) {
 // @Description Get league player
 // @Tags players
 // @Produce json
-// @Param season_id path string true "Season id"
-// @Param league_id path string true "League id"
-// @Param player_id path string true "Player id"
+// @Param season_id path string true "season id"
+// @Param league_id path string true "league id"
+// @Param player_id path string true "player id"
 // @Success 200 {object} players.PlayerModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
 // @Failure 401 {object} failure.Failure "Unauthorized"
@@ -90,9 +90,9 @@ func (h *handler) getLeaguePlayer(w http.ResponseWriter, r *http.Request) {
 // @Descriptions Assigns player to a league
 // @Tags players
 // @Produce json
-// @Param season_id path string true "Season id"
-// @Param league_id path string true "League id"
-// @Param player_id path string true "Player id"
+// @Param season_id path string true "season id"
+// @Param league_id path string true "league id"
+// @Param player_id path string true "player id"
 // @Success 200 {object} players.PlayerModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
 // @Failure 401 {object} failure.Failure "Unauthorized"
@@ -122,9 +122,9 @@ func (h *handler) assignPlayerToLeague(w http.ResponseWriter, r *http.Request) {
 // @Descriptions Removes player from a league
 // @Tags players
 // @Produce json
-// @Param season_id path string true "Season id"
-// @Param league_id path string true "League id"
-// @Param player_id path string true "Player id"
+// @Param season_id path string true "season id"
+// @Param league_id path string true "league id"
+// @Param player_id path string true "player id"
 // @Success 200 {object} players.PlayerModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
 // @Failure 401 {object} failure.Failure "Unauthorized"

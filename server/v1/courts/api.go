@@ -23,8 +23,8 @@ func New(cfg *config.Config, db *db.Conn) *api {
 
 func (a *api) Mount(r chi.Router) {
 	r.With(middleware.RequirePermission(permission.CreateCourt)).Post("/", a.hdl.createCourt)
-	r.Get("/", a.hdl.getCourts)
-	r.With(middleware.URLPathParamUUIDs("court_id")).Get("/{court_id}", a.hdl.getCourt)
-	r.With(middleware.URLPathParamUUIDs("court_id")).With(middleware.RequirePermission(permission.UpdateCourt)).Put("/{court_id}", a.hdl.updateCourt)
-	r.With(middleware.URLPathParamUUIDs("court_id")).With(middleware.RequirePermission(permission.DeleteCourt)).Delete("/{court_id}", a.hdl.deleteCourt)
+	r.With(middleware.URLQueryPaginationParams).Get("/", a.hdl.getCourts)
+	r.With(middleware.URLPathUUIDParams("court_id")).Get("/{court_id}", a.hdl.getCourt)
+	r.With(middleware.URLPathUUIDParams("court_id")).With(middleware.RequirePermission(permission.UpdateCourt)).Put("/{court_id}", a.hdl.updateCourt)
+	r.With(middleware.URLPathUUIDParams("court_id")).With(middleware.RequirePermission(permission.DeleteCourt)).Delete("/{court_id}", a.hdl.deleteCourt)
 }

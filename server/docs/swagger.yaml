@@ -500,6 +500,19 @@ paths:
   /v1/courts:
     get:
       description: Get courts
+      parameters:
+      - description: page
+        in: query
+        name: page
+        type: integer
+      - description: per page
+        in: query
+        name: per_page
+        type: integer
+      - description: order by
+        in: query
+        name: order_by
+        type: string
       produces:
       - application/json
       responses:
@@ -565,7 +578,7 @@ paths:
     delete:
       description: Delete an existing court
       parameters:
-      - description: Court id
+      - description: court id
         in: path
         name: court_id
         required: true
@@ -599,7 +612,7 @@ paths:
     get:
       description: Get court by id
       parameters:
-      - description: Court id
+      - description: court id
         in: path
         name: court_id
         required: true
@@ -637,7 +650,7 @@ paths:
       - application/json
       description: Update an existing court
       parameters:
-      - description: Court id
+      - description: court id
         in: path
         name: court_id
         required: true
@@ -741,6 +754,19 @@ paths:
   /v1/players:
     get:
       description: Get players
+      parameters:
+      - description: page
+        in: query
+        name: page
+        type: integer
+      - description: per page
+        in: query
+        name: per_page
+        type: integer
+      - description: order by
+        in: query
+        name: order_by
+        type: string
       produces:
       - application/json
       responses:
@@ -771,7 +797,7 @@ paths:
     get:
       description: Get player by id
       parameters:
-      - description: Player id
+      - description: player id
         in: path
         name: player_id
         required: true
@@ -809,7 +835,7 @@ paths:
       - application/json
       description: Update an existing player
       parameters:
-      - description: Player id
+      - description: player id
         in: path
         name: player_id
         required: true
@@ -851,6 +877,19 @@ paths:
   /v1/seasons:
     get:
       description: Get seasons
+      parameters:
+      - description: page
+        in: query
+        name: page
+        type: integer
+      - description: per page
+        in: query
+        name: per_page
+        type: integer
+      - description: order by
+        in: query
+        name: order_by
+        type: string
       produces:
       - application/json
       responses:
@@ -916,7 +955,7 @@ paths:
     delete:
       description: Delete an existing season
       parameters:
-      - description: Season id
+      - description: season id
         in: path
         name: season_id
         required: true
@@ -950,7 +989,7 @@ paths:
     get:
       description: Get season by id
       parameters:
-      - description: Season id
+      - description: season id
         in: path
         name: season_id
         required: true
@@ -988,7 +1027,7 @@ paths:
       - application/json
       description: Update an existing season
       parameters:
-      - description: Season id
+      - description: season id
         in: path
         name: season_id
         required: true
@@ -1031,10 +1070,22 @@ paths:
     get:
       description: Get leagues
       parameters:
-      - description: Season id
+      - description: season id
         in: path
         name: season_id
         required: true
+        type: string
+      - description: page
+        in: query
+        name: page
+        type: integer
+      - description: per page
+        in: query
+        name: per_page
+        type: integer
+      - description: order by
+        in: query
+        name: order_by
         type: string
       produces:
       - application/json
@@ -1067,7 +1118,7 @@ paths:
       - application/json
       description: Create a new league
       parameters:
-      - description: Season id
+      - description: season id
         in: path
         name: season_id
         required: true
@@ -1106,12 +1157,12 @@ paths:
     delete:
       description: Delete an existing league
       parameters:
-      - description: Season id
+      - description: season id
         in: path
         name: season_id
         required: true
         type: string
-      - description: League id
+      - description: league id
         in: path
         name: league_id
         required: true
@@ -1145,12 +1196,12 @@ paths:
     get:
       description: Get league by id
       parameters:
-      - description: Season id
+      - description: season id
         in: path
         name: season_id
         required: true
         type: string
-      - description: League id
+      - description: league id
         in: path
         name: league_id
         required: true
@@ -1188,12 +1239,12 @@ paths:
       - application/json
       description: Update an existing league
       parameters:
-      - description: Season id
+      - description: season id
         in: path
         name: season_id
         required: true
         type: string
-      - description: League id
+      - description: league id
         in: path
         name: league_id
         required: true
@@ -1236,15 +1287,27 @@ paths:
     get:
       description: Get matches
       parameters:
-      - description: Season id
+      - description: season id
         in: path
         name: season_id
         required: true
         type: string
-      - description: League id
+      - description: league id
         in: path
         name: league_id
         required: true
+        type: string
+      - description: page
+        in: query
+        name: page
+        type: integer
+      - description: per page
+        in: query
+        name: per_page
+        type: integer
+      - description: order by
+        in: query
+        name: order_by
         type: string
       produces:
       - application/json
@@ -1277,12 +1340,12 @@ paths:
       - application/json
       description: Create a new match
       parameters:
-      - description: Season id
+      - description: season id
         in: path
         name: season_id
         required: true
         type: string
-      - description: League id
+      - description: league id
         in: path
         name: league_id
         required: true
@@ -1321,17 +1384,17 @@ paths:
     get:
       description: Get match by id
       parameters:
-      - description: Season id
+      - description: season id
         in: path
         name: season_id
         required: true
         type: string
-      - description: League id
+      - description: league id
         in: path
         name: league_id
         required: true
         type: string
-      - description: Match id
+      - description: match id
         in: path
         name: match_id
         required: true
@@ -1369,17 +1432,17 @@ paths:
       - application/json
       description: Update match
       parameters:
-      - description: Season id
+      - description: season id
         in: path
         name: season_id
         required: true
         type: string
-      - description: League id
+      - description: league id
         in: path
         name: league_id
         required: true
         type: string
-      - description: Match id
+      - description: match id
         in: path
         name: match_id
         required: true
@@ -1428,17 +1491,17 @@ paths:
       - application/json
       description: Submit a match score
       parameters:
-      - description: Season id
+      - description: season id
         in: path
         name: season_id
         required: true
         type: string
-      - description: League id
+      - description: league id
         in: path
         name: league_id
         required: true
         type: string
-      - description: Match id
+      - description: match id
         in: path
         name: match_id
         required: true
@@ -1485,12 +1548,12 @@ paths:
     get:
       description: Get league players
       parameters:
-      - description: Season id
+      - description: season id
         in: path
         name: season_id
         required: true
         type: string
-      - description: League id
+      - description: league id
         in: path
         name: league_id
         required: true
@@ -1503,7 +1566,7 @@ paths:
         in: query
         name: per_page
         type: integer
-      - description: Match available
+      - description: match available
         in: query
         name: match_available
         type: boolean
@@ -1537,17 +1600,17 @@ paths:
     get:
       description: Get league player
       parameters:
-      - description: Season id
+      - description: season id
         in: path
         name: season_id
         required: true
         type: string
-      - description: League id
+      - description: league id
         in: path
         name: league_id
         required: true
         type: string
-      - description: Player id
+      - description: player id
         in: path
         name: player_id
         required: true
@@ -1579,17 +1642,17 @@ paths:
   /v1/seasons/{season_id}/leagues/{league_id}/players/{player_id}/assign:
     delete:
       parameters:
-      - description: Season id
+      - description: season id
         in: path
         name: season_id
         required: true
         type: string
-      - description: League id
+      - description: league id
         in: path
         name: league_id
         required: true
         type: string
-      - description: Player id
+      - description: player id
         in: path
         name: player_id
         required: true
@@ -1624,17 +1687,17 @@ paths:
       - players
     post:
       parameters:
-      - description: Season id
+      - description: season id
         in: path
         name: season_id
         required: true
         type: string
-      - description: League id
+      - description: league id
         in: path
         name: league_id
         required: true
         type: string
-      - description: Player id
+      - description: player id
         in: path
         name: player_id
         required: true
@@ -1671,15 +1734,27 @@ paths:
     get:
       description: Get standings
       parameters:
-      - description: Season id
+      - description: season id
         in: path
         name: season_id
         required: true
         type: string
-      - description: League id
+      - description: league id
         in: path
         name: league_id
         required: true
+        type: string
+      - description: page
+        in: query
+        name: page
+        type: integer
+      - description: per page
+        in: query
+        name: per_page
+        type: integer
+      - description: order by
+        in: query
+        name: order_by
         type: string
       produces:
       - application/json

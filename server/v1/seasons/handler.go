@@ -71,6 +71,9 @@ func (h *handler) createSeason(w http.ResponseWriter, r *http.Request) {
 // @Description Get seasons
 // @Tags seasons
 // @Produce json
+// @Param page query int false "page"
+// @Param per_page query int false "per page"
+// @Param order_by query string false "order by"
 // @Success 200 {array} seasons.SeasonModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
 // @Failure 401 {object} failure.Failure "Unauthorized"
@@ -100,7 +103,7 @@ func (h *handler) getSeasons(w http.ResponseWriter, r *http.Request) {
 // @Description Get season by id
 // @Tags seasons
 // @Produce json
-// @Param season_id path string true "Season id"
+// @Param season_id path string true "season id"
 // @Success 200 {object} seasons.SeasonModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
 // @Failure 401 {object} failure.Failure "Unauthorized"
@@ -132,7 +135,7 @@ func (h *handler) getSeason(w http.ResponseWriter, r *http.Request) {
 // @Tags seasons
 // @Accept json
 // @Produce json
-// @Param season_id path string true "Season id"
+// @Param season_id path string true "season id"
 // @Param body body seasons.UpdateSeasonRequestModel true "Request body"
 // @Success 200 {object} seasons.SeasonModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
@@ -175,7 +178,7 @@ func (h *handler) updateSeason(w http.ResponseWriter, r *http.Request) {
 // @Description Delete an existing season
 // @Tags seasons
 // @Produce json
-// @Param season_id path string true "Season id"
+// @Param season_id path string true "season id"
 // @Success 204 "No content"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
 // @Failure 401 {object} failure.Failure "Unauthorized"

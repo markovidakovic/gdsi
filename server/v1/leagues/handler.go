@@ -31,7 +31,7 @@ func newHandler(cfg *config.Config, db *db.Conn, validator *validation.Validator
 // @Tags leagues
 // @Accept json
 // @Produce json
-// @Param season_id path string true "Season id"
+// @Param season_id path string true "season id"
 // @Param body body leagues.CreateLeagueRequestModel true "Request body"
 // @Success 201 {object} leagues.LeagueModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
@@ -76,7 +76,10 @@ func (h *handler) createLeague(w http.ResponseWriter, r *http.Request) {
 // @Description Get leagues
 // @Tags leagues
 // @Produce json
-// @Param season_id path string true "Season id"
+// @Param season_id path string true "season id"
+// @Param page query int false "page"
+// @Param per_page query int false "per page"
+// @Param order_by query string false "order by"
 // @Success 200 {array} leagues.LeagueModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
 // @Failure 401 {object} failure.Failure "Unauthorized"
@@ -106,8 +109,8 @@ func (h *handler) getLeagues(w http.ResponseWriter, r *http.Request) {
 // @Description Get league by id
 // @Tags leagues
 // @Produce json
-// @Param season_id path string true "Season id"
-// @Param league_id path string true "League id"
+// @Param season_id path string true "season id"
+// @Param league_id path string true "league id"
 // @Success 200 {object} leagues.LeagueModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
 // @Failure 401 {object} failure.Failure "Unauthorized"
@@ -139,8 +142,8 @@ func (h *handler) getLeague(w http.ResponseWriter, r *http.Request) {
 // @Tags leagues
 // @Accept json
 // @Produce json
-// @Param season_id path string true "Season id"
-// @Param league_id path string true "League id"
+// @Param season_id path string true "season id"
+// @Param league_id path string true "league id"
 // @Param body body leagues.UpdateLeagueRequestModel true "Request body"
 // @Success 200 {object} leagues.LeagueModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
@@ -186,8 +189,8 @@ func (h *handler) updateLeague(w http.ResponseWriter, r *http.Request) {
 // @Description Delete an existing league
 // @Tags leagues
 // @Produce json
-// @Param season_id path string true "Season id"
-// @Param league_id path string true "League id"
+// @Param season_id path string true "season id"
+// @Param league_id path string true "league id"
 // @Success 204 "No content"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
 // @Failure 401 {object} failure.Failure "Unauthorized"
