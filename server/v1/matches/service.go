@@ -29,7 +29,6 @@ func newService(cfg *config.Config, store *store, validator *validation.Validato
 }
 
 func (s *service) processCreateMatch(ctx context.Context, model CreateMatchRequestModel) (*MatchModel, error) {
-	// validation
 	err := s.validator.NewValidation(ctx).
 		CourtExists(model.CourtId, "body").
 		SeasonExists(model.SeasonId, "path").
@@ -41,7 +40,6 @@ func (s *service) processCreateMatch(ctx context.Context, model CreateMatchReque
 		return nil, err
 	}
 
-	// begin tx
 	tx, err := s.store.db.Begin(ctx)
 	if err != nil {
 		return nil, failure.New("unable to create a match", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
@@ -59,7 +57,6 @@ func (s *service) processCreateMatch(ctx context.Context, model CreateMatchReque
 		model.WinnerId = &winnerId
 	}
 
-	// insert match
 	match, err := s.store.insertMatch(ctx, tx, model.CourtId, model.ScheduledAt, model.PlayerOneId, model.PlayerTwoId, model.WinnerId, model.Score, model.SeasonId, model.LeagueId)
 	if err != nil {
 		return nil, failure.New("unable to create a match", err)
@@ -67,11 +64,9 @@ func (s *service) processCreateMatch(ctx context.Context, model CreateMatchReque
 
 	// for cases where the score is submitted upon match creation
 	if model.Score != nil {
-		// calc player statistics
 		pl1Stats := calcMatchStats(*model.Score, true)
 		pl2Stats := calcMatchStats(*model.Score, false)
 
-		// update player stats
 		err = s.store.updatePlayerStatistics(ctx, tx, *model.WinnerId, model.PlayerOneId, model.PlayerTwoId)
 		if err != nil {
 			// the err here will be an internal and not a player not found because we've confirmend
@@ -79,20 +74,17 @@ func (s *service) processCreateMatch(ctx context.Context, model CreateMatchReque
 			return nil, failure.New("unable to create a match", err)
 		}
 
-		// update standings for pl1
 		err = s.store.updateStanding(ctx, tx, model.SeasonId, model.LeagueId, model.PlayerOneId, pl1Stats)
 		if err != nil {
 			return nil, failure.New("unable to create a match", err)
 		}
 
-		// update standings for pl2
 		err = s.store.updateStanding(ctx, tx, model.SeasonId, model.LeagueId, model.PlayerTwoId, pl2Stats)
 		if err != nil {
 			return nil, failure.New("unable to create a match", err)
 		}
 	}
 
-	// increment matches scheduled for the player creating the match
 	err = s.store.incrementPlayerMatchesScheduled(ctx, tx, model.PlayerOneId)
 	if err != nil {
 		return nil, failure.New("unable to create a match", err)
@@ -107,7 +99,6 @@ func (s *service) processCreateMatch(ctx context.Context, model CreateMatchReque
 }
 
 func (s *service) processGetMatches(ctx context.Context, seasonId, leagueId string) ([]MatchModel, error) {
-	// validation
 	err := s.validator.NewValidation(ctx).
 		SeasonExists(seasonId, "path").
 		LeagueExists(leagueId, "path").LeagueInSeason(seasonId, leagueId, "path").
@@ -116,7 +107,6 @@ func (s *service) processGetMatches(ctx context.Context, seasonId, leagueId stri
 		return nil, err
 	}
 
-	// call the store
 	mms, err := s.store.findMatches(ctx, seasonId, leagueId)
 	if err != nil {
 		return nil, err
@@ -126,7 +116,6 @@ func (s *service) processGetMatches(ctx context.Context, seasonId, leagueId stri
 }
 
 func (s *service) processGetMatch(ctx context.Context, seasonId, leagueId, matchId string) (*MatchModel, error) {
-	// validate
 	err := s.validator.NewValidation(ctx).
 		SeasonExists(seasonId, "path").
 		LeagueExists(leagueId, "path").LeagueInSeason(seasonId, leagueId, "path").
@@ -144,7 +133,6 @@ func (s *service) processGetMatch(ctx context.Context, seasonId, leagueId, match
 }
 
 func (s *service) processUpdateMatch(ctx context.Context, model UpdateMatchRequestModel) (*MatchModel, error) {
-	// validation
 	err := s.validator.NewValidation(ctx).
 		CourtExists(model.CourtId, "body").
 		SeasonExists(model.SeasonId, "path").
@@ -178,7 +166,6 @@ func (s *service) processUpdateMatch(ctx context.Context, model UpdateMatchReque
 }
 
 func (s *service) processSubmitMatchScore(ctx context.Context, model SubmitMatchScoreRequestModel) (*MatchModel, error) {
-	// validation
 	err := s.validator.NewValidation(ctx).
 		SeasonExists(model.SeasonId, "path").
 		LeagueExists(model.LeagueId, "path").LeagueInSeason(model.SeasonId, model.LeagueId, "path").
@@ -187,7 +174,6 @@ func (s *service) processSubmitMatchScore(ctx context.Context, model SubmitMatch
 		return nil, err
 	}
 
-	// find the existing match
 	match, err := s.store.findMatch(ctx, model.SeasonId, model.LeagueId, model.MatchId)
 	if err != nil {
 		return nil, err
@@ -198,15 +184,12 @@ func (s *service) processSubmitMatchScore(ctx context.Context, model SubmitMatch
 		return nil, failure.New("not able to submit match result, score already exists", failure.ErrCantModify)
 	}
 
-	// also add the match p1 and p2 info to the model struct
 	model.PlayerOneId = match.PlayerOne.Id
 	model.PlayerTwoId = match.PlayerTwo.Id
 	model.WinnerId = determineMatchWinner(model.Score, match.PlayerOne.Id, match.PlayerTwo.Id)
 
-	// begin tx
 	tx, err := s.store.db.Begin(ctx)
 	if err != nil {
-		// return nil, err
 		return nil, failure.New("not able to submit match score", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 
@@ -229,17 +212,14 @@ func (s *service) processSubmitMatchScore(ctx context.Context, model SubmitMatch
 		return nil, failure.New("not able to submit match score", err)
 	}
 
-	// calc pl1 & pl2 match stats
 	pl1MatchStats := calcMatchStats(model.Score, true)
 	pl2MatchStats := calcMatchStats(model.Score, false)
 
-	// update standing for pl1
 	err = s.store.updateStanding(ctx, tx, model.SeasonId, model.LeagueId, model.PlayerOneId, pl1MatchStats)
 	if err != nil {
 		return nil, failure.New("not able to submit match score", err)
 	}
 
-	// update standing for pl2
 	err = s.store.updateStanding(ctx, tx, model.SeasonId, model.LeagueId, model.PlayerTwoId, pl2MatchStats)
 	if err != nil {
 		return nil, failure.New("not able to submit match score", err)

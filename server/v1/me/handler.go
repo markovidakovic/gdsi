@@ -75,13 +75,11 @@ func (h *handler) updateMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// validation
 	if valErr := model.Validate(); valErr != nil {
 		response.WriteFailure(w, failure.NewValidation("validation failed", valErr))
 		return
 	}
 
-	// get account id
 	accountId := r.Context().Value(middleware.AccountIdCtxKey).(string)
 
 	result, err := h.store.updateMe(r.Context(), nil, accountId, model)

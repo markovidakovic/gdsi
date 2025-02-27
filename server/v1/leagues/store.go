@@ -195,19 +195,3 @@ func (s *store) deleteLeague(ctx context.Context, tx pgx.Tx, seasonId, leagueId 
 
 	return nil
 }
-
-// func (s *store) checkSeasonExistance(ctx context.Context, seasonId string) (bool, error) {
-// 	sql := `
-// 		select exists (
-// 			select 1 from season where id = $1
-// 		)
-// 	`
-
-// 	var exists bool
-// 	err := s.db.QueryRow(ctx, sql, seasonId).Scan(&exists)
-// 	if err != nil {
-// 		return false, err
-// 	}
-
-// 	return exists, nil
-// }

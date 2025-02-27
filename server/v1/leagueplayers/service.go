@@ -27,7 +27,6 @@ func newService(cfg *config.Config, store *store, validator *validation.Validato
 }
 
 func (s *service) processGetLeaguePlayers(ctx context.Context, seasonId, leagueId string) ([]players.PlayerModel, error) {
-	// validation
 	err := s.validator.NewValidation(ctx).
 		SeasonExists(seasonId, "path").
 		LeagueExists(leagueId, "path").
@@ -37,7 +36,6 @@ func (s *service) processGetLeaguePlayers(ctx context.Context, seasonId, leagueI
 		return nil, err
 	}
 
-	// find league players
 	lps, err := s.store.findLeaguePlayers(ctx, leagueId)
 	if err != nil {
 		return nil, err
@@ -47,7 +45,6 @@ func (s *service) processGetLeaguePlayers(ctx context.Context, seasonId, leagueI
 }
 
 func (s *service) processGetLeaguePlayer(ctx context.Context, seasonId, leagueId, playerId string) (*players.PlayerModel, error) {
-	// validation
 	err := s.validator.NewValidation(ctx).
 		SeasonExists(seasonId, "path").
 		LeagueExists(leagueId, "path").
@@ -58,7 +55,6 @@ func (s *service) processGetLeaguePlayer(ctx context.Context, seasonId, leagueId
 		return nil, err
 	}
 
-	// find league player
 	lp, err := s.store.findLeaguePlayer(ctx, leagueId, playerId)
 	if err != nil {
 		return nil, err
@@ -68,7 +64,6 @@ func (s *service) processGetLeaguePlayer(ctx context.Context, seasonId, leagueId
 }
 
 func (s *service) processAssignPlayerToLeague(ctx context.Context, seasonId, leagueId, playerId string) (*players.PlayerModel, error) {
-	// validation
 	err := s.validator.NewValidation(ctx).
 		SeasonExists(seasonId, "path").
 		LeagueExists(leagueId, "path").
@@ -79,7 +74,6 @@ func (s *service) processAssignPlayerToLeague(ctx context.Context, seasonId, lea
 		return nil, err
 	}
 
-	// begin tx
 	tx, err := s.store.db.Begin(ctx)
 	if err != nil {
 		return nil, failure.New("unable to assign player to league", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
@@ -92,7 +86,6 @@ func (s *service) processAssignPlayerToLeague(ctx context.Context, seasonId, lea
 		}
 	}()
 
-	// update player current league
 	player, err := s.store.updatePlayerCurrentLeague(ctx, tx, &leagueId, playerId)
 	if err != nil {
 		// another option to do here? could just return nil, err
@@ -103,14 +96,12 @@ func (s *service) processAssignPlayerToLeague(ctx context.Context, seasonId, lea
 		return nil, failure.New("unable to assign player to league", err)
 	}
 
-	// increment player seasons played
 	player, err = s.store.incrementPlayerSeasonsPlayed(ctx, tx, leagueId, playerId)
 	if err != nil {
 		// same as above, this will most likely be a db error
 		return nil, failure.New("unable to assign player to league", err)
 	}
 
-	// commit tx
 	err = tx.Commit(ctx)
 	if err != nil {
 		return nil, failure.New("unable to assign player to league", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
@@ -120,7 +111,6 @@ func (s *service) processAssignPlayerToLeague(ctx context.Context, seasonId, lea
 }
 
 func (s *service) processUnassignPlayerFromLeague(ctx context.Context, seasonId, leagueId, playerId string) (*players.PlayerModel, error) {
-	// validation
 	// todo: maybe do a validation in validation.go for playerInLeague
 	err := s.validator.NewValidation(ctx).
 		SeasonExists(seasonId, "path").
@@ -132,7 +122,6 @@ func (s *service) processUnassignPlayerFromLeague(ctx context.Context, seasonId,
 		return nil, err
 	}
 
-	// update player current league
 	lp, err := s.store.updatePlayerCurrentLeague(ctx, nil, nil, playerId)
 	if err != nil {
 		// same as in other methods. this will most likely be a db error

@@ -28,7 +28,6 @@ func (s *store) insertCourt(ctx context.Context, tx pgx.Tx, name, creatorId stri
 		q = s.db
 	}
 
-	// cte - common table expression
 	sql := `
 		with inserted_court as (
 			insert into court (name, creator_id)

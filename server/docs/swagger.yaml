@@ -1495,7 +1495,15 @@ paths:
         name: league_id
         required: true
         type: string
-      - description: Available opponents
+      - description: Page
+        in: query
+        name: page
+        type: integer
+      - description: Per page
+        in: query
+        name: per_page
+        type: integer
+      - description: Match available
         in: query
         name: match_available
         type: boolean

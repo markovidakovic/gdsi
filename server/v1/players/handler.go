@@ -35,7 +35,6 @@ func newHandler(cfg *config.Config, db *db.Conn) *handler {
 // @Security BearerAuth
 // @Router /v1/players [get]
 func (h *handler) getPlayers(w http.ResponseWriter, r *http.Request) {
-	// call store
 	result, err := h.store.findPlayers(r.Context())
 	if err != nil {
 		switch f := err.(type) {
@@ -67,7 +66,6 @@ func (h *handler) getPlayers(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/players/{player_id} [get]
 func (h *handler) getPlayer(w http.ResponseWriter, r *http.Request) {
-	// call store
 	result, err := h.store.findPlayer(r.Context(), chi.URLParam(r, "player_id"))
 	if err != nil {
 		switch f := err.(type) {
@@ -108,13 +106,11 @@ func (h *handler) updatePlayer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// validate model
 	if valErr := model.Validate(); valErr != nil {
 		response.WriteFailure(w, failure.NewValidation("validation failed", valErr))
 		return
 	}
 
-	// call store
 	result, err := h.store.updatePlayer(r.Context(), nil, chi.URLParam(r, "player_id"), model)
 	if err != nil {
 		switch f := err.(type) {

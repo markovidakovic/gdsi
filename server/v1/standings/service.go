@@ -22,7 +22,6 @@ func newService(cfg *config.Config, store *store, validator *validation.Validato
 }
 
 func (s *service) processGetStandings(ctx context.Context, seasonId, leagueId string) ([]StandingModel, error) {
-	// validation
 	err := s.validator.NewValidation(ctx).
 		SeasonExists(seasonId, "path").
 		LeagueExists(leagueId, "path").
@@ -32,7 +31,6 @@ func (s *service) processGetStandings(ctx context.Context, seasonId, leagueId st
 		return nil, err
 	}
 
-	// call the store
 	standings, err := s.store.findStandings(ctx, seasonId, leagueId)
 	if err != nil {
 		return nil, err

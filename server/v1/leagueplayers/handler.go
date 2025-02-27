@@ -29,7 +29,9 @@ func newHandler(cfg *config.Config, db *db.Conn, validator *validation.Validator
 // @Produce json
 // @Param season_id path string true "Season id"
 // @Param league_id path string true "League id"
-// @Param match_available query bool false "Available opponents"
+// @Param page query int false "Page"
+// @Param per_page query int false "Per page"
+// @Param match_available query bool false "Match available"
 // @Success 200 {array} players.PlayerModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
 // @Failure 401 {object} failure.Failure "Unauthorized"
@@ -39,9 +41,8 @@ func newHandler(cfg *config.Config, db *db.Conn, validator *validation.Validator
 func (h *handler) getLeaguePlayers(w http.ResponseWriter, r *http.Request) {
 
 	query := r.URL.Query()
-	fmt.Printf("query: %v\n", query.Get("match_available"))
+	fmt.Printf("query: %v\n", query)
 
-	// call the service
 	result, err := h.service.processGetLeaguePlayers(r.Context(), chi.URLParam(r, "season_id"), chi.URLParam(r, "league_id"))
 	if err != nil {
 		switch f := err.(type) {
@@ -73,7 +74,6 @@ func (h *handler) getLeaguePlayers(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/seasons/{season_id}/leagues/{league_id}/players/{player_id} [get]
 func (h *handler) getLeaguePlayer(w http.ResponseWriter, r *http.Request) {
-	// call the service
 	result, err := h.service.processGetLeaguePlayer(r.Context(), chi.URLParam(r, "season_id"), chi.URLParam(r, "league_id"), chi.URLParam(r, "player_id"))
 	if err != nil {
 		switch f := err.(type) {
@@ -106,7 +106,6 @@ func (h *handler) getLeaguePlayer(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/seasons/{season_id}/leagues/{league_id}/players/{player_id}/assign [post]
 func (h *handler) assignPlayerToLeague(w http.ResponseWriter, r *http.Request) {
-	// call the service
 	result, err := h.service.processAssignPlayerToLeague(r.Context(), chi.URLParam(r, "season_id"), chi.URLParam(r, "league_id"), chi.URLParam(r, "player_id"))
 	if err != nil {
 		switch f := err.(type) {
@@ -139,7 +138,6 @@ func (h *handler) assignPlayerToLeague(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/seasons/{season_id}/leagues/{league_id}/players/{player_id}/assign [delete]
 func (h *handler) unassignPlayerFromLeague(w http.ResponseWriter, r *http.Request) {
-	// call the service
 	result, err := h.service.processUnassignPlayerFromLeague(r.Context(), chi.URLParam(r, "season_id"), chi.URLParam(r, "league_id"), chi.URLParam(r, "player_id"))
 	if err != nil {
 		switch f := err.(type) {

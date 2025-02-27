@@ -35,20 +35,17 @@ func newHandler(cfg *config.Config, db *db.Conn) *handler {
 func (h *handler) signup(w http.ResponseWriter, r *http.Request) {
 	var model SignupRequestModel
 
-	// decode request body
 	err := json.NewDecoder(r.Body).Decode(&model)
 	if err != nil {
 		response.WriteFailure(w, failure.New("invalid request body", fmt.Errorf("%w -> %v", failure.ErrBadRequest, err)))
 		return
 	}
 
-	// validation
 	if valErr := model.Validate(); valErr != nil {
 		response.WriteFailure(w, failure.NewValidation("validation failed", valErr))
 		return
 	}
 
-	// call the service
 	accessToken, refreshToken, err := h.service.processSignup(r.Context(), model)
 	if err != nil {
 		switch f := err.(type) {
@@ -84,14 +81,12 @@ func (h *handler) signup(w http.ResponseWriter, r *http.Request) {
 func (h *handler) login(w http.ResponseWriter, r *http.Request) {
 	var model LoginRequestModel
 
-	// decode request body
 	err := json.NewDecoder(r.Body).Decode(&model)
 	if err != nil {
 		response.WriteFailure(w, failure.New("invalid request body", fmt.Errorf("%w -> %v", failure.ErrBadRequest, err)))
 		return
 	}
 
-	// validate model
 	if valErr := model.Validate(); valErr != nil {
 		response.WriteFailure(w, failure.NewValidation("validation failed", valErr))
 		return
@@ -108,7 +103,6 @@ func (h *handler) login(w http.ResponseWriter, r *http.Request) {
 	// fmt.Printf("port: %v\n", port)
 	// fmt.Printf("r.UserAgent(): %v\n", r.UserAgent())
 
-	// call the service
 	accessToken, refreshToken, err := h.service.processLogin(r.Context(), model)
 	if err != nil {
 		switch f := err.(type) {
@@ -144,14 +138,12 @@ func (h *handler) login(w http.ResponseWriter, r *http.Request) {
 func (h *handler) refreshToken(w http.ResponseWriter, r *http.Request) {
 	var model RefreshTokenRequestModel
 
-	// decode request body
 	err := json.NewDecoder(r.Body).Decode(&model)
 	if err != nil {
 		response.WriteFailure(w, failure.New("invalid request body", fmt.Errorf("%w -> %v", failure.ErrBadRequest, err)))
 		return
 	}
 
-	// validate model
 	if valErr := model.Validate(); valErr != nil {
 		response.WriteFailure(w, failure.NewValidation("validation failed", valErr))
 		return

@@ -1,25 +1,30 @@
 package response
 
 type Pagination[T any] struct {
-	CurrentPage  int `json:"current_page"`
-	TotalPages   int `json:"total_pages"`
-	TotalItems   int `json:"total_items"`
-	ItemsPerPage int `json:"items_per_page"`
-	Items        []T `json:"items"`
+	Page      int `json:"page"`
+	PerPage   int `json:"per_page"`
+	PageCount int `json:"page_count"`
+	ItemCount int `json:"item_count"`
+	Items     []T `json:"items"`
 }
 
-func NewPagination[T any](currentPage, totalItems, itemsPerPage int, items []T) Pagination[T] {
-	// totalPages := (totalItems + itemsPerPage - 1) / itemsPerPage
-	totalPages := totalItems / itemsPerPage
-	if totalItems%itemsPerPage > 0 {
-		totalPages++
+type UrlQueryParams struct {
+	Page    int `json:"page"`
+	PerPage int `json:"per_page"`
+}
+
+func NewPagination[T any](page, perPage, itemCount int, items []T) Pagination[T] {
+	// pageCount := (itemCount + perPage - 1) / perPage
+	pageCount := itemCount / perPage
+	if itemCount%perPage > 0 {
+		pageCount++
 	}
 
 	return Pagination[T]{
-		CurrentPage:  currentPage,
-		TotalPages:   totalPages,
-		TotalItems:   totalItems,
-		ItemsPerPage: itemsPerPage,
-		Items:        items,
+		Page:      page,
+		PerPage:   perPage,
+		PageCount: pageCount,
+		ItemCount: itemCount,
+		Items:     items,
 	}
 }

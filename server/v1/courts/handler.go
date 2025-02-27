@@ -45,16 +45,13 @@ func (h *handler) createCourt(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// validate
 	if valErr := model.Validate(); valErr != nil {
 		response.WriteFailure(w, failure.NewValidation("validation failed", valErr))
 		return
 	}
 
-	// attach account id
 	model.CreatorId = r.Context().Value(middleware.AccountIdCtxKey).(string)
 
-	// store call
 	result, err := h.store.insertCourt(r.Context(), nil, model.Name, model.CreatorId)
 	if err != nil {
 		switch f := err.(type) {
@@ -84,7 +81,6 @@ func (h *handler) createCourt(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/courts [get]
 func (h *handler) getCourts(w http.ResponseWriter, r *http.Request) {
-	// store call
 	result, err := h.store.findCourts(r.Context())
 	if err != nil {
 		switch f := err.(type) {
@@ -116,7 +112,6 @@ func (h *handler) getCourts(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/courts/{court_id} [get]
 func (h *handler) getCourt(w http.ResponseWriter, r *http.Request) {
-	// store call
 	result, err := h.store.findCourt(r.Context(), chi.URLParam(r, "court_id"))
 	if err != nil {
 		switch f := err.(type) {
@@ -156,7 +151,6 @@ func (h *handler) updateCourt(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// validate model
 	if valErr := model.Validate(); valErr != nil {
 		response.WriteFailure(w, failure.NewValidation("validation failed", valErr))
 		return
@@ -193,7 +187,6 @@ func (h *handler) updateCourt(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/courts/{court_id} [delete]
 func (h *handler) deleteCourt(w http.ResponseWriter, r *http.Request) {
-	// call store
 	err := h.store.deleteCourt(r.Context(), nil, chi.URLParam(r, "court_id"))
 	if err != nil {
 		switch f := err.(type) {

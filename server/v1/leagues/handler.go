@@ -40,14 +40,12 @@ func newHandler(cfg *config.Config, db *db.Conn, validator *validation.Validator
 // @Security BearerAuth
 // @Router /v1/seasons/{season_id}/leagues [post]
 func (h *handler) createLeague(w http.ResponseWriter, r *http.Request) {
-	// decode model
 	var model CreateLeagueRequestModel
 	if err := json.NewDecoder(r.Body).Decode(&model); err != nil {
 		response.WriteFailure(w, failure.New("invalid request body", fmt.Errorf("%w -> %v", failure.ErrBadRequest, err)))
 		return
 	}
 
-	// validate model
 	if valErr := model.Validate(); valErr != nil {
 		response.WriteFailure(w, failure.NewValidation("validation failed", valErr))
 		return
@@ -56,7 +54,6 @@ func (h *handler) createLeague(w http.ResponseWriter, r *http.Request) {
 	model.SeasonId = chi.URLParam(r, "season_id")
 	model.CreatorId = r.Context().Value(middleware.AccountIdCtxKey).(string)
 
-	// call the service
 	result, err := h.service.processCreateLeague(r.Context(), model)
 	if err != nil {
 		switch f := err.(type) {
@@ -87,7 +84,6 @@ func (h *handler) createLeague(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/seasons/{season_id}/leagues [get]
 func (h *handler) getLeagues(w http.ResponseWriter, r *http.Request) {
-	// call the service
 	result, err := h.service.processFindLeagues(r.Context(), chi.URLParam(r, "season_id"))
 	if err != nil {
 		switch f := err.(type) {
@@ -120,7 +116,6 @@ func (h *handler) getLeagues(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/seasons/{season_id}/leagues/{league_id} [get]
 func (h *handler) getLeague(w http.ResponseWriter, r *http.Request) {
-	// call the service
 	result, err := h.service.processFindLeague(r.Context(), chi.URLParam(r, "season_id"), chi.URLParam(r, "league_id"))
 	if err != nil {
 		switch f := err.(type) {
@@ -155,14 +150,12 @@ func (h *handler) getLeague(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/seasons/{season_id}/leagues/{league_id} [put]
 func (h *handler) updateLeague(w http.ResponseWriter, r *http.Request) {
-	// decode model
 	var model UpdateLeagueRequestModel
 	if err := json.NewDecoder(r.Body).Decode(&model); err != nil {
 		response.WriteFailure(w, failure.New("invalid request body", fmt.Errorf("%w -> %v", failure.ErrBadRequest, err)))
 		return
 	}
 
-	// validate model
 	if valErr := model.Validate(); valErr != nil {
 		response.WriteFailure(w, failure.NewValidation("validation vailed", valErr))
 		return
@@ -171,7 +164,6 @@ func (h *handler) updateLeague(w http.ResponseWriter, r *http.Request) {
 	model.SeasonId = chi.URLParam(r, "season_id")
 	model.LeagueId = chi.URLParam(r, "league_id")
 
-	// call the service
 	result, err := h.service.processUpdateLeague(r.Context(), model)
 	if err != nil {
 		switch f := err.(type) {
@@ -204,7 +196,6 @@ func (h *handler) updateLeague(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/seasons/{season_id}/leagues/{league_id} [delete]
 func (h *handler) deleteLeague(w http.ResponseWriter, r *http.Request) {
-	// call the service
 	err := h.service.processDeleteLeague(r.Context(), chi.URLParam(r, "season_id"), chi.URLParam(r, "league_id"))
 	if err != nil {
 		switch f := err.(type) {

@@ -1706,8 +1706,20 @@ const docTemplate = `{
                         "required": true
                     },
                     {
+                        "type": "integer",
+                        "description": "Page",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Per page",
+                        "name": "per_page",
+                        "in": "query"
+                    },
+                    {
                         "type": "boolean",
-                        "description": "Available opponents",
+                        "description": "Match available",
                         "name": "match_available",
                         "in": "query"
                     }
