@@ -10,6 +10,7 @@ import (
 	"github.com/markovidakovic/gdsi/server/db"
 	"github.com/markovidakovic/gdsi/server/failure"
 	"github.com/markovidakovic/gdsi/server/middleware"
+	"github.com/markovidakovic/gdsi/server/pagination"
 	"github.com/markovidakovic/gdsi/server/response"
 )
 
@@ -84,7 +85,10 @@ func (h *handler) createCourt(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/courts [get]
 func (h *handler) getCourts(w http.ResponseWriter, r *http.Request) {
-	result, err := h.store.findCourts(r.Context())
+	query := &pagination.QueryParams{}
+	query.Populate(r.URL.Query())
+
+	courts, count, err := h.service.processGetCourts(r.Context(), query)
 	if err != nil {
 		switch f := err.(type) {
 		case *failure.ValidationFailure:
@@ -98,6 +102,8 @@ func (h *handler) getCourts(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+
+	result := pagination.NewPaginated(query.Page, query.PerPage, count, courts)
 
 	response.WriteSuccess(w, http.StatusOK, result)
 }

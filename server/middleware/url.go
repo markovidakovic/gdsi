@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -43,32 +42,54 @@ func URLPathUUIDParams(params ...string) func(http.Handler) http.Handler {
 // standard pagination query parameters: page, per_page, order_by
 func URLQueryPaginationParams(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		val := []failure.InvalidField{}
 		query := r.URL.Query()
+		val := []failure.InvalidField{}
 
-		page, err := strconv.Atoi(query.Get("page"))
-		if err != nil {
-			val = append(val, failure.InvalidField{
-				Field:    "page",
-				Message:  "invalid value",
-				Location: "query",
-			})
-		}
-		perPage, err := strconv.Atoi(query.Get("per_page"))
-		if err != nil {
-			val = append(val, failure.InvalidField{
-				Field:    "per_page",
-				Message:  "invalid value",
-				Location: "query",
-			})
-		}
-		orderBy := query.Get("order_by")
-		obSl := strings.Split(orderBy, " ")
-		fmt.Printf("obSl: %v\n", obSl)
+		if query.Get("page") != "" {
+			page, err := strconv.Atoi(query.Get("page"))
+			if err != nil {
+				val = append(val, failure.InvalidField{
+					Field:    "page",
+					Message:  "invalid value",
+					Location: "query",
+				})
 
-		fmt.Printf("page: %v\n", page)
-		fmt.Printf("perPage: %v\n", perPage)
-		fmt.Printf("orderBy: %v\n", orderBy)
+			}
+			if page < 1 {
+				val = append(val, failure.InvalidField{
+					Field:    "page",
+					Message:  "invalid value",
+					Location: "query",
+				})
+			}
+		}
+		if query.Get("per_page") != "" {
+			perPage, err := strconv.Atoi(query.Get("per_page"))
+			if err != nil {
+				val = append(val, failure.InvalidField{
+					Field:    "per_page",
+					Message:  "invalid value",
+					Location: "query",
+				})
+			}
+			if perPage < 1 {
+				val = append(val, failure.InvalidField{
+					Field:    "per_page",
+					Message:  "invalid value",
+					Location: "query",
+				})
+			}
+		}
+		if query.Get("order_by") != "" {
+			obSl := strings.Split(query.Get("order_by"), " ")
+			if len(obSl) != 2 || (obSl[1] != "asc" && obSl[1] != "desc") {
+				val = append(val, failure.InvalidField{
+					Field:    "order_by",
+					Message:  "invalid value",
+					Location: "query",
+				})
+			}
+		}
 
 		if len(val) > 0 {
 			response.WriteFailure(w, failure.NewValidation("validation failed", val))

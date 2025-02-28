@@ -54,7 +54,7 @@ func (s *store) insertCourt(ctx context.Context, tx pgx.Tx, name, creatorId stri
 	return dest, nil
 }
 
-func (s *store) findCourts(ctx context.Context) ([]CourtModel, error) {
+func (s *store) findCourts(ctx context.Context, limit, offset int) ([]CourtModel, error) {
 	sql := `
 		select 
 			court.id as court_id,
@@ -67,9 +67,19 @@ func (s *store) findCourts(ctx context.Context) ([]CourtModel, error) {
 		order by court.created_at desc		
 	`
 
-	rows, err := s.db.Query(ctx, sql)
-	if err != nil {
-		return nil, failure.New("unable to find courts", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
+	var err error
+	var rows pgx.Rows
+	if limit >= 0 {
+		sql += `limit $1 offset $2`
+		rows, err = s.db.Query(ctx, sql, limit, offset)
+		if err != nil {
+			return nil, failure.New("unable to find courts", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
+		}
+	} else {
+		rows, err = s.db.Query(ctx, sql)
+		if err != nil {
+			return nil, failure.New("unable to find courts", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
+		}
 	}
 	defer rows.Close()
 
@@ -88,6 +98,16 @@ func (s *store) findCourts(ctx context.Context) ([]CourtModel, error) {
 	}
 
 	return dest, nil
+}
+
+func (s *store) countCourts(ctx context.Context) (int, error) {
+	var count int
+	sql := `select count(*) from court`
+	err := s.db.QueryRow(ctx, sql).Scan(&count)
+	if err != nil {
+		return 0, failure.New("unable to count courts", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
+	}
+	return count, nil
 }
 
 func (s *store) findCourt(ctx context.Context, courtId string) (*CourtModel, error) {
