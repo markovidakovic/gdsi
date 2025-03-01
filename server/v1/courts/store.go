@@ -72,17 +72,21 @@ func (s *store) findCourts(ctx context.Context, limit, offset int, orderBy *para
 		join account on court.creator_id = account.id
 	`
 
-	if orderBy != nil && params.IsValidSortingField(sortingFields, orderBy.Field) {
+	if orderBy != nil && orderBy.IsValid(sortingFields) {
 		sql += fmt.Sprintf("order by %s %s\n", sortingFields[orderBy.Field], orderBy.Direction)
 	} else {
 		sql += fmt.Sprintln("order by court.created_at desc")
 	}
 
+	var err error
+	var rows pgx.Rows
 	if limit >= 0 {
-		sql += fmt.Sprintf("limit %d offset %d", limit, offset)
+		sql += "limit $1 offset $2"
+		rows, err = s.db.Query(ctx, sql, limit, offset)
+	} else {
+		rows, err = s.db.Query(ctx, sql)
 	}
 
-	rows, err := s.db.Query(ctx, sql)
 	if err != nil {
 		return nil, failure.New("unable to find courts", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}

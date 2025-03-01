@@ -15,11 +15,6 @@ type Query struct {
 	Additional map[string]string
 }
 
-type OrderBy struct {
-	Field     string
-	Direction string
-}
-
 func NewQuery(values url.Values) *Query {
 	q := &Query{}
 
@@ -53,6 +48,28 @@ func NewQuery(values url.Values) *Query {
 	return q
 }
 
+type OrderBy struct {
+	Field     string
+	Direction string
+}
+
+func (ob *OrderBy) IsValid(allowed map[string]string) bool {
+	if ob == nil {
+		return true
+	}
+	valid := false
+	for k := range allowed {
+		if k == ob.Field {
+			valid = true
+			break
+		}
+	}
+	if valid {
+		valid = ob.Direction == "asc" || ob.Direction == "desc"
+	}
+	return valid
+}
+
 func (q *Query) CalcLimitAndOffset(count int) (limit, offset int) {
 	if q.Page > 0 && q.PerPage > 0 {
 		pageCount := pagination.CalcPageCount(count, q.PerPage)
@@ -69,13 +86,4 @@ func (q *Query) CalcLimitAndOffset(count int) (limit, offset int) {
 		q.PerPage = count
 	}
 	return
-}
-
-func IsValidSortingField(allowed map[string]string, field string) bool {
-	for k := range allowed {
-		if k == field {
-			return true
-		}
-	}
-	return false
 }
