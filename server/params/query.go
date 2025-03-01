@@ -26,12 +26,12 @@ func NewQuery(values url.Values) *Query {
 		if pageStr == "" {
 			q.Page = 1
 		} else {
-			q.Page, _ = strconv.Atoi(pageStr)
+			q.Page, _ = strconv.Atoi(pageStr) // already validated in middleware
 		}
 		if perPageStr == "" {
 			q.PerPage = 10
 		} else {
-			q.PerPage, _ = strconv.Atoi(perPageStr)
+			q.PerPage, _ = strconv.Atoi(perPageStr) // already validated in middleware
 		}
 	}
 
