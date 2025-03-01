@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/markovidakovic/gdsi/server/db"
 	"github.com/markovidakovic/gdsi/server/failure"
+	"github.com/markovidakovic/gdsi/server/params"
 )
 
 type store struct {
@@ -18,6 +19,13 @@ func newStore(db *db.Conn) *store {
 	return &store{
 		db,
 	}
+}
+
+var allowedSortFields = map[string]string{
+	"title":      "league.title",
+	"start_date": "league.start_date",
+	"end_date":   "league.end_date",
+	"created_at": "league.created_at",
 }
 
 func (s *store) insertLeague(ctx context.Context, tx pgx.Tx, title string, description *string, creatorId string, seasonId string) (LeagueModel, error) {
@@ -58,7 +66,7 @@ func (s *store) insertLeague(ctx context.Context, tx pgx.Tx, title string, descr
 	return dest, nil
 }
 
-func (s *store) findLeagues(ctx context.Context, seasonId string) ([]LeagueModel, error) {
+func (s *store) findLeagues(ctx context.Context, seasonId string, limit, offset int, sort *params.OrderBy) ([]LeagueModel, error) {
 	sql := `
 		select 
 			league.id,
@@ -73,17 +81,29 @@ func (s *store) findLeagues(ctx context.Context, seasonId string) ([]LeagueModel
 		join season on league.season_id = season.id
 		join account on league.creator_id = account.id
 		where league.season_id = $1
-		order by league.created_at desc
 	`
 
-	dest := []LeagueModel{}
+	if sort != nil && sort.IsValid(allowedSortFields) {
+		sql += fmt.Sprintf("order by %s %s\n", allowedSortFields[sort.Field], sort.Direction)
+	} else {
+		sql += fmt.Sprintln("order by league.created_at desc")
+	}
 
-	rows, err := s.db.Query(ctx, sql, seasonId)
+	var err error
+	var rows pgx.Rows
+	if limit >= 0 {
+		sql += `limit $2 offset $3`
+		rows, err = s.db.Query(ctx, sql, seasonId, limit, offset)
+	} else {
+		rows, err = s.db.Query(ctx, sql, seasonId)
+	}
+
 	if err != nil {
 		return nil, failure.New("unable to find leagues", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 	defer rows.Close()
 
+	dest := []LeagueModel{}
 	for rows.Next() {
 		var lm LeagueModel
 		err := lm.ScanRows(rows)
@@ -99,6 +119,16 @@ func (s *store) findLeagues(ctx context.Context, seasonId string) ([]LeagueModel
 	}
 
 	return dest, nil
+}
+
+func (s *store) countLeagues(ctx context.Context, seasonId string) (int, error) {
+	var count int
+	sql := `select count(*) from league where league.season_id = $1`
+	err := s.db.QueryRow(ctx, sql, seasonId).Scan(&count)
+	if err != nil {
+		return 0, failure.New("unable to count leagues", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
+	}
+	return count, nil
 }
 
 func (s *store) findLeague(ctx context.Context, seasonId, leagueId string) (*LeagueModel, error) {

@@ -11,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/markovidakovic/gdsi/server/config"
 	"github.com/markovidakovic/gdsi/server/failure"
+	"github.com/markovidakovic/gdsi/server/params"
 	"github.com/markovidakovic/gdsi/server/validation"
 )
 
@@ -98,21 +99,28 @@ func (s *service) processCreateMatch(ctx context.Context, model CreateMatchReque
 	return &match, nil
 }
 
-func (s *service) processGetMatches(ctx context.Context, seasonId, leagueId string) ([]MatchModel, error) {
+func (s *service) processGetMatches(ctx context.Context, seasonId, leagueId string, query *params.Query) ([]MatchModel, int, error) {
 	err := s.validator.NewValidation(ctx).
 		SeasonExists(seasonId, "path").
 		LeagueExists(leagueId, "path").LeagueInSeason(seasonId, leagueId, "path").
 		Result()
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	mms, err := s.store.findMatches(ctx, seasonId, leagueId)
+	count, err := s.store.countMatches(ctx, seasonId, leagueId)
 	if err != nil {
-		return nil, err
+		return nil, 0, failure.New("unable to get matches", err)
 	}
 
-	return mms, nil
+	limit, offset := query.CalcLimitAndOffset(count)
+
+	mms, err := s.store.findMatches(ctx, seasonId, leagueId, limit, offset, query.OrderBy)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return mms, count, nil
 }
 
 func (s *service) processGetMatch(ctx context.Context, seasonId, leagueId, matchId string) (*MatchModel, error) {

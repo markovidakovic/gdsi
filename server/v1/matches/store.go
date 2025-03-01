@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/markovidakovic/gdsi/server/db"
 	"github.com/markovidakovic/gdsi/server/failure"
+	"github.com/markovidakovic/gdsi/server/params"
 )
 
 type store struct {
@@ -19,6 +20,10 @@ func newStore(db *db.Conn) *store {
 	return &store{
 		db,
 	}
+}
+
+var allowedSortFields = map[string]string{
+	"created_at": "match.created_at",
 }
 
 func (s *store) insertMatch(ctx context.Context, tx pgx.Tx, courtId, scheduledAt, playerOneId, playerTwoId string, winnerId, score *string, seasonId, leagueId string) (MatchModel, error) {
@@ -75,7 +80,7 @@ func (s *store) insertMatch(ctx context.Context, tx pgx.Tx, courtId, scheduledAt
 	return dest, nil
 }
 
-func (s *store) findMatches(ctx context.Context, seasonId, leagueId string) ([]MatchModel, error) {
+func (s *store) findMatches(ctx context.Context, seasonId, leagueId string, limit, offset int, sort *params.OrderBy) ([]MatchModel, error) {
 	sql := `
 		select
 			match.id,
@@ -105,17 +110,29 @@ func (s *store) findMatches(ctx context.Context, seasonId, leagueId string) ([]M
 		join season on match.season_id = season.id
 		join league on match.league_id = league.id
 		where match.season_id = $1 and match.league_id = $2
-		order by match.created_at desc
 	`
 
-	dest := []MatchModel{}
+	if sort != nil && sort.IsValid(allowedSortFields) {
+		sql += fmt.Sprintf("order by %s %s\n", allowedSortFields[sort.Field], sort.Direction)
+	} else {
+		sql += fmt.Sprintln("order by match.created_at desc")
+	}
 
-	rows, err := s.db.Query(ctx, sql, seasonId, leagueId)
+	var err error
+	var rows pgx.Rows
+	if limit >= 0 {
+		sql += `limit $3 offset $4`
+		rows, err = s.db.Query(ctx, sql, seasonId, leagueId, limit, offset)
+	} else {
+		rows, err = s.db.Query(ctx, sql, seasonId, leagueId)
+	}
+
 	if err != nil {
 		return nil, failure.New("unable to find matches", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 	defer rows.Close()
 
+	dest := []MatchModel{}
 	for rows.Next() {
 		var mm MatchModel
 		err := mm.ScanRows(rows)
@@ -131,6 +148,16 @@ func (s *store) findMatches(ctx context.Context, seasonId, leagueId string) ([]M
 	}
 
 	return dest, nil
+}
+
+func (s *store) countMatches(ctx context.Context, seasonId, leagueId string) (int, error) {
+	var count int
+	sql := `select count(*) from match where season_id = $1 and league_id = $2`
+	err := s.db.QueryRow(ctx, sql, seasonId, leagueId).Scan(&count)
+	if err != nil {
+		return 0, failure.New("unable to count matches", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
+	}
+	return count, nil
 }
 
 func (s *store) findMatch(ctx context.Context, seasonId, leagueId, matchId string) (*MatchModel, error) {

@@ -9,6 +9,8 @@ import (
 	"github.com/markovidakovic/gdsi/server/config"
 	"github.com/markovidakovic/gdsi/server/db"
 	"github.com/markovidakovic/gdsi/server/failure"
+	"github.com/markovidakovic/gdsi/server/pagination"
+	"github.com/markovidakovic/gdsi/server/params"
 	"github.com/markovidakovic/gdsi/server/response"
 )
 
@@ -38,7 +40,9 @@ func newHandler(cfg *config.Config, db *db.Conn) *handler {
 // @Security BearerAuth
 // @Router /v1/players [get]
 func (h *handler) getPlayers(w http.ResponseWriter, r *http.Request) {
-	result, err := h.store.findPlayers(r.Context())
+	query := params.NewQuery(r.URL.Query())
+
+	players, count, err := h.service.processGetPlayers(r.Context(), query)
 	if err != nil {
 		switch f := err.(type) {
 		case *failure.ValidationFailure:
@@ -52,6 +56,8 @@ func (h *handler) getPlayers(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+
+	result := pagination.NewPaginated(query.Page, query.PerPage, count, players)
 
 	response.WriteSuccess(w, http.StatusOK, result)
 }

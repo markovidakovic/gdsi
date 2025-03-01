@@ -9,6 +9,8 @@ import (
 	"github.com/markovidakovic/gdsi/server/config"
 	"github.com/markovidakovic/gdsi/server/db"
 	"github.com/markovidakovic/gdsi/server/failure"
+	"github.com/markovidakovic/gdsi/server/pagination"
+	"github.com/markovidakovic/gdsi/server/params"
 	"github.com/markovidakovic/gdsi/server/response"
 )
 
@@ -81,7 +83,9 @@ func (h *handler) createSeason(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/seasons [get]
 func (h *handler) getSeasons(w http.ResponseWriter, r *http.Request) {
-	result, err := h.store.findSeasons(r.Context())
+	query := params.NewQuery(r.URL.Query())
+
+	seasons, count, err := h.service.processGetSeasons(r.Context(), query)
 	if err != nil {
 		switch f := err.(type) {
 		case *failure.ValidationFailure:
@@ -95,6 +99,8 @@ func (h *handler) getSeasons(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+
+	result := pagination.NewPaginated(query.Page, query.PerPage, count, seasons)
 
 	response.WriteSuccess(w, http.StatusOK, result)
 }

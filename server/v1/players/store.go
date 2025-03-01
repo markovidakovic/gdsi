@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/markovidakovic/gdsi/server/db"
 	"github.com/markovidakovic/gdsi/server/failure"
+	"github.com/markovidakovic/gdsi/server/params"
 )
 
 type store struct {
@@ -20,7 +21,11 @@ func newStore(db *db.Conn) *store {
 	}
 }
 
-func (s *store) findPlayers(ctx context.Context) ([]PlayerModel, error) {
+var allowedSortFields = map[string]string{
+	"created_at": "player.created_at",
+}
+
+func (s *store) findPlayers(ctx context.Context, limit, offset int, sort *params.OrderBy) ([]PlayerModel, error) {
 	sql := `
 		select
 			player.id,
@@ -41,17 +46,29 @@ func (s *store) findPlayers(ctx context.Context) ([]PlayerModel, error) {
 		from player
 		join account on player.account_id = account.id
 		left join league on player.current_league_id = league.id
-		order by player.created_at desc
 	`
 
-	var dest = []PlayerModel{}
+	if sort != nil && sort.IsValid(allowedSortFields) {
+		sql += fmt.Sprintf("order by %s %s\n", allowedSortFields[sort.Field], sort.Direction)
+	} else {
+		sql += fmt.Sprintln("order by player.created_at desc")
+	}
 
-	rows, err := s.db.Query(ctx, sql)
+	var err error
+	var rows pgx.Rows
+	if limit >= 0 {
+		sql += `limit $1 offset $2`
+		rows, err = s.db.Query(ctx, sql, limit, offset)
+	} else {
+		rows, err = s.db.Query(ctx, sql)
+	}
+
 	if err != nil {
 		return nil, failure.New("unable to find players", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 	defer rows.Close()
 
+	var dest = []PlayerModel{}
 	for rows.Next() {
 		var pm PlayerModel
 		err := pm.ScanRows(rows)
@@ -67,6 +84,16 @@ func (s *store) findPlayers(ctx context.Context) ([]PlayerModel, error) {
 	}
 
 	return dest, nil
+}
+
+func (s *store) countPlayers(ctx context.Context) (int, error) {
+	var count int
+	sql := `select count(*) from player`
+	err := s.db.QueryRow(ctx, sql).Scan(&count)
+	if err != nil {
+		return 0, failure.New("unable to count players", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
+	}
+	return count, nil
 }
 
 func (s *store) findPlayer(ctx context.Context, playerId string) (*PlayerModel, error) {

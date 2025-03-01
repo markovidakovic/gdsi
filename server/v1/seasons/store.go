@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/markovidakovic/gdsi/server/db"
 	"github.com/markovidakovic/gdsi/server/failure"
+	"github.com/markovidakovic/gdsi/server/params"
 )
 
 type store struct {
@@ -18,6 +19,10 @@ func newStore(db *db.Conn) *store {
 	return &store{
 		db,
 	}
+}
+
+var allowedSortFields = map[string]string{
+	"created_at": "season.created_at",
 }
 
 func (s *store) insertSeason(ctx context.Context, tx pgx.Tx, model CreateSeasonRequestModel) (SeasonModel, error) {
@@ -50,7 +55,7 @@ func (s *store) insertSeason(ctx context.Context, tx pgx.Tx, model CreateSeasonR
 	return dest, nil
 }
 
-func (s *store) findSeasons(ctx context.Context) ([]SeasonModel, error) {
+func (s *store) findSeasons(ctx context.Context, limit, offset int, sort *params.OrderBy) ([]SeasonModel, error) {
 	sql := `
 		select
 			season.id,
@@ -66,7 +71,21 @@ func (s *store) findSeasons(ctx context.Context) ([]SeasonModel, error) {
 		order by season.created_at desc
 	`
 
-	rows, err := s.db.Query(ctx, sql)
+	if sort != nil && sort.IsValid(allowedSortFields) {
+		sql += fmt.Sprintf("order by %s %s\n", allowedSortFields[sort.Field], sort.Direction)
+	} else {
+		sql += fmt.Sprintln("order by season.created_at desc")
+	}
+
+	var err error
+	var rows pgx.Rows
+	if limit >= 0 {
+		sql += `limit $1 offset $2`
+		rows, err = s.db.Query(ctx, sql, limit, offset)
+	} else {
+		rows, err = s.db.Query(ctx, sql)
+	}
+
 	if err != nil {
 		return nil, failure.New("unable to find seasons", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
@@ -89,6 +108,16 @@ func (s *store) findSeasons(ctx context.Context) ([]SeasonModel, error) {
 	}
 
 	return dest, nil
+}
+
+func (s *store) countSeasons(ctx context.Context) (int, error) {
+	var count int
+	sql := `select count(*) from season`
+	err := s.db.QueryRow(ctx, sql).Scan(&count)
+	if err != nil {
+		return 0, failure.New("unable to count seasons", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
+	}
+	return count, nil
 }
 
 func (s *store) findSeason(ctx context.Context, seasonId string) (*SeasonModel, error) {

@@ -10,6 +10,8 @@ import (
 	"github.com/markovidakovic/gdsi/server/db"
 	"github.com/markovidakovic/gdsi/server/failure"
 	"github.com/markovidakovic/gdsi/server/middleware"
+	"github.com/markovidakovic/gdsi/server/pagination"
+	"github.com/markovidakovic/gdsi/server/params"
 	"github.com/markovidakovic/gdsi/server/response"
 	"github.com/markovidakovic/gdsi/server/validation"
 )
@@ -92,7 +94,9 @@ func (h *handler) createMatch(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /v1/seasons/{season_id}/leagues/{league_id}/matches [get]
 func (h *handler) getMatches(w http.ResponseWriter, r *http.Request) {
-	result, err := h.service.processGetMatches(r.Context(), chi.URLParam(r, "season_id"), chi.URLParam(r, "league_id"))
+	query := params.NewQuery(r.URL.Query())
+
+	matches, count, err := h.service.processGetMatches(r.Context(), chi.URLParam(r, "season_id"), chi.URLParam(r, "league_id"), query)
 	if err != nil {
 		switch f := err.(type) {
 		case *failure.ValidationFailure:
@@ -106,6 +110,8 @@ func (h *handler) getMatches(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+
+	result := pagination.NewPaginated(query.Page, query.PerPage, count, matches)
 
 	response.WriteSuccess(w, http.StatusOK, result)
 }
