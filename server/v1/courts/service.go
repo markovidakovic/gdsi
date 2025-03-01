@@ -5,7 +5,7 @@ import (
 
 	"github.com/markovidakovic/gdsi/server/config"
 	"github.com/markovidakovic/gdsi/server/failure"
-	"github.com/markovidakovic/gdsi/server/pagination"
+	"github.com/markovidakovic/gdsi/server/params"
 )
 
 type service struct {
@@ -20,7 +20,7 @@ func newService(cfg *config.Config, store *store) *service {
 	}
 }
 
-func (s *service) processGetCourts(ctx context.Context, query *pagination.QueryParams) ([]CourtModel, int, error) {
+func (s *service) processGetCourts(ctx context.Context, query *params.Query) ([]CourtModel, int, error) {
 	count, err := s.store.countCourts(ctx)
 	if err != nil {
 		return nil, 0, failure.New("unable to get courts", err)
@@ -28,7 +28,7 @@ func (s *service) processGetCourts(ctx context.Context, query *pagination.QueryP
 
 	limit, offset := query.CalcLimitAndOffset(count)
 
-	result, err := s.store.findCourts(ctx, limit, offset)
+	result, err := s.store.findCourts(ctx, limit, offset, query.OrderBy)
 	if err != nil {
 		return nil, 0, err
 	}

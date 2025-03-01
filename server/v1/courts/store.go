@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/markovidakovic/gdsi/server/db"
 	"github.com/markovidakovic/gdsi/server/failure"
+	"github.com/markovidakovic/gdsi/server/params"
 )
 
 type store struct {
@@ -18,6 +19,11 @@ func newStore(db *db.Conn) *store {
 	return &store{
 		db,
 	}
+}
+
+var sortingFields = map[string]string{
+	"name":       "court.name",
+	"created_at": "court.created_at",
 }
 
 func (s *store) insertCourt(ctx context.Context, tx pgx.Tx, name, creatorId string) (CourtModel, error) {
@@ -54,7 +60,7 @@ func (s *store) insertCourt(ctx context.Context, tx pgx.Tx, name, creatorId stri
 	return dest, nil
 }
 
-func (s *store) findCourts(ctx context.Context, limit, offset int) ([]CourtModel, error) {
+func (s *store) findCourts(ctx context.Context, limit, offset int, orderBy *params.OrderBy) ([]CourtModel, error) {
 	sql := `
 		select 
 			court.id as court_id,
@@ -64,22 +70,21 @@ func (s *store) findCourts(ctx context.Context, limit, offset int) ([]CourtModel
 			court.created_at as court_created_at
 		from court
 		join account on court.creator_id = account.id
-		order by court.created_at desc		
 	`
 
-	var err error
-	var rows pgx.Rows
-	if limit >= 0 {
-		sql += `limit $1 offset $2`
-		rows, err = s.db.Query(ctx, sql, limit, offset)
-		if err != nil {
-			return nil, failure.New("unable to find courts", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
-		}
+	if orderBy != nil && params.IsValidSortingField(sortingFields, orderBy.Field) {
+		sql += fmt.Sprintf("order by %s %s\n", sortingFields[orderBy.Field], orderBy.Direction)
 	} else {
-		rows, err = s.db.Query(ctx, sql)
-		if err != nil {
-			return nil, failure.New("unable to find courts", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
-		}
+		sql += fmt.Sprintln("order by court.created_at desc")
+	}
+
+	if limit >= 0 {
+		sql += fmt.Sprintf("limit %d offset %d", limit, offset)
+	}
+
+	rows, err := s.db.Query(ctx, sql)
+	if err != nil {
+		return nil, failure.New("unable to find courts", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
 	defer rows.Close()
 
