@@ -7,6 +7,8 @@ import (
 	"github.com/markovidakovic/gdsi/server/config"
 	"github.com/markovidakovic/gdsi/server/db"
 	"github.com/markovidakovic/gdsi/server/failure"
+	"github.com/markovidakovic/gdsi/server/pagination"
+	"github.com/markovidakovic/gdsi/server/params"
 	"github.com/markovidakovic/gdsi/server/response"
 	"github.com/markovidakovic/gdsi/server/validation"
 )
@@ -28,8 +30,9 @@ func newHandler(cfg *config.Config, db *db.Conn, validator *validation.Validator
 // @Produce json
 // @Param season_id path string true "season id"
 // @Param league_id path string true "league id"
-// @Param page query int false "Page"
-// @Param per_page query int false "Per page"
+// @Param page query int false "page"
+// @Param per_page query int false "per page"
+// @Param order_by query string false "order by"
 // @Param match_available query bool false "match available"
 // @Success 200 {array} players.PlayerModel "OK"
 // @Failure 400 {object} failure.ValidationFailure "Bad request"
@@ -38,7 +41,9 @@ func newHandler(cfg *config.Config, db *db.Conn, validator *validation.Validator
 // @Security BearerAuth
 // @Router /v1/seasons/{season_id}/leagues/{league_id}/players [get]
 func (h *handler) getLeaguePlayers(w http.ResponseWriter, r *http.Request) {
-	result, err := h.service.processGetLeaguePlayers(r.Context(), chi.URLParam(r, "season_id"), chi.URLParam(r, "league_id"))
+	query := params.NewQuery(r.URL.Query())
+
+	leaguePlayers, count, err := h.service.processGetLeaguePlayers(r.Context(), chi.URLParam(r, "season_id"), chi.URLParam(r, "league_id"), query)
 	if err != nil {
 		switch f := err.(type) {
 		case *failure.ValidationFailure:
@@ -51,6 +56,8 @@ func (h *handler) getLeaguePlayers(w http.ResponseWriter, r *http.Request) {
 			response.WriteFailure(w, failure.New("internal server error", err))
 		}
 	}
+
+	result := pagination.NewPaginated(query.Page, query.PerPage, count, leaguePlayers)
 
 	response.WriteSuccess(w, http.StatusOK, result)
 }

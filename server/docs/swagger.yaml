@@ -1558,14 +1558,18 @@ paths:
         name: league_id
         required: true
         type: string
-      - description: Page
+      - description: page
         in: query
         name: page
         type: integer
-      - description: Per page
+      - description: per page
         in: query
         name: per_page
         type: integer
+      - description: order by
+        in: query
+        name: order_by
+        type: string
       - description: match available
         in: query
         name: match_available

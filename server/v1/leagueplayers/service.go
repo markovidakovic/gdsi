@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/markovidakovic/gdsi/server/config"
 	"github.com/markovidakovic/gdsi/server/failure"
+	"github.com/markovidakovic/gdsi/server/params"
 	"github.com/markovidakovic/gdsi/server/v1/players"
 	"github.com/markovidakovic/gdsi/server/validation"
 )
@@ -26,22 +27,29 @@ func newService(cfg *config.Config, store *store, validator *validation.Validato
 	}
 }
 
-func (s *service) processGetLeaguePlayers(ctx context.Context, seasonId, leagueId string) ([]players.PlayerModel, error) {
+func (s *service) processGetLeaguePlayers(ctx context.Context, seasonId, leagueId string, query *params.Query) ([]players.PlayerModel, int, error) {
 	err := s.validator.NewValidation(ctx).
 		SeasonExists(seasonId, "path").
 		LeagueExists(leagueId, "path").
 		LeagueInSeason(seasonId, leagueId, "path").
 		Result()
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	lps, err := s.store.findLeaguePlayers(ctx, leagueId)
+	count, err := s.store.countLeaguePlayers(ctx, leagueId)
 	if err != nil {
-		return nil, err
+		return nil, 0, failure.New("unable to get league players", err)
 	}
 
-	return lps, nil
+	limit, offset := query.CalcLimitAndOffset(count)
+
+	lps, err := s.store.findLeaguePlayers(ctx, leagueId, limit, offset, query.OrderBy)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return lps, count, nil
 }
 
 func (s *service) processGetLeaguePlayer(ctx context.Context, seasonId, leagueId, playerId string) (*players.PlayerModel, error) {

@@ -1803,14 +1803,20 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "description": "Page",
+                        "description": "page",
                         "name": "page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "description": "Per page",
+                        "description": "per page",
                         "name": "per_page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "order by",
+                        "name": "order_by",
                         "in": "query"
                     },
                     {

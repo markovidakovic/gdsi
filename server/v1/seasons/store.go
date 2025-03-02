@@ -68,7 +68,6 @@ func (s *store) findSeasons(ctx context.Context, limit, offset int, sort *params
 			season.created_at
 		from season
 		join account on season.creator_id = account.id
-		order by season.created_at desc
 	`
 
 	if sort != nil && sort.IsValid(allowedSortFields) {

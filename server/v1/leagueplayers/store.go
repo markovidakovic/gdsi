@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/markovidakovic/gdsi/server/db"
 	"github.com/markovidakovic/gdsi/server/failure"
+	"github.com/markovidakovic/gdsi/server/params"
 	"github.com/markovidakovic/gdsi/server/v1/players"
 )
 
@@ -21,7 +22,11 @@ func newStore(db *db.Conn) *store {
 	}
 }
 
-func (s *store) findLeaguePlayers(ctx context.Context, leagueId string) ([]players.PlayerModel, error) {
+var allowedSortFeilds = map[string]string{
+	"created_at": "player.created_at",
+}
+
+func (s *store) findLeaguePlayers(ctx context.Context, leagueId string, limit, offset int, sort *params.OrderBy) ([]players.PlayerModel, error) {
 	sql := `
 		select
 			player.id,
@@ -43,16 +48,29 @@ func (s *store) findLeaguePlayers(ctx context.Context, leagueId string) ([]playe
 		join account on player.account_id = account.id
 		left join league on player.current_league_id = league.id
 		where player.current_league_id = $1
-		order by player.created_at desc
 	`
 
-	dest := []players.PlayerModel{}
+	if sort != nil && sort.IsValid(allowedSortFeilds) {
+		sql += fmt.Sprintf("order by %s %s\n", allowedSortFeilds[sort.Field], sort.Direction)
+	} else {
+		sql += fmt.Sprintln("order by player.created_at desc")
+	}
 
-	rows, err := s.db.Query(ctx, sql, leagueId)
+	var err error
+	var rows pgx.Rows
+	if limit >= 0 {
+		sql += "limit $2 offset $3"
+		rows, err = s.db.Query(ctx, sql, leagueId, limit, offset)
+	} else {
+		rows, err = s.db.Query(ctx, sql, leagueId)
+	}
+
 	if err != nil {
 		return nil, failure.New("unable to find league players", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
+	defer rows.Close()
 
+	dest := []players.PlayerModel{}
 	for rows.Next() {
 		var pm players.PlayerModel
 		err := pm.ScanRows(rows)
@@ -68,6 +86,16 @@ func (s *store) findLeaguePlayers(ctx context.Context, leagueId string) ([]playe
 	}
 
 	return dest, nil
+}
+
+func (s *store) countLeaguePlayers(ctx context.Context, leagueId string) (int, error) {
+	var count int
+	sql := `select count(*) from player where current_league_id = $1`
+	err := s.db.QueryRow(ctx, sql, leagueId).Scan(&count)
+	if err != nil {
+		return 0, failure.New("unable to count league players", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
+	}
+	return count, nil
 }
 
 func (s *store) findLeaguePlayer(ctx context.Context, leagueId, playerId string) (players.PlayerModel, error) {
