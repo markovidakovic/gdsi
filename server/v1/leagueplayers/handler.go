@@ -7,6 +7,7 @@ import (
 	"github.com/markovidakovic/gdsi/server/config"
 	"github.com/markovidakovic/gdsi/server/db"
 	"github.com/markovidakovic/gdsi/server/failure"
+	"github.com/markovidakovic/gdsi/server/middleware"
 	"github.com/markovidakovic/gdsi/server/pagination"
 	"github.com/markovidakovic/gdsi/server/params"
 	"github.com/markovidakovic/gdsi/server/response"
@@ -41,9 +42,11 @@ func newHandler(cfg *config.Config, db *db.Conn, validator *validation.Validator
 // @Security BearerAuth
 // @Router /v1/seasons/{season_id}/leagues/{league_id}/players [get]
 func (h *handler) getLeaguePlayers(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	requestingPlayerId := ctx.Value(middleware.PlayerIdCtxKey).(string)
 	query := params.NewQuery(r.URL.Query())
 
-	leaguePlayers, count, err := h.service.processGetLeaguePlayers(r.Context(), chi.URLParam(r, "season_id"), chi.URLParam(r, "league_id"), query)
+	leaguePlayers, count, err := h.service.processGetLeaguePlayers(ctx, chi.URLParam(r, "season_id"), chi.URLParam(r, "league_id"), requestingPlayerId, query)
 	if err != nil {
 		switch f := err.(type) {
 		case *failure.ValidationFailure:

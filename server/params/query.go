@@ -16,7 +16,9 @@ type Query struct {
 }
 
 func NewQuery(values url.Values) *Query {
-	q := &Query{}
+	q := &Query{
+		Additional: make(map[string]string),
+	}
 
 	pageStr := values.Get("page")
 	perPageStr := values.Get("per_page")
@@ -45,7 +47,30 @@ func NewQuery(values url.Values) *Query {
 		q.OrderBy = nil
 	}
 
+	// check for additional query params
+	for k, v := range values {
+		if k == "page" || k == "per_page" || k == "order_by" {
+			continue
+		}
+		if len(v) > 0 {
+			q.Additional[k] = v[0]
+		}
+	}
+
 	return q
+}
+
+func (q *Query) GetBool(key string, defaultValue bool) bool {
+	val, ok := q.Additional[key]
+	if ok {
+		if val == "true" {
+			return true
+		}
+		if val == "false" {
+			return false
+		}
+	}
+	return defaultValue
 }
 
 type OrderBy struct {

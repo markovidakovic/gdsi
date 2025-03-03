@@ -26,7 +26,7 @@ var allowedSortFeilds = map[string]string{
 	"created_at": "player.created_at",
 }
 
-func (s *store) findLeaguePlayers(ctx context.Context, leagueId string, limit, offset int, sort *params.OrderBy) ([]players.PlayerModel, error) {
+func (s *store) findLeaguePlayers(ctx context.Context, leagueId string, requestingPlayerId string, matchAvailable bool, limit, offset int, sort *params.OrderBy) ([]players.PlayerModel, error) {
 	sql := `
 		select
 			player.id,
@@ -50,21 +50,44 @@ func (s *store) findLeaguePlayers(ctx context.Context, leagueId string, limit, o
 		where player.current_league_id = $1
 	`
 
+	args := []interface{}{leagueId}
+	argCounter := 2 // starting with $2 since $1 is already used for current_league_id
+
+	if matchAvailable {
+		// exclude the player requesting
+		sql += fmt.Sprintf(" and player.id != $%d", argCounter)
+		args = append(args, requestingPlayerId)
+		argCounter++
+
+		// exclude players who have already played a match with the requesting player
+		sql += fmt.Sprintf(`
+			and not exists (
+				select 1
+				from match
+				where (
+					(match.player_one_id = player.id and match.player_two_id = $%d)
+					or
+					(match.player_one_id = $%d and match.player_two_id = player.id)
+				)
+				and match.league_id = $1
+			)
+		`, argCounter, argCounter)
+		args = append(args, requestingPlayerId)
+		argCounter++
+	}
+
 	if sort != nil && sort.IsValid(allowedSortFeilds) {
 		sql += fmt.Sprintf("order by %s %s\n", allowedSortFeilds[sort.Field], sort.Direction)
 	} else {
 		sql += fmt.Sprintln("order by player.created_at desc")
 	}
 
-	var err error
-	var rows pgx.Rows
 	if limit >= 0 {
-		sql += "limit $2 offset $3"
-		rows, err = s.db.Query(ctx, sql, leagueId, limit, offset)
-	} else {
-		rows, err = s.db.Query(ctx, sql, leagueId)
+		sql += fmt.Sprintf("limit $%d offset $%d", argCounter, argCounter+1)
+		args = append(args, limit, offset)
 	}
 
+	rows, err := s.db.Query(ctx, sql, args...)
 	if err != nil {
 		return nil, failure.New("unable to find league players", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}

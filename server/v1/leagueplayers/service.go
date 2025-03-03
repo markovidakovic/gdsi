@@ -27,7 +27,7 @@ func newService(cfg *config.Config, store *store, validator *validation.Validato
 	}
 }
 
-func (s *service) processGetLeaguePlayers(ctx context.Context, seasonId, leagueId string, query *params.Query) ([]players.PlayerModel, int, error) {
+func (s *service) processGetLeaguePlayers(ctx context.Context, seasonId, leagueId, requestingPlayerId string, query *params.Query) ([]players.PlayerModel, int, error) {
 	err := s.validator.NewValidation(ctx).
 		SeasonExists(seasonId, "path").
 		LeagueExists(leagueId, "path").
@@ -43,8 +43,9 @@ func (s *service) processGetLeaguePlayers(ctx context.Context, seasonId, leagueI
 	}
 
 	limit, offset := query.CalcLimitAndOffset(count)
+	matchAvailable := query.GetBool("match_available", false)
 
-	lps, err := s.store.findLeaguePlayers(ctx, leagueId, limit, offset, query.OrderBy)
+	lps, err := s.store.findLeaguePlayers(ctx, leagueId, requestingPlayerId, matchAvailable, limit, offset, query.OrderBy)
 	if err != nil {
 		return nil, 0, err
 	}
