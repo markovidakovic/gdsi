@@ -13,9 +13,6 @@ import (
 	"github.com/markovidakovic/gdsi/server/sec"
 )
 
-// right now the seed program will focus on seeding accounts but later we might add other resources
-// and before each resource seed we ask if the user wants to seed the resource, if not, move to the next resource
-
 type Account struct {
 	Name        string `json:"name"`
 	Email       string `json:"email"`
@@ -31,10 +28,9 @@ type Court struct {
 }
 
 func main() {
-	var seedAccountsFile string
-	var seedCourtsFile string
-	flag.StringVar(&seedAccountsFile, "accounts-file", "./db/seed/accounts.json", "Path to seed file")
-	flag.StringVar(&seedCourtsFile, "courts-file", "./db/seed/courts.json", "Path to seed file")
+	var accountsFile, courtsFile string
+	flag.StringVar(&accountsFile, "accounts-file", "./db/seed/accounts.json", "Path to seed file")
+	flag.StringVar(&courtsFile, "courts-file", "./db/seed/courts.json", "Path to seed file")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Seed accounts and courts into the database\n")
 		fmt.Fprintf(os.Stderr, "Usage:\n")
@@ -56,11 +52,10 @@ func main() {
 	}
 
 	var confirm string
-	fmt.Printf("Do you want to seed accounts found at %s? (y/n): ", seedAccountsFile)
+	fmt.Printf("Do you want to seed accounts found at %s? (y/n): ", accountsFile)
 	fmt.Scanln(&confirm)
 	if confirm == "y" {
-		// read seed file
-		b, err := os.ReadFile(seedAccountsFile)
+		b, err := os.ReadFile(accountsFile)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -79,10 +74,26 @@ func main() {
 		fmt.Println("accounts seeded!")
 	}
 
-	fmt.Printf("Do you want to seed courts found at %s? (y/n): ", seedCourtsFile)
+	fmt.Printf("Do you want to seed courts found at %s? (y/n): ", courtsFile)
 	fmt.Scanln(&confirm)
 	if confirm == "y" {
-		fmt.Println("seed courts")
+		b, err := os.ReadFile(courtsFile)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		courts := []Court{}
+		err = json.Unmarshal(b, &courts)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = seedCourts(ctx, db, courts)
+		if err != nil {
+			log.Fatalf("seeding courts: %v", err)
+		}
+
+		fmt.Println("courts seeded!")
 	}
 }
 
@@ -132,5 +143,34 @@ func seedAccounts(ctx context.Context, db *db.Conn, data []Account) error {
 }
 
 func seedCourts(ctx context.Context, db *db.Conn, data []Court) error {
+	tx, err := db.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to begin tx: %w", err)
+	}
+	defer tx.Rollback(ctx)
+	// defer func() {
+	// 	err := tx.Rollback(ctx)
+	// 	if err != nil && err != pgx.ErrTxClosed {
+	// 		log.Printf("rollback failed: %v", err)
+	// 	}
+	// }()
+
+	sql := `
+		insert into court (name)
+		values ($1)
+	`
+
+	for _, v := range data {
+		_, err := tx.Exec(ctx, sql, v.Name)
+		if err != nil {
+			return fmt.Errorf("failed to insert court %s -> %w", v.Name, err)
+		}
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to commit tx: %w", err)
+	}
+
 	return nil
 }
