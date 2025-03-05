@@ -1,0 +1,11 @@
+[
+  {
+    "name": "Marko Vidaković",
+    "email": "marko.vidakovic@gmail.com",
+    "dob": "1995-09-04",
+    "gender": "male",
+    "phone_number": "0989559516",
+    "password": "string",
+    "role": "developer"
+  }
+]

@@ -102,13 +102,11 @@ func main() {
 		log.Fatalf("encrypting password: %v", err)
 	}
 
-	// load config
 	cfg, err := config.Load()
 	if err != nil {
 		log.Fatalf("loading config: %v", err)
 	}
 
-	// connect to the db
 	db, err := db.Connect(cfg)
 	if err != nil {
 		log.Fatalf("connecting database: %v", err)
@@ -116,7 +114,6 @@ func main() {
 
 	ctx := context.Background()
 
-	// seed dev account
 	err = seedDeveloperAccount(ctx, db, inp)
 	if err != nil {
 		log.Fatalf("seeding developer account: %v", err)
