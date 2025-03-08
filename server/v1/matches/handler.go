@@ -21,11 +21,15 @@ type handler struct {
 	store   *store
 }
 
-func newHandler(cfg *config.Config, db *db.Conn, validator *validation.Validator) *handler {
+func newHandler(cfg *config.Config, db *db.Conn, validator *validation.Validator) (*handler, error) {
 	h := &handler{}
-	h.store = newStore(db)
+	store, err := newStore(db)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize matches store -> %v", err)
+	}
+	h.store = store
 	h.service = newService(cfg, h.store, validator)
-	return h
+	return h, nil
 }
 
 // @Summary Create

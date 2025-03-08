@@ -2,6 +2,7 @@ package players
 
 import (
 	"context"
+	"embed"
 	"errors"
 	"fmt"
 
@@ -11,14 +12,47 @@ import (
 	"github.com/markovidakovic/gdsi/server/params"
 )
 
+//go:embed queries/*.sql
+var sqlFiles embed.FS
+
 type store struct {
-	db *db.Conn
+	db      *db.Conn
+	queries struct {
+		list     string
+		findById string
+		update   string
+	}
 }
 
-func newStore(db *db.Conn) *store {
-	return &store{
-		db,
+func newStore(db *db.Conn) (*store, error) {
+	s := &store{
+		db: db,
 	}
+	if err := s.loadQueries(); err != nil {
+		return nil, err
+	}
+	return s, nil
+}
+
+func (s *store) loadQueries() error {
+	listBytes, err := sqlFiles.ReadFile("queries/list.sql")
+	if err != nil {
+		return fmt.Errorf("failed to load list.sql -> %w", err)
+	}
+	findByIdBytes, err := sqlFiles.ReadFile("queries/find_by_id.sql")
+	if err != nil {
+		return fmt.Errorf("failed to load find_by_id.sql -> %w", err)
+	}
+	updateBytes, err := sqlFiles.ReadFile("queries/update.sql")
+	if err != nil {
+		return fmt.Errorf("failed to load update.sql -> %w", err)
+	}
+
+	s.queries.list = string(listBytes)
+	s.queries.findById = string(findByIdBytes)
+	s.queries.update = string(updateBytes)
+
+	return nil
 }
 
 var allowedSortFields = map[string]string{
@@ -26,51 +60,19 @@ var allowedSortFields = map[string]string{
 }
 
 func (s *store) findPlayers(ctx context.Context, limit, offset int, sort *params.OrderBy) ([]PlayerModel, error) {
-	sql := `
-		select
-			player.id as player_id,
-			player.height as player_height,
-			player.weight as player_weight,
-			player.handedness as player_handedness,
-			player.racket as player_racket,
-			player.matches_expected as player_matches_expected,
-			player.matches_played as player_matches_played,
-			player.matches_won as player_matches_won,
-			player.matches_scheduled as player_matches_scheduled,
-			player.seasons_played as player.seasons_played,
-			player.elo as player_elo,
-			player.highest_elo as player_highest_elo,
-			player.is_elo_provisional as player_is_elo_provisional,
-			account.id as player_account_id,
-			account.name as player_account_name,
-			current_league.id as player_current_league_id,
-			current_league.tier as player_current_league_tier,
-			current_league.name as player_current_league_name,
-			previous_league.id as player_previous_league_id,
-			previous_league.tier as player_previous_league_tier,
-			previous_league.name as player_previous_league_name,
-			player.previous_league_rank as player_previous_league_rank,
-			player.is_playing_next_season as player_is_playing_next_season,
-			player.created_at as player_created_at
-		from player
-		join account on player.account_id = account.id
-		left join league current_league on player.current_league_id = current_league.id
-		left joint league previous_league on player.previous_league_id = previous_league.id
-	`
-
 	if sort != nil && sort.IsValid(allowedSortFields) {
-		sql += fmt.Sprintf("order by %s %s\n", allowedSortFields[sort.Field], sort.Direction)
+		s.queries.list += fmt.Sprintf("order by %s %s\n", allowedSortFields[sort.Field], sort.Direction)
 	} else {
-		sql += fmt.Sprintln("order by player.created_at desc")
+		s.queries.list += fmt.Sprintln("order by player.created_at desc")
 	}
 
 	var err error
 	var rows pgx.Rows
 	if limit >= 0 {
-		sql += `limit $1 offset $2`
-		rows, err = s.db.Query(ctx, sql, limit, offset)
+		s.queries.list += `limit $1 offset $2`
+		rows, err = s.db.Query(ctx, s.queries.list, limit, offset)
 	} else {
-		rows, err = s.db.Query(ctx, sql)
+		rows, err = s.db.Query(ctx, s.queries.list)
 	}
 
 	if err != nil {
@@ -107,32 +109,8 @@ func (s *store) countPlayers(ctx context.Context) (int, error) {
 }
 
 func (s *store) findPlayer(ctx context.Context, playerId string) (*PlayerModel, error) {
-	sql := `
-		select
-			player.id,
-			player.height,
-			player.weight,
-			player.handedness,
-			player.racket,
-			player.matches_expected,
-			player.matches_played,
-			player.matches_won,
-			player.matches_scheduled,
-			player.seasons_played,
-			account.id as account_id,
-			account.name as account_name,
-			league.id as league_id,
-			league.title as league_title,
-			player.created_at
-		from player
-		join account on player.account_id = account.id
-		left join league on player.current_league_id = league.id
-		where player.id = $1
-	`
-
 	var dest PlayerModel
-
-	row := s.db.QueryRow(ctx, sql, playerId)
+	row := s.db.QueryRow(ctx, s.queries.findById, playerId)
 	err := dest.ScanRow(row)
 	if err != nil {
 		if errors.Is(err, failure.ErrNotFound) {
@@ -152,37 +130,8 @@ func (s *store) updatePlayer(ctx context.Context, tx pgx.Tx, playerId string, mo
 		q = s.db
 	}
 
-	sql := `
-		with updated_player as (
-			update player 
-			set height = $1, weight = $2, handedness = $3, racket = $4
-			where id = $5
-			returning id, height, weight, handedness, racket, matches_expected, matches_played, matches_won, matches_scheduled, seasons_played, account_id, current_league_id, created_at
-		)
-		select 
-			up.id,
-			up.height,
-			up.weight,
-			up.handedness,
-			up.racket,
-			up.matches_expected,
-			up.matches_played,
-			up.matches_won,
-			up.matches_scheduled,
-			up.seasons_played,
-			account.id as account_id,
-			account.name as account_name,
-			league.id as league_id,
-			league.title as league_title,
-			up.created_at
-		from updated_player up
-		join account on up.account_id = account.id
-		left join league on up.current_league_id = league.id
-	`
-
 	var dest PlayerModel
-
-	row := q.QueryRow(ctx, sql, model.Height, model.Weight, model.Handedness, model.Racket, playerId)
+	row := q.QueryRow(ctx, s.queries.update, model.Height, model.Weight, model.Handedness, model.Racket, playerId)
 	err := dest.ScanRow(row)
 	if err != nil {
 		if errors.Is(err, failure.ErrNotFound) {

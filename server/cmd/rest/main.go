@@ -18,7 +18,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("api server failed to start -> %v", err)
 	}
-	srv.MountRouters()
+
+	err = srv.MountRouters()
+	if err != nil {
+		log.Fatalf("api server failed to start -> %v", err)
+	}
 
 	go func() {
 		// run server in a separate goroutine

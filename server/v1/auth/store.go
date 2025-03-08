@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"embed"
 	"errors"
 	"fmt"
 	"time"
@@ -11,24 +12,80 @@ import (
 	"github.com/markovidakovic/gdsi/server/failure"
 )
 
+//go:embed queries/*.sql
+var sqlFiles embed.FS
+
 type store struct {
-	db *db.Conn
+	db      *db.Conn
+	queries struct {
+		insertAccount              string
+		insertPlayer               string
+		findAccountByEmail         string
+		insertRefreshToken         string
+		revokeAccountRefreshTokens string
+		findRefreshTokenByHash     string
+		updateRefreshToken         string
+		revokeRefreshToken         string
+	}
 }
 
-func newStore(db *db.Conn) *store {
-	var r = &store{
-		db,
+func newStore(db *db.Conn) (*store, error) {
+	var s = &store{
+		db: db,
 	}
-	return r
+	if err := s.loadQueries(); err != nil {
+		return nil, err
+	}
+	return s, nil
+}
+
+func (s *store) loadQueries() error {
+	insertAccountBytes, err := sqlFiles.ReadFile("queries/insert_account.sql")
+	if err != nil {
+		return fmt.Errorf("failed to read insert_account.sql file -> %v", err)
+	}
+	insertPlayerBytes, err := sqlFiles.ReadFile("queries/insert_player.sql")
+	if err != nil {
+		return fmt.Errorf("failed to read insert_player.sql file -> %v", err)
+	}
+	findAccountByEmailBytes, err := sqlFiles.ReadFile("queries/find_account_by_email.sql")
+	if err != nil {
+		return fmt.Errorf("failed to read find_account_by_email.sql file -> %v", err)
+	}
+	insertRefreshTokenBytes, err := sqlFiles.ReadFile("queries/insert_refresh_token.sql")
+	if err != nil {
+		return fmt.Errorf("failed to read insert_refresh_token.sql file -> %v", err)
+	}
+	revokeAccountRefreshTokensBytes, err := sqlFiles.ReadFile("queries/revoke_account_refresh_tokens.sql")
+	if err != nil {
+		return fmt.Errorf("failed to read revoke_account_refresh_tokens.sql file -> %v", err)
+	}
+	findRefreshTokenByHashBytes, err := sqlFiles.ReadFile("queries/find_refresh_token_by_hash.sql")
+	if err != nil {
+		return fmt.Errorf("failed to read find_refresh_token_by_hash.sql file -> %v", err)
+	}
+	updateRefreshTokenBytes, err := sqlFiles.ReadFile("queries/update_refresh_token.sql")
+	if err != nil {
+		return fmt.Errorf("failed to read update_refresh_token.sql file -> %v", err)
+	}
+	revokeRefreshTokenBytes, err := sqlFiles.ReadFile("queries/revoke_refresh_token.sql")
+	if err != nil {
+		return fmt.Errorf("failed to read revoke_refresh_token.sql file -> %v", err)
+	}
+
+	s.queries.insertAccount = string(insertAccountBytes)
+	s.queries.insertPlayer = string(insertPlayerBytes)
+	s.queries.findAccountByEmail = string(findAccountByEmailBytes)
+	s.queries.insertRefreshToken = string(insertRefreshTokenBytes)
+	s.queries.revokeAccountRefreshTokens = string(revokeAccountRefreshTokensBytes)
+	s.queries.findRefreshTokenByHash = string(findRefreshTokenByHashBytes)
+	s.queries.updateRefreshToken = string(updateRefreshTokenBytes)
+	s.queries.revokeRefreshToken = string(revokeRefreshTokenBytes)
+
+	return nil
 }
 
 func (s *store) insertAccount(ctx context.Context, tx pgx.Tx, model SignupRequestModel) (AccountModel, error) {
-	sql := `
-		insert into account (name, email, dob, gender, phone_number, password)
-		values ($1, $2, $3, $4, $5, $6)
-		returning id, name, email, dob, gender, phone_number, password, role, NULL as player_id, created_at
-	`
-
 	var q db.Querier
 	if tx != nil {
 		q = tx
@@ -37,7 +94,7 @@ func (s *store) insertAccount(ctx context.Context, tx pgx.Tx, model SignupReques
 	}
 
 	var dest AccountModel
-	row := q.QueryRow(ctx, sql, model.Name, model.Email, model.Dob, model.Gender, model.PhoneNumber, model.Password)
+	row := q.QueryRow(ctx, s.queries.insertAccount, model.Name, model.Email, model.Dob, model.Gender, model.PhoneNumber, model.Password)
 	err := dest.ScanRow(row)
 	if err != nil {
 		return dest, failure.New("failed to insert account", err)
@@ -48,12 +105,6 @@ func (s *store) insertAccount(ctx context.Context, tx pgx.Tx, model SignupReques
 
 // todo: instead of returning string return the full model here
 func (s *store) insertPlayer(ctx context.Context, tx pgx.Tx, accountId string) (string, error) {
-	sql := `
-		insert into player (account_id)
-		values ($1)
-		returning id
-	`
-
 	var q db.Querier
 	if tx != nil {
 		q = tx
@@ -63,7 +114,7 @@ func (s *store) insertPlayer(ctx context.Context, tx pgx.Tx, accountId string) (
 
 	var playerId string
 
-	err := q.QueryRow(ctx, sql, accountId).Scan(&playerId)
+	err := q.QueryRow(ctx, s.queries.insertPlayer, accountId).Scan(&playerId)
 	if err != nil {
 		return "", failure.New("failed to insert player", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
@@ -73,24 +124,6 @@ func (s *store) insertPlayer(ctx context.Context, tx pgx.Tx, accountId string) (
 
 func (s *store) findAccountByEmail(ctx context.Context, tx pgx.Tx, email string) (*AccountModel, error) {
 	var dest AccountModel
-
-	sql := `
-		select 
-			account.id as account_id, 
-			account.name as account_name, 
-			account.email as account_email, 
-			account.dob as account_dob, 
-			account.gender as account_gender, 
-			account.phone_number as account_phone_number, 
-			account.password as account_password, 
-			account.role as account_role, 
-			player.id as player_id, 
-			account.created_at as account_created_at
-		from account
-		left join player on player.account_id = account.id
-		where account.email = $1
-	`
-
 	var q db.Querier
 	if tx != nil {
 		q = tx
@@ -98,7 +131,7 @@ func (s *store) findAccountByEmail(ctx context.Context, tx pgx.Tx, email string)
 		q = s.db
 	}
 
-	row := q.QueryRow(ctx, sql, email)
+	row := q.QueryRow(ctx, s.queries.findAccountByEmail, email)
 	err := dest.ScanRow(row)
 	if err != nil {
 		if errors.Is(err, failure.ErrNotFound) {
@@ -111,12 +144,6 @@ func (s *store) findAccountByEmail(ctx context.Context, tx pgx.Tx, email string)
 }
 
 func (s *store) insertRefreshToken(ctx context.Context, tx pgx.Tx, accountId string, token string, issuedAt, expiresAt time.Time) error {
-	sql := `
-		insert into refresh_token (account_id, token_hash, issued_at, expires_at)
-		values ($1, $2, $3, $4)
-		returning id, account_id, token_hash, device_id, ip_address, user_agent, issued_at, expires_at, last_used_at, is_revoked
-	`
-
 	var q db.Querier
 	if tx != nil {
 		q = tx
@@ -124,7 +151,7 @@ func (s *store) insertRefreshToken(ctx context.Context, tx pgx.Tx, accountId str
 		q = s.db
 	}
 
-	_, err := q.Exec(ctx, sql, accountId, token, issuedAt, expiresAt)
+	_, err := q.Exec(ctx, s.queries.insertRefreshToken, accountId, token, issuedAt, expiresAt)
 	if err != nil {
 		return failure.New("failed to insert refresh token", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
@@ -133,12 +160,6 @@ func (s *store) insertRefreshToken(ctx context.Context, tx pgx.Tx, accountId str
 }
 
 func (s *store) revokeAccountRefreshTokens(ctx context.Context, tx pgx.Tx, accountId string) error {
-	sql := `
-		update refresh_token
-		set is_revoked = true
-		where account_id = $1 and is_revoked = false
-	`
-
 	var q db.Querier
 	if tx != nil {
 		q = tx
@@ -146,7 +167,7 @@ func (s *store) revokeAccountRefreshTokens(ctx context.Context, tx pgx.Tx, accou
 		q = s.db
 	}
 
-	_, err := q.Exec(ctx, sql, accountId)
+	_, err := q.Exec(ctx, s.queries.revokeAccountRefreshTokens, accountId)
 	if err != nil {
 		return failure.New("failed to revoke account refresh tokens", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
@@ -162,29 +183,8 @@ func (s *store) findRefreshTokenByHash(ctx context.Context, tx pgx.Tx, rt string
 		q = s.db
 	}
 
-	sql := `
-		select
-			refresh_token.id,
-			account.id as account_id,
-			account.role as account_role,
-			refresh_token.token_hash,
-			refresh_token.device_id,
-			refresh_token.ip_address,
-			refresh_token.user_agent,
-			refresh_token.issued_at,
-			refresh_token.expires_at,
-			refresh_token.last_used_at,
-			refresh_token.is_revoked,
-			player.id as player_id
-		from refresh_token
-		join account on refresh_token.account_id = account.id
-		join player on account.id = player.account_id
-		where refresh_token.token_hash = $1
-	`
-
 	var dest RefreshTokenModel
-
-	row := q.QueryRow(ctx, sql, rt)
+	row := q.QueryRow(ctx, s.queries.findRefreshTokenByHash, rt)
 	err := dest.ScanRow(row)
 	if err != nil {
 		if errors.Is(err, failure.ErrNotFound) {
@@ -198,12 +198,6 @@ func (s *store) findRefreshTokenByHash(ctx context.Context, tx pgx.Tx, rt string
 
 // todo: refactor this to return a full refresh token model and not just the error
 func (s *store) updateRefreshToken(ctx context.Context, tx pgx.Tx, rtId string) error {
-	sql := `
-		update refresh_token
-		set last_used_at = $1
-		where id = $2
-	`
-
 	var q db.Querier
 	if tx != nil {
 		q = tx
@@ -214,7 +208,7 @@ func (s *store) updateRefreshToken(ctx context.Context, tx pgx.Tx, rtId string) 
 	// last updated
 	lua := time.Now()
 
-	_, err := q.Exec(ctx, sql, lua, rtId)
+	_, err := q.Exec(ctx, s.queries.updateRefreshToken, lua, rtId)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return failure.New("refresh token not found", fmt.Errorf("%w -> %v", failure.ErrNotFound, err))
@@ -226,12 +220,6 @@ func (s *store) updateRefreshToken(ctx context.Context, tx pgx.Tx, rtId string) 
 }
 
 func (s *store) revokeRefreshToken(ctx context.Context, tx pgx.Tx, rtId string) error {
-	sql := `
-		update refresh_token
-		set is_revoked = true
-		where id = $1	
-	`
-
 	var q db.Querier
 	if tx != nil {
 		q = tx
@@ -239,7 +227,7 @@ func (s *store) revokeRefreshToken(ctx context.Context, tx pgx.Tx, rtId string) 
 		q = s.db
 	}
 
-	_, err := q.Exec(ctx, sql, rtId)
+	_, err := q.Exec(ctx, s.queries.revokeRefreshToken, rtId)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return failure.New("refresh token not found", fmt.Errorf("%w -> %v", failure.ErrNotFound, err))

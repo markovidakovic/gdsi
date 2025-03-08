@@ -9,19 +9,21 @@ import (
 	"github.com/markovidakovic/gdsi/server/router"
 )
 
-type api struct {
+type API struct {
 	hdl *handler
 }
 
-var _ router.Mounter = (*api)(nil)
+var _ router.Mounter = (*API)(nil)
 
-func New(cfg *config.Config, db *db.Conn) *api {
-	return &api{
-		hdl: newHandler(cfg, db),
+func NewAPI(cfg *config.Config, db *db.Conn) (*API, error) {
+	h, err := newHandler(cfg, db)
+	if err != nil {
+		return nil, err
 	}
+	return &API{hdl: h}, nil
 }
 
-func (a *api) Mount(r chi.Router) {
+func (a *API) Mount(r chi.Router) {
 	r.With(middleware.RequirePermission(permission.CreateCourt)).Post("/", a.hdl.createCourt)
 	r.With(middleware.URLQueryPaginationParams).Get("/", a.hdl.getCourts)
 	r.With(middleware.URLPathUUIDParams("court_id")).Get("/{court_id}", a.hdl.getCourt)

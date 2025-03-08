@@ -2,6 +2,7 @@ package leagues
 
 import (
 	"context"
+	"embed"
 	"errors"
 	"fmt"
 
@@ -11,14 +12,59 @@ import (
 	"github.com/markovidakovic/gdsi/server/params"
 )
 
+//go:embed queries/*.sql
+var sqlFiles embed.FS
+
 type store struct {
-	db *db.Conn
+	db      *db.Conn
+	queries struct {
+		insert   string
+		list     string
+		findById string
+		update   string
+		delete   string
+	}
 }
 
-func newStore(db *db.Conn) *store {
-	return &store{
-		db,
+func newStore(db *db.Conn) (*store, error) {
+	s := &store{
+		db: db,
 	}
+	if err := s.loadQueries(); err != nil {
+		return nil, err
+	}
+	return s, nil
+}
+
+func (s *store) loadQueries() error {
+	insertBytes, err := sqlFiles.ReadFile("queries/insert.sql")
+	if err != nil {
+		return fmt.Errorf("failed to read insert.sql -> %v", err)
+	}
+	listBytes, err := sqlFiles.ReadFile("queries/list.sql")
+	if err != nil {
+		return fmt.Errorf("failed to read list.sql -> %v", err)
+	}
+	findByIdBytes, err := sqlFiles.ReadFile("queries/find_by_id.sql")
+	if err != nil {
+		return fmt.Errorf("failed to read find_by_id.sql -> %v", err)
+	}
+	updateBytes, err := sqlFiles.ReadFile("queries/update.sql")
+	if err != nil {
+		return fmt.Errorf("failed to read update.sql -> %v", err)
+	}
+	deleteBytes, err := sqlFiles.ReadFile("queries/delete.sql")
+	if err != nil {
+		return fmt.Errorf("failed to read delete.sql -> %v", err)
+	}
+
+	s.queries.insert = string(insertBytes)
+	s.queries.list = string(listBytes)
+	s.queries.findById = string(findByIdBytes)
+	s.queries.update = string(updateBytes)
+	s.queries.delete = string(deleteBytes)
+
+	return nil
 }
 
 var allowedSortFields = map[string]string{
@@ -36,28 +82,8 @@ func (s *store) insertLeague(ctx context.Context, tx pgx.Tx, title string, descr
 		q = s.db
 	}
 
-	sql := `
-		with inserted_league as (
-			insert into league (title, description, season_id, creator_id)
-			values ($1, $2, $3, $4)
-			returning id, title, description, season_id, creator_id, created_at
-		)
-		select
-			il.id,
-			il.title,
-			il.description,
-			season.id as season_id,
-			season.title as season_title,
-			account.id as creator_id,
-			account.name as creator_name,
-			il.created_at
-		from inserted_league il
-		join season on il.season_id = season.id
-		join account on il.creator_id = account.id
-	`
-
 	var dest LeagueModel
-	row := q.QueryRow(ctx, sql, title, description, seasonId, creatorId)
+	row := q.QueryRow(ctx, s.queries.insert, title, description, seasonId, creatorId)
 	err := dest.ScanRow(row)
 	if err != nil {
 		return dest, failure.New("failed to insert league", err)
@@ -67,35 +93,19 @@ func (s *store) insertLeague(ctx context.Context, tx pgx.Tx, title string, descr
 }
 
 func (s *store) findLeagues(ctx context.Context, seasonId string, limit, offset int, sort *params.OrderBy) ([]LeagueModel, error) {
-	sql := `
-		select 
-			league.id,
-			league.title,
-			league.description,
-			season.id as season_id,
-			season.title as season_title,
-			account.id as creator_id,
-			account.name as creator_name,
-			league.created_at
-		from league
-		join season on league.season_id = season.id
-		join account on league.creator_id = account.id
-		where league.season_id = $1
-	`
-
 	if sort != nil && sort.IsValid(allowedSortFields) {
-		sql += fmt.Sprintf("order by %s %s\n", allowedSortFields[sort.Field], sort.Direction)
+		s.queries.list += fmt.Sprintf("order by %s %s\n", allowedSortFields[sort.Field], sort.Direction)
 	} else {
-		sql += fmt.Sprintln("order by league.created_at desc")
+		s.queries.list += fmt.Sprintln("order by league.created_at desc")
 	}
 
 	var err error
 	var rows pgx.Rows
 	if limit >= 0 {
-		sql += `limit $2 offset $3`
-		rows, err = s.db.Query(ctx, sql, seasonId, limit, offset)
+		s.queries.list += `limit $2 offset $3`
+		rows, err = s.db.Query(ctx, s.queries.list, seasonId, limit, offset)
 	} else {
-		rows, err = s.db.Query(ctx, sql, seasonId)
+		rows, err = s.db.Query(ctx, s.queries.list, seasonId)
 	}
 
 	if err != nil {
@@ -132,24 +142,8 @@ func (s *store) countLeagues(ctx context.Context, seasonId string) (int, error) 
 }
 
 func (s *store) findLeague(ctx context.Context, seasonId, leagueId string) (*LeagueModel, error) {
-	sql := `
-		select 
-			league.id,
-			league.title,
-			league.description,
-			season.id as season_id,
-			season.title as season_title,
-			account.id as creator_id,
-			account.name as creator_name,
-			league.created_at
-		from league
-		join season on league.season_id = season.id
-		join account on league.creator_id = account.id
-		where league.season_id = $1 and league.id = $2
-	`
-
 	var dest LeagueModel
-	row := s.db.QueryRow(ctx, sql, seasonId, leagueId)
+	row := s.db.QueryRow(ctx, s.queries.findById, seasonId, leagueId)
 	err := dest.ScanRow(row)
 	if err != nil {
 		if errors.Is(err, failure.ErrNotFound) {
@@ -169,29 +163,8 @@ func (s *store) updateLeague(ctx context.Context, tx pgx.Tx, title string, descr
 		q = s.db
 	}
 
-	sql := `
-		with updated_league as (
-			update league
-			set title = $1, description = $2
-			where id = $3 and season_id = $4
-			returning id, title, description, season_id, creator_id, created_at
-		)
-		select
-			ul.id,
-			ul.title,
-			ul.description,
-			season.id as season_id,
-			season.title as season_title,
-			account.id as creator_id,
-			account.name as creator_name,
-			ul.created_at
-		from updated_league ul
-		join season on ul.season_id = season.id
-		join account on ul.creator_id = account.id
-	`
-
 	var dest LeagueModel
-	row := q.QueryRow(ctx, sql, title, description, leagueId, seasonId)
+	row := q.QueryRow(ctx, s.queries.update, title, description, leagueId, seasonId)
 	err := dest.ScanRow(row)
 	if err != nil {
 		if errors.Is(err, failure.ErrNotFound) {
@@ -211,11 +184,7 @@ func (s *store) deleteLeague(ctx context.Context, tx pgx.Tx, seasonId, leagueId 
 		q = s.db
 	}
 
-	sql := `
-		delete from league where id = $1 and season_id = $2
-	`
-
-	ct, err := q.Exec(ctx, sql, leagueId, seasonId)
+	ct, err := q.Exec(ctx, s.queries.delete, leagueId, seasonId)
 	if err != nil {
 		return failure.New("unable to delete league", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}

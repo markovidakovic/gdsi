@@ -2,6 +2,7 @@ package leagueplayers
 
 import (
 	"context"
+	"embed"
 	"errors"
 	"fmt"
 
@@ -12,14 +13,53 @@ import (
 	"github.com/markovidakovic/gdsi/server/v1/players"
 )
 
+//go:embed queries/*.sql
+var sqlFiles embed.FS
+
 type store struct {
-	db *db.Conn
+	db      *db.Conn
+	queries struct {
+		list                   string
+		findById               string
+		update                 string
+		incrementSeasonsPlayed string
+	}
 }
 
-func newStore(db *db.Conn) *store {
-	return &store{
-		db,
+func newStore(db *db.Conn) (*store, error) {
+	s := &store{
+		db: db,
 	}
+	if err := s.loadQueries(); err != nil {
+		return nil, err
+	}
+	return s, nil
+}
+
+func (s *store) loadQueries() error {
+	listBytes, err := sqlFiles.ReadFile("queries/list.sql")
+	if err != nil {
+		return fmt.Errorf("failed to read list.sql -> %v", err)
+	}
+	findByIdBytes, err := sqlFiles.ReadFile("queries/find_by_id.sql")
+	if err != nil {
+		return fmt.Errorf("failed to read find_by_id.sql -> %v", err)
+	}
+	updateBytes, err := sqlFiles.ReadFile("queries/update_current_league.sql")
+	if err != nil {
+		return fmt.Errorf("failed to read update.sql -> %v", err)
+	}
+	incrementSeasonsPlayedBytes, err := sqlFiles.ReadFile("queries/increment_seasons_played.sql")
+	if err != nil {
+		return fmt.Errorf("failed to read increment_seasons_played.sql -> %v", err)
+	}
+
+	s.queries.list = string(listBytes)
+	s.queries.findById = string(findByIdBytes)
+	s.queries.update = string(updateBytes)
+	s.queries.incrementSeasonsPlayed = string(incrementSeasonsPlayedBytes)
+
+	return nil
 }
 
 var allowedSortFeilds = map[string]string{
@@ -27,40 +67,17 @@ var allowedSortFeilds = map[string]string{
 }
 
 func (s *store) findLeaguePlayers(ctx context.Context, leagueId string, requestingPlayerId string, matchAvailable bool, limit, offset int, sort *params.OrderBy) ([]players.PlayerModel, error) {
-	sql := `
-		select
-			player.id,
-			player.height,
-			player.weight,
-			player.handedness,
-			player.racket,
-			player.matches_expected,
-			player.matches_played,
-			player.matches_won,
-			player.matches_scheduled,
-			player.seasons_played,
-			account.id as account_id,
-			account.name as account_name,
-			league.id as current_league_id,
-			league.title as current_league_title,
-			player.created_at
-		from player
-		join account on player.account_id = account.id
-		left join league on player.current_league_id = league.id
-		where player.current_league_id = $1
-	`
-
 	args := []interface{}{leagueId}
 	argCounter := 2 // starting with $2 since $1 is already used for current_league_id
 
 	if matchAvailable {
 		// exclude the player requesting
-		sql += fmt.Sprintf(" and player.id != $%d", argCounter)
+		s.queries.list += fmt.Sprintf(" and player.id != $%d", argCounter)
 		args = append(args, requestingPlayerId)
 		argCounter++
 
 		// exclude players who have already played a match with the requesting player
-		sql += fmt.Sprintf(`
+		s.queries.list += fmt.Sprintf(`
 			and not exists (
 				select 1
 				from match
@@ -77,17 +94,17 @@ func (s *store) findLeaguePlayers(ctx context.Context, leagueId string, requesti
 	}
 
 	if sort != nil && sort.IsValid(allowedSortFeilds) {
-		sql += fmt.Sprintf("order by %s %s\n", allowedSortFeilds[sort.Field], sort.Direction)
+		s.queries.list += fmt.Sprintf("order by %s %s\n", allowedSortFeilds[sort.Field], sort.Direction)
 	} else {
-		sql += fmt.Sprintln("order by player.created_at desc")
+		s.queries.list += fmt.Sprintln("order by player.created_at desc")
 	}
 
 	if limit >= 0 {
-		sql += fmt.Sprintf("limit $%d offset $%d", argCounter, argCounter+1)
+		s.queries.list += fmt.Sprintf("limit $%d offset $%d", argCounter, argCounter+1)
 		args = append(args, limit, offset)
 	}
 
-	rows, err := s.db.Query(ctx, sql, args...)
+	rows, err := s.db.Query(ctx, s.queries.list, args...)
 	if err != nil {
 		return nil, failure.New("unable to find league players", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
@@ -123,31 +140,7 @@ func (s *store) countLeaguePlayers(ctx context.Context, leagueId string) (int, e
 
 func (s *store) findLeaguePlayer(ctx context.Context, leagueId, playerId string) (players.PlayerModel, error) {
 	var dest players.PlayerModel
-
-	sql := `
-		select 
-			player.id,
-			player.height,
-			player.weight,
-			player.handedness,
-			player.racket,
-			player.matches_expected,
-			player.matches_played,
-			player.matches_won,
-			player.matches_scheduled,
-			player.seasons_played,
-			account.id as account_id,
-			account.name as account_name,
-			league.id as current_league_id,
-			league.title as current_league_title,
-			player.created_at
-		from player
-		join account on player.account_id = account.id
-		left join league on player.current_league_id = league.id
-		where player.id = $1 and player.current_league_id = $2
-	`
-
-	row := s.db.QueryRow(ctx, sql, playerId, leagueId)
+	row := s.db.QueryRow(ctx, s.queries.findById, playerId, leagueId)
 	err := dest.ScanRow(row)
 	if err != nil {
 		if errors.Is(err, failure.ErrNotFound) {
@@ -167,38 +160,8 @@ func (s *store) updatePlayerCurrentLeague(ctx context.Context, tx pgx.Tx, league
 		q = s.db
 	}
 
-	sql := `
-		with updated_player as (
-			update player
-			set 
-				current_league_id = $1
-			where id = $2
-			returning id, height, weight, handedness, racket, matches_expected, matches_played, matches_won, matches_scheduled, seasons_played, account_id, current_league_id, created_at
-		)
-		select
-			up.id as player_id,
-			up.height as player_height,
-			up.weight as player_weight,
-			up.handedness as player_handedness,
-			up.racket as player_racket,
-			up.matches_expected as player_matches_expected,
-			up.matches_played as player_matches_played,
-			up.matches_won as player_matches_won,
-			up.matches_scheduled as player_matches_scheduled,
-			up.seasons_played as player_seasons_played,
-			account.id as player_account_id,
-			account.name as player_account_name,
-			league.id as player_current_league_id,
-			league.title as player_current_league_title,
-			up.created_at
-		from updated_player up
-		join account on up.account_id = account.id
-		left join league on up.current_league_id = league.id
-	`
-
 	var dest players.PlayerModel
-
-	row := q.QueryRow(ctx, sql, leagueId, playerId)
+	row := q.QueryRow(ctx, s.queries.update, leagueId, playerId)
 	err := dest.ScanRow(row)
 	if err != nil {
 		if errors.Is(err, failure.ErrNotFound) {
@@ -218,37 +181,8 @@ func (s *store) incrementPlayerSeasonsPlayed(ctx context.Context, tx pgx.Tx, lea
 		q = s.db
 	}
 
-	sql := `
-		with updated_player as (
-			update player
-			set
-				seasons_played = seasons_played + 1
-			where id = $1 and current_league_id = $2
-			returning id, height, weight, handedness, racket, matches_expected, matches_played, matches_won, matches_scheduled, seasons_played, account_id, current_league_id, created_at
-		)
-		select
-			up.id as player_id,
-			up.height as player_height,
-			up.weight as player_weight,
-			up.handedness as player_handedness,
-			up.racket as player_racket,
-			up.matches_expected as player_matches_expected,
-			up.matches_played as player_matches_played,
-			up.matches_won as player_matches_won,
-			up.matches_scheduled as player_matches_scheduled,
-			up.seasons_played as player_seasons_played,
-			account.id as player_account_id,
-			account.name as player_account_name,
-			league.id as player_current_league_id,
-			league.title as player_current_league_title,
-			up.created_at as player_created_at
-		from updated_player up
-		join account on up.account_id = account.id
-		left join league on up.current_league_id = league.id
-	`
-
 	var dest players.PlayerModel
-	row := q.QueryRow(ctx, sql, playerId, leagueId)
+	row := q.QueryRow(ctx, s.queries.incrementSeasonsPlayed, playerId, leagueId)
 	err := dest.ScanRow(row)
 	if err != nil {
 		if errors.Is(err, failure.ErrNotFound) {

@@ -20,11 +20,15 @@ type handler struct {
 	service *service
 }
 
-func newHandler(cfg *config.Config, db *db.Conn) *handler {
+func newHandler(cfg *config.Config, db *db.Conn) (*handler, error) {
 	h := &handler{}
-	h.store = newStore(db)
+	store, err := newStore(db)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize the courts store -> %v", err)
+	}
+	h.store = store
 	h.service = newService(cfg, h.store)
-	return h
+	return h, nil
 }
 
 // @Summary Create

@@ -7,19 +7,23 @@ import (
 	"github.com/markovidakovic/gdsi/server/router"
 )
 
-type api struct {
+type API struct {
 	hdl *handler
 }
 
-var _ router.Mounter = (*api)(nil)
+var _ router.Mounter = (*API)(nil)
 
-func New(cfg *config.Config, db *db.Conn) *api {
-	return &api{
-		hdl: newHandler(cfg, db),
+func NewAPI(cfg *config.Config, db *db.Conn) (*API, error) {
+	h, err := newHandler(cfg, db)
+	if err != nil {
+		return nil, err
 	}
+	return &API{
+		hdl: h,
+	}, nil
 }
 
-func (a *api) Mount(r chi.Router) {
+func (a *API) Mount(r chi.Router) {
 	r.Post("/signup", a.hdl.signup)
 	r.Post("/tokens/access", a.hdl.login)
 	r.Post("/tokens/refresh", a.hdl.refreshToken)

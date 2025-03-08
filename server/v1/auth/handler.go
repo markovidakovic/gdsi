@@ -15,11 +15,14 @@ type handler struct {
 	service *service
 }
 
-func newHandler(cfg *config.Config, db *db.Conn) *handler {
+func newHandler(cfg *config.Config, db *db.Conn) (*handler, error) {
 	h := &handler{}
-	store := newStore(db)
+	store, err := newStore(db)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize auth store -> %v", err)
+	}
 	h.service = newService(cfg, store)
-	return h
+	return h, nil
 }
 
 // @Summary Signup

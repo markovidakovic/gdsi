@@ -9,19 +9,21 @@ import (
 	"github.com/markovidakovic/gdsi/server/validation"
 )
 
-type api struct {
+type API struct {
 	hdl *handler
 }
 
-var _ router.Mounter = (*api)(nil)
+var _ router.Mounter = (*API)(nil)
 
-func New(cfg *config.Config, db *db.Conn, validator *validation.Validator) *api {
-	return &api{
-		hdl: newHandler(cfg, db, validator),
+func NewAPI(cfg *config.Config, db *db.Conn, validator *validation.Validator) (*API, error) {
+	h, err := newHandler(cfg, db, validator)
+	if err != nil {
+		return nil, err
 	}
+	return &API{hdl: h}, nil
 }
 
-func (a *api) Mount(r chi.Router) {
+func (a *API) Mount(r chi.Router) {
 	r.With(middleware.URLPathUUIDParams("season_id", "league_id")).Post("/", a.hdl.createMatch)
 	r.With(middleware.URLPathUUIDParams("season_id", "league_id")).With(middleware.URLQueryPaginationParams).Get("/", a.hdl.getMatches)
 	r.With(middleware.URLPathUUIDParams("season_id", "league_id", "match_id")).Get("/{match_id}", a.hdl.getMatch)

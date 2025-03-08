@@ -2,6 +2,7 @@ package seasons
 
 import (
 	"context"
+	"embed"
 	"errors"
 	"fmt"
 
@@ -11,14 +12,59 @@ import (
 	"github.com/markovidakovic/gdsi/server/params"
 )
 
+//go:embed queries/*.sql
+var sqlFiles embed.FS
+
 type store struct {
-	db *db.Conn
+	db      *db.Conn
+	queries struct {
+		insert   string
+		list     string
+		findById string
+		update   string
+		delete   string
+	}
 }
 
-func newStore(db *db.Conn) *store {
-	return &store{
-		db,
+func newStore(db *db.Conn) (*store, error) {
+	s := &store{
+		db: db,
 	}
+	if err := s.loadQueries(); err != nil {
+		return nil, err
+	}
+	return s, nil
+}
+
+func (s *store) loadQueries() error {
+	insertBytes, err := sqlFiles.ReadFile("queries/insert.sql")
+	if err != nil {
+		return fmt.Errorf("failed to read insert.sql file -> %v", err)
+	}
+	listBytes, err := sqlFiles.ReadFile("queries/list.sql")
+	if err != nil {
+		return fmt.Errorf("failed to read list.sql file -> %v", err)
+	}
+	findByIdBytes, err := sqlFiles.ReadFile("queries/find_by_id.sql")
+	if err != nil {
+		return fmt.Errorf("failed to read find_by_id.sql file -> %v", err)
+	}
+	updateBytes, err := sqlFiles.ReadFile("queries/update.sql")
+	if err != nil {
+		return fmt.Errorf("failed to read update.sql file -> %v", err)
+	}
+	deleteBytes, err := sqlFiles.ReadFile("queries/delete.sql")
+	if err != nil {
+		return fmt.Errorf("failed to read delete.sql file -> %v", err)
+	}
+
+	s.queries.insert = string(insertBytes)
+	s.queries.list = string(listBytes)
+	s.queries.findById = string(findByIdBytes)
+	s.queries.update = string(updateBytes)
+	s.queries.delete = string(deleteBytes)
+
+	return nil
 }
 
 var allowedSortFields = map[string]string{
@@ -33,20 +79,8 @@ func (s *store) insertSeason(ctx context.Context, tx pgx.Tx, model CreateSeasonR
 		q = s.db
 	}
 
-	sql := `
-		with inserted_season as (
-			insert into season (title, description, start_date, end_date, creator_id)
-			values ($1, $2, $3, $4, $5)
-			returning id, title, description, start_date, end_date, creator_id, created_at
-		)
-		select s.id, s.title, s.description, s.start_date, s.end_date, account.id as creator_id, account.name as creator_name, s.created_at
-		from inserted_season s
-		join account on s.creator_id = account.id
-	`
-
 	var dest SeasonModel
-
-	row := q.QueryRow(ctx, sql, model.Title, model.Description, model.StartDate, model.EndDate, model.CreatorId)
+	row := q.QueryRow(ctx, s.queries.insert, model.Title, model.Description, model.StartDate, model.EndDate, model.CreatorId)
 	err := dest.ScanRow(row)
 	if err != nil {
 		return dest, failure.New("failed to insert season", err)
@@ -56,33 +90,19 @@ func (s *store) insertSeason(ctx context.Context, tx pgx.Tx, model CreateSeasonR
 }
 
 func (s *store) findSeasons(ctx context.Context, limit, offset int, sort *params.OrderBy) ([]SeasonModel, error) {
-	sql := `
-		select
-			season.id,
-			season.title,
-			season.description,
-			season.start_date,
-			season.end_date,
-			account.id as creator_id,
-			account.name as creator_name,
-			season.created_at
-		from season
-		join account on season.creator_id = account.id
-	`
-
 	if sort != nil && sort.IsValid(allowedSortFields) {
-		sql += fmt.Sprintf("order by %s %s\n", allowedSortFields[sort.Field], sort.Direction)
+		s.queries.list += fmt.Sprintf("order by %s %s\n", allowedSortFields[sort.Field], sort.Direction)
 	} else {
-		sql += fmt.Sprintln("order by season.created_at desc")
+		s.queries.list += fmt.Sprintln("order by season.created_at desc")
 	}
 
 	var err error
 	var rows pgx.Rows
 	if limit >= 0 {
-		sql += `limit $1 offset $2`
-		rows, err = s.db.Query(ctx, sql, limit, offset)
+		s.queries.list += `limit $1 offset $2`
+		rows, err = s.db.Query(ctx, s.queries.list, limit, offset)
 	} else {
-		rows, err = s.db.Query(ctx, sql)
+		rows, err = s.db.Query(ctx, s.queries.list)
 	}
 
 	if err != nil {
@@ -120,24 +140,8 @@ func (s *store) countSeasons(ctx context.Context) (int, error) {
 }
 
 func (s *store) findSeason(ctx context.Context, seasonId string) (*SeasonModel, error) {
-	sql := `
-		select
-			season.id,
-			season.title,
-			season.description,
-			season.start_date,
-			season.end_date,
-			account.id as creator_id,
-			account.name as creator_name,
-			season.created_at
-		from season
-		join account on season.creator_id = account.id
-		where season.id = $1
-	`
-
 	var dest SeasonModel
-
-	row := s.db.QueryRow(ctx, sql, seasonId)
+	row := s.db.QueryRow(ctx, s.queries.findById, seasonId)
 	err := dest.ScanRow(row)
 	if err != nil {
 		if errors.Is(err, failure.ErrNotFound) {
@@ -157,29 +161,8 @@ func (s *store) updateSeason(ctx context.Context, tx pgx.Tx, seasonId string, mo
 		q = s.db
 	}
 
-	sql := `
-		with updated_season as (
-			update season 
-			set title = $1, description = $2, start_date = $3, end_date = $4
-			where id = $5
-			returning id, title, description, start_date, end_date, creator_id, created_at
-		)
-		select 
-			us.id as season_id,
-			us.title as season_title,
-			us.description as season_description,
-			us.start_date as season_start_date,
-			us.end_date as season_end_date,
-			account.id as creator_id,
-			account.name as creator_name,
-			us.created_at as season_created_at
-		from updated_season us
-		join account on us.creator_id = account.id
-	`
-
 	var dest SeasonModel
-
-	row := q.QueryRow(ctx, sql, model.Title, model.Description, model.StartDate, model.EndDate, seasonId)
+	row := q.QueryRow(ctx, s.queries.update, model.Title, model.Description, model.StartDate, model.EndDate, seasonId)
 	err := dest.ScanRow(row)
 	if err != nil {
 		if errors.Is(err, failure.ErrNotFound) {
@@ -199,11 +182,7 @@ func (s *store) deleteSeason(ctx context.Context, tx pgx.Tx, seasonId string) er
 		q = s.db
 	}
 
-	sql := `
-		delete from season where id = $1
-	`
-
-	ct, err := q.Exec(ctx, sql, seasonId)
+	ct, err := q.Exec(ctx, s.queries.delete, seasonId)
 	if err != nil {
 		return failure.New("unable to delete season", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}

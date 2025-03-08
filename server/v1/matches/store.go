@@ -3,6 +3,7 @@ package matches
 import (
 	"context"
 	"database/sql"
+	"embed"
 	"errors"
 	"fmt"
 
@@ -12,14 +13,77 @@ import (
 	"github.com/markovidakovic/gdsi/server/params"
 )
 
+//go:embed queries/*.sql
+var sqlFiles embed.FS
+
 type store struct {
-	db *db.Conn
+	db      *db.Conn
+	queries struct {
+		insert                          string
+		list                            string
+		findById                        string
+		update                          string
+		updatePlayerStatistics          string
+		incrementPlayerMatchesScheduled string
+		updateStanding                  string
+		updateScore                     string
+	}
 }
 
-func newStore(db *db.Conn) *store {
-	return &store{
-		db,
+func newStore(db *db.Conn) (*store, error) {
+	s := &store{
+		db: db,
 	}
+	if err := s.loadQueries(); err != nil {
+		return nil, err
+	}
+	return s, nil
+}
+
+func (s *store) loadQueries() error {
+	insertBytes, err := sqlFiles.ReadFile("queries/insert.sql")
+	if err != nil {
+		return fmt.Errorf("failed to read insert.sql -> %v", err)
+	}
+	listBytes, err := sqlFiles.ReadFile("queries/list.sql")
+	if err != nil {
+		return fmt.Errorf("failed to read list.sql -> %v", err)
+	}
+	findByIdBytes, err := sqlFiles.ReadFile("queries/find_by_id.sql")
+	if err != nil {
+		return fmt.Errorf("failed to read find_by_id.sql -> %v", err)
+	}
+	updateBytes, err := sqlFiles.ReadFile("queries/update.sql")
+	if err != nil {
+		return fmt.Errorf("failed to read update.sql -> %v", err)
+	}
+	updatePlayerStatisticsBytes, err := sqlFiles.ReadFile("queries/update_player_statistics.sql")
+	if err != nil {
+		return fmt.Errorf("failed to read update_player_statistics.sql -> %v", err)
+	}
+	incrementPlayerMatchesScheduledBytes, err := sqlFiles.ReadFile("queries/increment_player_matches_scheduled.sql")
+	if err != nil {
+		return fmt.Errorf("failed to read increment_player_matches_scheduled.sql -> %v", err)
+	}
+	updateStandingBytes, err := sqlFiles.ReadFile("queries/update_standing.sql")
+	if err != nil {
+		return fmt.Errorf("failed to read update_standing.sql -> %v", err)
+	}
+	updateScoreBytes, err := sqlFiles.ReadFile("queries/update_score.sql")
+	if err != nil {
+		return fmt.Errorf("failed to read update_score.sql -> %v", err)
+	}
+
+	s.queries.insert = string(insertBytes)
+	s.queries.list = string(listBytes)
+	s.queries.findById = string(findByIdBytes)
+	s.queries.update = string(updateBytes)
+	s.queries.updatePlayerStatistics = string(updatePlayerStatisticsBytes)
+	s.queries.incrementPlayerMatchesScheduled = string(incrementPlayerMatchesScheduledBytes)
+	s.queries.updateStanding = string(updateStandingBytes)
+	s.queries.updateScore = string(updateScoreBytes)
+
+	return nil
 }
 
 var allowedSortFields = map[string]string{
@@ -34,44 +98,9 @@ func (s *store) insertMatch(ctx context.Context, tx pgx.Tx, courtId, scheduledAt
 		q = s.db
 	}
 
-	sql := `
-		with inserted_match as (
-			insert into match (court_id, scheduled_at, player_one_id, player_two_id, winner_id, score, season_id, league_id, creator_id)
-			values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-			returning id, court_id, scheduled_at, player_one_id, player_two_id, winner_id, score, season_id, league_id, created_at
-		)
-		select
-			im.id,
-			court.id as court_id,
-			court.name as court_name,
-			im.scheduled_at,
-			player1.id as player_one_id,
-			account1.name as player_one_name,
-			player2.id as player_two_id,
-			account2.name as player_two_name,
-			winner.id as winner_id,
-			account3.name as winner_name,
-			im.score,
-			season.id as season_id,
-			season.title as season_title,
-			league.id as league_id,
-			league.title as league_title,
-			im.created_at
-		from inserted_match im
-		join court on im.court_id = court.id
-		join player player1 on im.player_one_id = player1.id
-		join account account1 on player1.account_id = account1.id
-		join player player2 on im.player_two_id = player2.id
-		join account account2 on player2.account_id = account2.id
-		left join player winner on im.winner_id = winner.id
-		left join account account3 on winner.account_id = account3.id
-		join season on im.season_id = season.id
-		join league on im.league_id = league.id
-	`
-
 	var dest MatchModel
 
-	row := q.QueryRow(ctx, sql, courtId, scheduledAt, playerOneId, playerTwoId, winnerId, score, seasonId, leagueId, playerOneId)
+	row := q.QueryRow(ctx, s.queries.insert, courtId, scheduledAt, playerOneId, playerTwoId, winnerId, score, seasonId, leagueId, playerOneId)
 	err := dest.ScanRow(row)
 	if err != nil {
 		return dest, failure.New("unable to insert match", err)
@@ -81,50 +110,19 @@ func (s *store) insertMatch(ctx context.Context, tx pgx.Tx, courtId, scheduledAt
 }
 
 func (s *store) findMatches(ctx context.Context, seasonId, leagueId string, limit, offset int, sort *params.OrderBy) ([]MatchModel, error) {
-	sql := `
-		select
-			match.id,
-			court.id as court_id,
-			court.name as court_name,
-			match.scheduled_at,
-			player1.id as player_one_id,
-			account1.name as player_one_name,
-			player2.id as player_two_id,
-			account2.name as player_two_name,
-			winner.id as winner_id,
-			account3.name as winner_name,
-			match.score,
-			season.id as season_id,
-			season.title as season_title,
-			league.id as league_id,
-			league.title as league_title,
-			match.created_at
-		from match
-		join court on match.court_id = court.id
-		join player player1 on match.player_one_id = player1.id
-		join account account1 on player1.account_id = account1.id
-		join player player2 on match.player_two_id = player2.id
-		join account account2 on player2.account_id = account2.id
-		left join player winner on match.winner_id = winner.id
-		left join account account3 on winner.account_id = account3.id
-		join season on match.season_id = season.id
-		join league on match.league_id = league.id
-		where match.season_id = $1 and match.league_id = $2
-	`
-
 	if sort != nil && sort.IsValid(allowedSortFields) {
-		sql += fmt.Sprintf("order by %s %s\n", allowedSortFields[sort.Field], sort.Direction)
+		s.queries.list += fmt.Sprintf("order by %s %s\n", allowedSortFields[sort.Field], sort.Direction)
 	} else {
-		sql += fmt.Sprintln("order by match.created_at desc")
+		s.queries.list += fmt.Sprintln("order by match.created_at desc")
 	}
 
 	var err error
 	var rows pgx.Rows
 	if limit >= 0 {
-		sql += `limit $3 offset $4`
-		rows, err = s.db.Query(ctx, sql, seasonId, leagueId, limit, offset)
+		s.queries.list += `limit $3 offset $4`
+		rows, err = s.db.Query(ctx, s.queries.list, seasonId, leagueId, limit, offset)
 	} else {
-		rows, err = s.db.Query(ctx, sql, seasonId, leagueId)
+		rows, err = s.db.Query(ctx, s.queries.list, seasonId, leagueId)
 	}
 
 	if err != nil {
@@ -161,40 +159,8 @@ func (s *store) countMatches(ctx context.Context, seasonId, leagueId string) (in
 }
 
 func (s *store) findMatch(ctx context.Context, seasonId, leagueId, matchId string) (*MatchModel, error) {
-	sql := `
-		select
-			match.id,
-			court.id as court_id,
-			court.name as court_name,
-			match.scheduled_at,
-			player1.id as player_one_id,
-			account1.name as player_one_name,
-			player2.id as player_two_id,
-			account2.name as player_two_name,
-			winner.id as winner_id,
-			account3.name as winner_name,
-			match.score,
-			season.id as season_id,
-			season.title as season_title,
-			league.id as league_id,
-			league.title as league_title,
-			match.created_at
-		from match
-		join court on match.court_id = court.id
-		join player player1 on match.player_one_id = player1.id
-		join account account1 on player1.account_id = account1.id
-		join player player2 on match.player_two_id = player2.id
-		join account account2 on player2.account_id = account2.id
-		left join player winner on match.winner_id = winner.id
-		left join account account3 on winner.account_id = account3.id
-		join season on match.season_id = season.id
-		join league on match.league_id = league.id
-		where match.id = $1 and match.season_id = $2 and match.league_id = $3
-	`
-
 	var dest MatchModel
-
-	row := s.db.QueryRow(ctx, sql, matchId, seasonId, leagueId)
+	row := s.db.QueryRow(ctx, s.queries.findById, matchId, seasonId, leagueId)
 	err := dest.ScanRow(row)
 	if err != nil {
 		if errors.Is(err, failure.ErrNotFound) {
@@ -214,45 +180,8 @@ func (s *store) updateMatch(ctx context.Context, tx pgx.Tx, courtId, scheduledAt
 		q = s.db
 	}
 
-	sql := `
-		with updated_match as (
-			update match 
-			set court_id = $1, scheduled_at = $2, player_two_id = $3
-			where id = $4 and season_id = $5 and league_id = $6
-			returning id, court_id, scheduled_at, player_one_id, player_two_id, winner_id, score, season_id, league_id, created_at
-		)
-		select
-			um.id,
-			court.id as court_id,
-			court.name as court_name,
-			um.scheduled_at,
-			player1.id as player_one_id,
-			account1.name as player_one_name,
-			player2.id as player_two_id,
-			account2.name as player_two_name,
-			winner.id as winner_id,
-			account3.name as winner_name,
-			um.score,
-			season.id as season_id,
-			season.title as season_title,
-			league.id as league_id,
-			league.title as league_title,
-			um.created_at
-		from updated_match um
-		join court on um.court_id = court.id
-		join player player1 on um.player_one_id = player1.id
-		join account account1 on player1.account_id = account1.id
-		join player player2 on um.player_two_id = player2.id
-		join account account2 on player2.account_id = account2.id
-		left join player winner on um.winner_id = winner.id
-		left join account account3 on winner.account_id = account3.id
-		join season on um.season_id = season.id
-		join league on um.league_id = league.id
-	`
-
 	var dest MatchModel
-
-	row := q.QueryRow(ctx, sql, courtId, scheduledAt, playerTwoId, matchId, seasonId, leagueId)
+	row := q.QueryRow(ctx, s.queries.update, courtId, scheduledAt, playerTwoId, matchId, seasonId, leagueId)
 	err := dest.ScanRow(row)
 	if err != nil {
 		if errors.Is(err, failure.ErrNotFound) {
@@ -272,15 +201,7 @@ func (s *store) updatePlayerStatistics(ctx context.Context, tx pgx.Tx, winnerId,
 		q = s.db
 	}
 
-	sql := `
-		update player
-		set 
-			matches_played = matches_played + 1,
-			matches_won = matches_won + case when id = $1 then 1 else 0 end
-		where id in ($2, $3)
-	`
-
-	_, err := q.Exec(ctx, sql, winnerId, playerOneId, playerTwoId)
+	_, err := q.Exec(ctx, s.queries.updatePlayerStatistics, winnerId, playerOneId, playerTwoId)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return failure.New("players for updating statistics not found", fmt.Errorf("%w -> %v", failure.ErrNotFound, err))
@@ -299,14 +220,7 @@ func (s *store) incrementPlayerMatchesScheduled(ctx context.Context, tx pgx.Tx, 
 		q = s.db
 	}
 
-	sql := `
-		update player
-		set
-			matches_scheduled = matches_scheduled + 1
-		where id = $1	
-	`
-
-	_, err := q.Exec(ctx, sql, playerId)
+	_, err := q.Exec(ctx, s.queries.incrementPlayerMatchesScheduled, playerId)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return failure.New("player for updating matches scheduled not found", fmt.Errorf("%w -> %v", failure.ErrNotFound, err))
@@ -325,21 +239,7 @@ func (s *store) updateStanding(ctx context.Context, tx pgx.Tx, seasonId, leagueI
 		q = s.db
 	}
 
-	sql := `
-		insert into standing (points, matches_played, matches_won, sets_won, sets_lost, games_won, games_lost, season_id, league_id, player_id)
-		values ($1, 1, $2, $3, $4, $5, $6, $7, $8, $9)
-		on conflict (season_id, league_id, player_id) do update
-		set
-			points = standing.points + $1,
-			matches_played = standing.matches_played + 1,
-			matches_won = standing.matches_won + $2,
-			sets_won = standing.sets_won + $3,
-			sets_lost = standing.sets_lost + $4,
-			games_won = standing.games_won + $5,
-			games_lost = standing.games_lost + $6
-	`
-
-	_, err := q.Exec(ctx, sql, plStats.Pts, plStats.WonMatches, plStats.SetsWon, plStats.SetsLost, plStats.GamesWon, plStats.GamesLost, seasonId, leagueId, playerId)
+	_, err := q.Exec(ctx, s.queries.updateStanding, plStats.Pts, plStats.WonMatches, plStats.SetsWon, plStats.SetsLost, plStats.GamesWon, plStats.GamesLost, seasonId, leagueId, playerId)
 	if err != nil {
 		return failure.New("unable to update standings", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
@@ -355,45 +255,9 @@ func (s *store) updateMatchScore(ctx context.Context, tx pgx.Tx, seasonId, leagu
 		q = s.db
 	}
 
-	sql := `
-		with updated_match as (
-			update match 
-			set score = $1, winner_id = $2
-			where id = $3 and season_id = $4 and league_id = $5
-			returning id, court_id, scheduled_at, player_one_id, player_two_id, winner_id, score, season_id, league_id, created_at
-		)
-		select
-			um.id,
-			court.id as court_id,
-			court.name as court_name,
-			um.scheduled_at,
-			player1.id as player_one_id,
-			account1.name as player_one_name,
-			player2.id as player_two_id,
-			account2.name as player_two_name,
-			winner.id as winner_id,
-			account3.name as winner_name,
-			um.score,
-			season.id as season_id,
-			season.title as season_title,
-			league.id as league_id,
-			league.title as league_title,
-			um.created_at
-		from updated_match um
-		join court on um.court_id = court.id
-		join player player1 on um.player_one_id = player1.id
-		join account account1 on player1.account_id = account1.id
-		join player player2 on um.player_two_id = player2.id
-		join account account2 on player2.account_id = account2.id
-		left join player winner on um.winner_id = winner.id
-		left join account account3 on winner.account_id = account3.id
-		join season on um.season_id = season.id
-		join league on um.league_id = league.id 
-	`
-
 	var dest MatchModel
 
-	row := q.QueryRow(ctx, sql, score, winnerId, matchId, seasonId, leagueId)
+	row := q.QueryRow(ctx, s.queries.updateScore, score, winnerId, matchId, seasonId, leagueId)
 	err := dest.ScanRow(row)
 	if err != nil {
 		if errors.Is(err, failure.ErrNotFound) {

@@ -53,15 +53,22 @@ func NewServer() (*server, error) {
 // @in header
 // @name Authorization
 // @description Enter the Bearer token in the format: Bearer token
-func (s *server) MountRouters() {
+func (s *server) MountRouters() error {
 	s.setupMiddleware()
 
+	v1, err := v1.New(s.Cfg, s.Db)
+	if err != nil {
+		return err
+	}
+
 	// mount v1
-	s.Rtr.Route("/v1", v1.New(s.Cfg, s.Db).Mount)
+	s.Rtr.Route("/v1", v1.Mount)
 
 	if s.swaggerEnabled {
 		s.Rtr.Get("/swagger/*", httpSwagger.WrapHandler)
 	}
+
+	return nil
 }
 
 func (s *server) Shutdown(ctx context.Context) error {

@@ -1,6 +1,7 @@
 package standings
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -15,11 +16,15 @@ type handler struct {
 	service *service
 }
 
-func newHandler(cfg *config.Config, db *db.Conn, validator *validation.Validator) *handler {
+func newHandler(cfg *config.Config, db *db.Conn, validator *validation.Validator) (*handler, error) {
 	h := &handler{}
-	store := newStore(db)
+	// store := newStore(db)
+	store, err := newStore(db)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize standings store -> %v", err)
+	}
 	h.service = newService(cfg, store, validator)
-	return h
+	return h, nil
 }
 
 // @Summary Get

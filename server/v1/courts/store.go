@@ -2,6 +2,7 @@ package courts
 
 import (
 	"context"
+	"embed"
 	"errors"
 	"fmt"
 
@@ -11,14 +12,59 @@ import (
 	"github.com/markovidakovic/gdsi/server/params"
 )
 
+//go:embed queries/*.sql
+var sqlFiles embed.FS
+
 type store struct {
-	db *db.Conn
+	db      *db.Conn
+	queries struct {
+		insert   string
+		list     string
+		findById string
+		update   string
+		delete   string
+	}
 }
 
-func newStore(db *db.Conn) *store {
-	return &store{
-		db,
+func newStore(db *db.Conn) (*store, error) {
+	s := &store{
+		db: db,
 	}
+	if err := s.loadQueries(); err != nil {
+		return nil, err
+	}
+	return s, nil
+}
+
+func (s *store) loadQueries() error {
+	insertBytes, err := sqlFiles.ReadFile("queries/insert.sql")
+	if err != nil {
+		return fmt.Errorf("failed to read insert.sql file -> %v", err)
+	}
+	listBytes, err := sqlFiles.ReadFile("queries/list.sql")
+	if err != nil {
+		return fmt.Errorf("failed to read list.sql file -> %v", err)
+	}
+	findByIdBytes, err := sqlFiles.ReadFile("queries/find_by_id.sql")
+	if err != nil {
+		return fmt.Errorf("failed to read find_by_id.sql file -> %v", err)
+	}
+	updateBytes, err := sqlFiles.ReadFile("queries/update.sql")
+	if err != nil {
+		return fmt.Errorf("failed to read update.sql file -> %v", err)
+	}
+	deleteBytes, err := sqlFiles.ReadFile("queries/delete.sql")
+	if err != nil {
+		return fmt.Errorf("failed to read delete.sql file -> %v", err)
+	}
+
+	s.queries.insert = string(insertBytes)
+	s.queries.list = string(listBytes)
+	s.queries.findById = string(findByIdBytes)
+	s.queries.update = string(updateBytes)
+	s.queries.delete = string(deleteBytes)
+
+	return nil
 }
 
 var sortingFields = map[string]string{
@@ -34,24 +80,8 @@ func (s *store) insertCourt(ctx context.Context, tx pgx.Tx, name, creatorId stri
 		q = s.db
 	}
 
-	sql := `
-		with inserted_court as (
-			insert into court (name, creator_id)
-			values ($1, $2)
-			returning id, name, creator_id, created_at			
-		)
-		select 
-			ic.id as court_id, 
-			ic.name as court_name, 
-			account.id as creator_id, 
-			account.name as creator_name, 
-			ic.created_at as court_created_at
-		from inserted_court ic
-		join account on ic.creator_id = account.id
-	`
-
 	var dest CourtModel
-	row := q.QueryRow(ctx, sql, name, creatorId)
+	row := q.QueryRow(ctx, s.queries.insert, name, creatorId)
 	err := dest.ScanRow(row)
 	if err != nil {
 		return dest, failure.New("failed to insert court", err)
@@ -61,30 +91,19 @@ func (s *store) insertCourt(ctx context.Context, tx pgx.Tx, name, creatorId stri
 }
 
 func (s *store) findCourts(ctx context.Context, limit, offset int, orderBy *params.OrderBy) ([]CourtModel, error) {
-	sql := `
-		select 
-			court.id as court_id,
-			court.name as court_name,
-			account.id as creator_id,
-			account.name as creator_name,
-			court.created_at as court_created_at
-		from court
-		join account on court.creator_id = account.id
-	`
-
 	if orderBy != nil && orderBy.IsValid(sortingFields) {
-		sql += fmt.Sprintf("order by %s %s\n", sortingFields[orderBy.Field], orderBy.Direction)
+		s.queries.list += fmt.Sprintf("order by %s %s\n", sortingFields[orderBy.Field], orderBy.Direction)
 	} else {
-		sql += fmt.Sprintln("order by court.created_at desc")
+		s.queries.list += fmt.Sprintln("order by court.created_at desc")
 	}
 
 	var err error
 	var rows pgx.Rows
 	if limit >= 0 {
-		sql += "limit $1 offset $2"
-		rows, err = s.db.Query(ctx, sql, limit, offset)
+		s.queries.list += "limit $1 offset $2"
+		rows, err = s.db.Query(ctx, s.queries.list, limit, offset)
 	} else {
-		rows, err = s.db.Query(ctx, sql)
+		rows, err = s.db.Query(ctx, s.queries.list)
 	}
 
 	if err != nil {
@@ -121,20 +140,7 @@ func (s *store) countCourts(ctx context.Context) (int, error) {
 
 func (s *store) findCourt(ctx context.Context, courtId string) (*CourtModel, error) {
 	var dest CourtModel
-
-	sql := `
-		select 
-			court.id as court_id,
-			court.name as court_name,
-			account.id as creator_id,
-			account.name as creator_name,
-			court.created_at as court_created_at
-		from court
-		join account on court.creator_id = account.id
-		where court.id = $1
-	`
-
-	row := s.db.QueryRow(ctx, sql, courtId)
+	row := s.db.QueryRow(ctx, s.queries.findById, courtId)
 	err := dest.ScanRow(row)
 	if err != nil {
 		if errors.Is(err, failure.ErrNotFound) {
@@ -155,25 +161,7 @@ func (s *store) updateCourt(ctx context.Context, tx pgx.Tx, courtId string, name
 	}
 
 	var dest CourtModel
-
-	sql := `
-		with updated_court as (
-			update court
-			set name = $1
-			where id = $2
-			returning id, name, creator_id, created_at
-		)
-		select
-			uc.id as court_id,
-			uc.name as court_name,
-			account.id as creator_id,
-			account.name as creator_name,
-			uc.created_at as court_created_at
-		from updated_court uc
-		join account on uc.creator_id = account.id
-	`
-
-	row := q.QueryRow(ctx, sql, name, courtId)
+	row := q.QueryRow(ctx, s.queries.update, name, courtId)
 	err := dest.ScanRow(row)
 	if err != nil {
 		if errors.Is(err, failure.ErrNotFound) {
@@ -193,11 +181,7 @@ func (s *store) deleteCourt(ctx context.Context, tx pgx.Tx, courtId string) erro
 		q = s.db
 	}
 
-	sql := `
-		delete from court where id = $1
-	`
-
-	ct, err := q.Exec(ctx, sql, courtId)
+	ct, err := q.Exec(ctx, s.queries.delete, courtId)
 	if err != nil {
 		return failure.New("unable to delete court", fmt.Errorf("%w -> %v", failure.ErrInternal, err))
 	}
